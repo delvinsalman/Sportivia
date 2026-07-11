@@ -1,0 +1,19 @@
+# Deploy Sportivia (website + live duel server) on Render
+# 1. Push repo to GitHub
+# 2. New → Blueprint → select this repo
+# 3. Open the public URL — create a lobby, share the code, anyone can join
+#
+# Note: free web services can sleep when idle. For true always-on duels,
+# use a paid always-on instance (Render Starter / Railway / Fly / etc.).
+
+services:
+  - type: web
+    name: sportivia
+    runtime: node
+    plan: free
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
