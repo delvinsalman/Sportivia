@@ -93,11 +93,7 @@ export function loadProfile(): PlayerProfile {
       unlockedCharacters: unlocked,
       equippedPet: safePet,
       unlockedPets,
-      stats: {
-        soccer: { ...base.stats.soccer, ...parsed.stats?.soccer },
-        basketball: { ...base.stats.basketball, ...parsed.stats?.basketball },
-        baseball: { ...base.stats.baseball, ...parsed.stats?.baseball },
-      },
+      stats: loadStats(),
     };
 
     const equippedMigrated =
