@@ -1,5 +1,6 @@
 import type { PlayerProfile } from '../types/profile';
 import { xpProgress } from '../lib/progression';
+import { Users } from 'lucide-react';
 
 interface LevelBarProps {
   profile: PlayerProfile;
@@ -85,9 +86,39 @@ export function CoinBadge({ coins, onClick }: CoinBadgeProps) {
   return <div className={chipClass}>{inner}</div>;
 }
 
-export function HeaderStats({ profile }: { profile: PlayerProfile }) {
+export function HeaderStats({
+  profile,
+  online,
+}: {
+  profile: PlayerProfile;
+  online?: number | null;
+}) {
+  const label =
+    typeof online === 'number' ? String(online) : '…';
+
   return (
     <div className="flex items-center gap-1.5">
+      <div
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1e1f22]/95 border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#0c0d0f]"
+        title="Players online right now"
+      >
+        <span className="relative flex h-2 w-2">
+          <span
+            className={`absolute inline-flex h-full w-full rounded-full bg-[#23a559] opacity-60 ${
+              typeof online === 'number' ? 'animate-ping' : ''
+            }`}
+          />
+          <span
+            className={`relative inline-flex h-2 w-2 rounded-full ${
+              typeof online === 'number' ? 'bg-[#23a559]' : 'bg-[#5c5e66]'
+            }`}
+          />
+        </span>
+        <Users className="w-3.5 h-3.5 text-[#949ba4]" />
+        <span className="text-[11px] font-black text-[#f2f3f5] font-mono tabular-nums min-w-[1ch]">
+          {label}
+        </span>
+      </div>
       <CoinBadge coins={profile.coins} />
     </div>
   );

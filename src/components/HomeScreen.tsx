@@ -21,6 +21,7 @@ interface HomeScreenProps {
   onOpenStore: () => void;
   onOpenAbout: () => void;
   onSaveName: (name: string) => void;
+  online?: number | null;
 }
 
 const modeLabels: Record<GameMode, string> = {
@@ -111,6 +112,7 @@ export function HomeScreen({
   onOpenStore,
   onOpenAbout,
   onSaveName,
+  online,
 }: HomeScreenProps) {
   const [showModes, setShowModes] = useState(false);
   const s = profile.stats[sport];
@@ -191,7 +193,7 @@ export function HomeScreen({
         animate={{ opacity: 1, x: 0 }}
         className="fixed top-0 right-0 z-30 p-3 sm:p-4 flex items-center gap-1.5 sm:gap-2"
       >
-        <HeaderStats profile={profile} />
+        <HeaderStats profile={profile} online={online} />
         <button
           type="button"
           onClick={() => {

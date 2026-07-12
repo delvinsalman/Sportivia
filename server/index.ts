@@ -9,6 +9,7 @@ const PORT = Number(process.env.PORT ?? process.env.DUEL_PORT ?? 3001);
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
 const DIST = resolve(ROOT, 'dist');
 const WS_PATH = '/duel';
+const LIVE_PATH = '/live';
 
 type Sport = 'soccer' | 'basketball' | 'baseball';
 type RoomStatus = 'lobby' | 'playing' | 'finished';
@@ -54,6 +55,7 @@ interface Room {
 const rooms = new Map<string, Room>();
 const socketRoom = new WeakMap<WebSocket, string>();
 const socketPlayer = new WeakMap<WebSocket, string>();
+const liveClients = new Set<WebSocket>();
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -252,12 +254,75 @@ const server = createServer((req, res) => {
 
   if (url.startsWith('/api/health') || url === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-    res.end(JSON.stringify({ ok: true, service: 'sportivia', rooms: rooms.size }));
+    res.end(
+      JSON.stringify({
+        ok: true,
+        service: 'sportivia',
+        rooms: rooms.size,
+        online: liveClients.size,
+      }),
+    );
+    return;
+  }
+
+  if (url.startsWith('/api/online')) {
+    res.writeHead(200, {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Access-Control-Allow-Origin': '*',
+    });
+    res.end(JSON.stringify({ online: liveClients.size }));
     return;
   }
 
   serveStatic(url, res);
 });
+
+function broadcastOnline() {
+  const payload = JSON.stringify({ type: 'online', online: liveClients.size });
+  for (const client of liveClients) {
+    if (client.readyState === WebSocket.OPEN) client.send(payload);
+  }
+}
+
+const liveWss = new WebSocketServer({ server, path: LIVE_PATH });
+
+liveWss.on('connection', ws => {
+  const c = ws as WebSocket & { isAlive?: boolean };
+  c.isAlive = true;
+  liveClients.add(ws);
+  send(ws, { type: 'online', online: liveClients.size });
+  broadcastOnline();
+
+  ws.on('pong', () => {
+    c.isAlive = true;
+  });
+
+  ws.on('close', () => {
+    liveClients.delete(ws);
+    broadcastOnline();
+  });
+
+  ws.on('error', () => {
+    liveClients.delete(ws);
+    broadcastOnline();
+  });
+});
+
+const liveHeartbeat = setInterval(() => {
+  for (const client of liveWss.clients) {
+    const c = client as WebSocket & { isAlive?: boolean };
+    if (c.isAlive === false) {
+      liveClients.delete(client);
+      client.terminate();
+      continue;
+    }
+    c.isAlive = false;
+    if (client.readyState === WebSocket.OPEN) client.ping();
+  }
+  broadcastOnline();
+}, 25_000);
+
+liveWss.on('close', () => clearInterval(liveHeartbeat));
 
 const wss = new WebSocketServer({ server, path: WS_PATH });
 
@@ -465,4 +530,5 @@ wss.on('connection', ws => {
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`[sportivia] live on http://0.0.0.0:${PORT}`);
   console.log(`[sportivia] duel websocket at ws://0.0.0.0:${PORT}${WS_PATH}`);
+  console.log(`[sportivia] live count websocket at ws://0.0.0.0:${PORT}${LIVE_PATH}`);
 });

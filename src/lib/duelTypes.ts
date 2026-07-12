@@ -88,3 +88,29 @@ export function duelWsUrl(): string {
   const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
   return `${proto}://${window.location.host}/duel`;
 }
+
+/** Presence channel for live player count (same host as duel server). */
+export function liveWsUrl(): string {
+  const duel = import.meta.env.VITE_DUEL_WS as string | undefined;
+  if (duel) return duel.replace(/\/duel\/?$/, '/live');
+
+  const proto = window.location.protocol === 'https:' ? 'wss' : 'ws';
+  return `${proto}://${window.location.host}/live`;
+}
+
+export function onlineApiUrl(): string {
+  const duel = import.meta.env.VITE_DUEL_WS as string | undefined;
+  if (duel) {
+    try {
+      const u = new URL(duel);
+      u.protocol = u.protocol === 'wss:' ? 'https:' : 'http:';
+      u.pathname = '/api/online';
+      u.search = '';
+      u.hash = '';
+      return u.toString();
+    } catch {
+      /* fall through */
+    }
+  }
+  return '/api/online';
+}

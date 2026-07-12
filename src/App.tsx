@@ -20,6 +20,7 @@ import type { PlayerProfile } from './types/profile';
 import type { CharacterId, PetId } from './types/profile';
 import { useDuel } from './hooks/useDuel';
 import { useAmbientMusic } from './hooks/useAmbientMusic';
+import { useOnlineCount } from './hooks/useOnlineCount';
 
 type Screen = 'home' | 'about' | 'store' | 'lobby' | 'intro' | 'game';
 
@@ -44,6 +45,8 @@ export default function App() {
     characterId: profile.equippedCharacter,
     sport,
   });
+
+  const online = useOnlineCount();
 
   useAmbientMusic(screen);
 
@@ -142,6 +145,7 @@ export default function App() {
             onOpenStore={() => setScreen('store')}
             onOpenAbout={() => setScreen('about')}
             onSaveName={handleSaveName}
+            online={online}
           />
         )}
 
