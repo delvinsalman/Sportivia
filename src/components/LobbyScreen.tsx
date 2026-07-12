@@ -97,7 +97,7 @@ export function LobbyScreen({
           </div>
         </header>
 
-        <div className="flex-1 flex items-center justify-center px-4 py-6">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain flex items-center justify-center px-4 py-4 sm:py-6">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}

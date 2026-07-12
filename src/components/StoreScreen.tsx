@@ -110,32 +110,33 @@ export function StoreScreen({
       <SportBackground sport={sport} />
 
       <div className="relative z-10 h-svh flex flex-col">
-        <header className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 backdrop-blur-md bg-[#0a0a0b]/40 border-b border-white/5">
+        <header className="shrink-0 flex items-center justify-between gap-2 px-3 sm:px-6 py-3 backdrop-blur-md bg-[#0a0a0b]/40 border-b border-white/5">
           <button
             type="button"
             onClick={() => {
               playMenuBack();
               onBack();
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5] bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5c5e66] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all"
+            className="flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5] bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5c5e66] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all shrink-0"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
-          <div className="flex items-center gap-2">
-            <h1 className="text-sm sm:text-lg font-black text-[#f2f3f5] tracking-tight">
-              Sportivia Game Store
+          <div className="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1 justify-center">
+            <h1 className="text-xs sm:text-lg font-black text-[#f2f3f5] tracking-tight truncate">
+              <span className="sm:hidden">Store</span>
+              <span className="hidden sm:inline">Sportivia Game Store</span>
             </h1>
             <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center border-[3px] border-white/25 shadow-[0_3px_0_rgba(0,0,0,0.35)] shrink-0"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center border-[3px] border-white/25 shadow-[0_3px_0_rgba(0,0,0,0.35)] shrink-0"
               style={{ background: accent }}
             >
-              <ShoppingBag className="w-4 h-4" style={{ color: accent === '#f4f4f5' ? '#18191c' : '#fff' }} />
+              <ShoppingBag className="w-3.5 h-3.5 sm:w-4 sm:h-4" style={{ color: accent === '#f4f4f5' ? '#18191c' : '#fff' }} />
             </div>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#f0b232]/70 shadow-[0_3px_0_#8a6814]">
-            <Coins className="w-4 h-4 text-[#f0b232]" />
-            <span className="text-sm font-black text-[#f0b232] font-mono">{profile.coins}</span>
+          <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#f0b232]/70 shadow-[0_3px_0_#8a6814] shrink-0">
+            <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#f0b232]" />
+            <span className="text-xs sm:text-sm font-black text-[#f0b232] font-mono">{profile.coins}</span>
           </div>
         </header>
 
@@ -171,9 +172,9 @@ export function StoreScreen({
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center min-h-0 px-2 sm:px-5 pb-8">
-          <div className="w-full max-w-2xl flex flex-col items-center gap-5">
-            <div className="relative w-full flex items-center justify-center min-h-[340px]">
+        <div className="flex-1 flex flex-col items-center min-h-0 overflow-y-auto overscroll-contain px-2 sm:px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <div className="w-full max-w-2xl flex flex-col items-center gap-3 sm:gap-5 py-2 sm:py-0 sm:justify-center sm:flex-1">
+            <div className="relative w-full flex items-center justify-center min-h-[220px] sm:min-h-[340px]">
               <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-[28%] max-w-[140px]">
                 {prevItem ? (
                   <button
@@ -219,7 +220,7 @@ export function StoreScreen({
                       height={300}
                       bare
                       hero
-                      className="w-full pointer-events-none"
+                      className="w-full pointer-events-none max-sm:scale-95 max-sm:origin-top"
                     />
                     <motion.div
                       className="absolute inset-0 z-30 cursor-grab active:cursor-grabbing"

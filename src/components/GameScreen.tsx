@@ -88,6 +88,8 @@ export function GameScreen({
   }
 
   const showHints = getSettings().showHints;
+  const boardChromeRem =
+    mode === 'duel' && showHints ? 12.5 : mode === 'duel' ? 11 : showHints ? 10.5 : 9.75;
 
   return (
     <div className="h-svh flex flex-col bg-[#0a0a0b] relative overflow-hidden">
@@ -121,7 +123,10 @@ export function GameScreen({
 
       <main className="flex-1 min-h-0 flex flex-col items-center justify-center px-3 py-2 relative z-10 overflow-hidden">
         {/* Width capped by viewport height so the 3×3 square grid never forces scroll */}
-        <div className="relative w-full max-w-[min(520px,calc(100svh-9.75rem))]">
+        <div
+          className="relative w-full"
+          style={{ maxWidth: `min(520px, calc(100svh - ${boardChromeRem}rem))` }}
+        >
           <GamePanel>
             <PlayerBar
               playerName={game.currentPlayer?.name}

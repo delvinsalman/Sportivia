@@ -100,7 +100,7 @@ function SettingRow({
             }
           : undefined
       }
-      className={`flex items-center gap-3 px-3.5 py-2.5 w-full text-left transition-colors ${
+      className={`flex items-center gap-2.5 sm:gap-3 px-2.5 sm:px-3.5 py-2 sm:py-2.5 w-full text-left transition-colors ${
         !last ? 'border-b border-[#2b2d31]' : ''
       } ${onClick ? 'cursor-pointer hover:bg-white/[0.03]' : ''} ${dimmed ? 'opacity-45' : ''}`}
     >
@@ -197,12 +197,12 @@ export function SettingsScreen({ sport, onBack }: SettingsScreenProps) {
   }
 
   return (
-    <div className="relative h-svh overflow-hidden">
+    <div className="relative h-svh flex flex-col overflow-hidden">
       <SportBackground sport={sport} />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#0a0a0b]/40 via-transparent to-[#0a0a0b]" />
 
       {/* About-style top bar */}
-      <div className="relative z-30 flex items-center justify-between px-4 sm:px-6 py-3 backdrop-blur-md bg-[#0a0a0b]/55 border-b border-white/5">
+      <div className="relative z-30 shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 backdrop-blur-md bg-[#0a0a0b]/55 border-b border-white/5">
         <button
           type="button"
           onClick={back}
@@ -221,11 +221,11 @@ export function SettingsScreen({ sport, onBack }: SettingsScreenProps) {
         <div className="w-[4.5rem] sm:w-[5.25rem]" aria-hidden />
       </div>
 
-      <div className="relative z-10 h-[calc(100svh-3.25rem)] flex flex-col max-w-lg mx-auto px-4 py-3 sm:py-4">
+      <div className="relative z-10 flex-1 min-h-0 overflow-y-auto overscroll-contain max-w-lg mx-auto w-full px-4 py-3 sm:py-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex-1 min-h-0 flex flex-col justify-center gap-3"
+          className="flex flex-col gap-3"
         >
           <Section title="Audio">
             <SettingRow

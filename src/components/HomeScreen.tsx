@@ -137,7 +137,7 @@ export function HomeScreen({
         className="fixed top-0 left-0 z-30 p-3 sm:p-4 flex items-center gap-2"
       >
         <SportBall sport={sport} size={24} className="shrink-0 drop-shadow-sm" />
-        <h1 className="text-lg sm:text-xl font-black tracking-tight text-[#f2f3f5] leading-none">
+        <h1 className="text-base sm:text-xl font-black tracking-tight text-[#f2f3f5] leading-none">
           Sportivia
         </h1>
       </motion.div>
@@ -146,7 +146,7 @@ export function HomeScreen({
       <motion.aside
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 pl-3 sm:pl-5 flex flex-col items-stretch gap-4"
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 pl-2 sm:pl-5 flex flex-col items-stretch gap-3 sm:gap-4 max-sm:scale-[0.92] max-sm:origin-left"
       >
         <SportPicker sport={sport} onSportChange={onSportChange} layout="rail" />
 
@@ -196,7 +196,7 @@ export function HomeScreen({
       <motion.div
         initial={{ opacity: 0, x: 12 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed top-0 right-0 z-30 p-3 sm:p-4 flex items-center gap-1.5 sm:gap-2"
+        className="fixed top-0 right-0 z-30 p-2 sm:p-4 flex items-center gap-1 sm:gap-2"
       >
         <HeaderStats profile={profile} online={showOnline} />
         <button
@@ -205,7 +205,7 @@ export function HomeScreen({
             playMenuClick();
             onOpenSettings();
           }}
-          className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#f0b232] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:gap-1 sm:px-3 sm:py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#f0b232] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
           aria-label="Settings"
         >
           <Settings className="w-3.5 h-3.5 text-[#949ba4]" />
@@ -217,10 +217,11 @@ export function HomeScreen({
             playMenuClick();
             onOpenAbout();
           }}
-          className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#23a559] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:gap-1 sm:px-3 sm:py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#23a559] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          aria-label="About"
         >
           <Info className="w-3.5 h-3.5 text-[#949ba4]" />
-          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1]">About</span>
+          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1] hidden sm:inline">About</span>
         </button>
         <button
           type="button"
@@ -228,10 +229,11 @@ export function HomeScreen({
             playMenuClick();
             onOpenStore();
           }}
-          className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5865f2] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:gap-1 sm:px-3 sm:py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5865f2] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          aria-label="Store"
         >
           <ShoppingBag className="w-3.5 h-3.5 text-[#949ba4]" />
-          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1]">Store</span>
+          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1] hidden sm:inline">Store</span>
         </button>
       </motion.div>
 
@@ -239,19 +241,19 @@ export function HomeScreen({
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-0 right-0 z-30 p-3 sm:p-4"
+        className="fixed bottom-0 right-0 z-30 p-2 sm:p-4 max-sm:scale-90 max-sm:origin-bottom-right"
       >
         <LevelCorner profile={profile} accent={accent} />
       </motion.div>
 
       {/* Hero — character center stage */}
-      <div className="relative z-10 h-svh flex flex-col items-center justify-center px-4 pt-12 pb-10 -translate-y-4 sm:-translate-y-6">
+      <div className="relative z-10 h-svh flex flex-col items-center justify-center pl-14 sm:pl-4 pr-3 sm:px-4 pt-14 sm:pt-12 pb-16 sm:pb-10 max-sm:translate-y-0 sm:-translate-y-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center w-full max-w-md"
+          className="flex flex-col items-center w-full max-w-md min-h-0"
         >
-          <div className="flex flex-col items-center translate-x-1.5 sm:translate-x-2.5 translate-y-3 sm:translate-y-4 relative z-10 -mb-1">
+          <div className="flex flex-col items-center translate-x-0 sm:translate-x-2.5 translate-y-1 sm:translate-y-4 relative z-10 -mb-1 shrink-0">
             <EditableName name={profile.playerName} onSave={onSaveName} />
             <p className="text-xs font-semibold text-[#949ba4] mt-0.5 mb-0 text-center">
               {profile.equippedPet
@@ -260,7 +262,8 @@ export function HomeScreen({
             </p>
           </div>
 
-          <div className="relative w-full max-w-[520px] sm:max-w-[580px]">
+          <div className="relative w-full max-w-[min(100%,320px)] sm:max-w-[520px] shrink min-h-0">
+            <div className="max-sm:scale-[0.88] max-sm:origin-top">
             <CharacterPodium
               characterId={profile.equippedCharacter}
               accent={SPORT_PODIUM_ACCENT[sport]}
@@ -269,8 +272,9 @@ export function HomeScreen({
               hero
               className="w-full max-w-[400px] sm:max-w-[450px] mx-auto"
             />
+            </div>
             {profile.equippedPet && (
-              <div className="absolute right-[-4%] sm:right-[-6%] bottom-0 w-[56%] max-w-[280px] pointer-events-none">
+              <div className="absolute right-0 sm:right-[-6%] bottom-0 w-[50%] sm:w-[56%] max-w-[280px] pointer-events-none max-sm:scale-90 max-sm:origin-bottom-right">
                 <CharacterPodium
                   petId={profile.equippedPet}
                   accent={getPetDef(profile.equippedPet).accent}
@@ -296,7 +300,7 @@ export function HomeScreen({
               playMenuClick();
               setShowModes(true);
             }}
-            className="group/play relative overflow-hidden mt-2 translate-x-0.5 sm:translate-x-1.5 flex items-center gap-2.5 px-10 py-3.5 rounded-2xl text-base font-black border-[3px] border-white/30 transition-[box-shadow] duration-200"
+            className="group/play relative overflow-hidden mt-1 sm:mt-2 flex items-center gap-2.5 px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-black border-[3px] border-white/30 transition-[box-shadow] duration-200 shrink-0"
             style={{
               background: accent,
               color: onAccentFg(accent),
@@ -334,7 +338,7 @@ export function HomeScreen({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 40 }}
               transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-              className="w-full max-w-md rounded-[28px] bg-[#151619] border-[3px] border-[#3f4147] p-5 shadow-[0_10px_0_#0c0d0f]"
+              className="w-full max-w-md max-h-[85svh] overflow-y-auto overscroll-contain rounded-[28px] bg-[#151619] border-[3px] border-[#3f4147] p-4 sm:p-5 shadow-[0_10px_0_#0c0d0f]"
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-4">
