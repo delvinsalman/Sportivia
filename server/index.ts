@@ -355,7 +355,36 @@ function broadcastOnline() {
   }
 }
 
-const liveWss = new WebSocketServer({ server, path: LIVE_PATH });
+// noServer + manual upgrade routing — required when multiple WS paths share one HTTP server.
+// Otherwise the first WebSocketServer aborts non-matching upgrades with HTTP 400.
+const liveWss = new WebSocketServer({ noServer: true });
+const wss = new WebSocketServer({ noServer: true });
+
+server.on('upgrade', (req, socket, head) => {
+  let pathname = '/';
+  try {
+    pathname = new URL(req.url || '/', 'http://localhost').pathname;
+  } catch {
+    socket.destroy();
+    return;
+  }
+
+  if (pathname === LIVE_PATH) {
+    liveWss.handleUpgrade(req, socket, head, ws => {
+      liveWss.emit('connection', ws, req);
+    });
+    return;
+  }
+
+  if (pathname === WS_PATH) {
+    wss.handleUpgrade(req, socket, head, ws => {
+      wss.emit('connection', ws, req);
+    });
+    return;
+  }
+
+  socket.destroy();
+});
 
 liveWss.on('connection', ws => {
   const c = ws as WebSocket & { isAlive?: boolean };
@@ -421,8 +450,6 @@ const liveHeartbeat = setInterval(() => {
 }, 25_000);
 
 liveWss.on('close', () => clearInterval(liveHeartbeat));
-
-const wss = new WebSocketServer({ server, path: WS_PATH });
 
 // Keep connections alive through proxies / idle timeouts
 const heartbeat = setInterval(() => {
