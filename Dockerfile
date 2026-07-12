@@ -3,7 +3,8 @@ FROM node:22-bookworm
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci
+# npm install (not ci) — avoids lockfile sync failures across npm versions
+RUN npm install
 
 COPY . .
 RUN npm run build
