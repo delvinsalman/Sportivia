@@ -114,3 +114,8 @@ export function onlineApiUrl(): string {
   }
   return '/api/online';
 }
+
+export function presenceApiUrl(): string {
+  const online = onlineApiUrl();
+  return online.replace(/\/api\/online\/?$/, '/api/presence');
+}

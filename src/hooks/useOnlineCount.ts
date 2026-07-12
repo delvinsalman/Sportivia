@@ -1,39 +1,71 @@
 import { useEffect, useState } from 'react';
-import { liveWsUrl, onlineApiUrl } from '../lib/duelTypes';
+import { liveWsUrl, onlineApiUrl, presenceApiUrl } from '../lib/duelTypes';
+
+const TAB_ID_KEY = 'sportivia-presence-tab';
+
+function tabId(): string {
+  try {
+    // sessionStorage is unique per tab — so 3 tabs = 3 ids
+    let id = sessionStorage.getItem(TAB_ID_KEY);
+    if (!id) {
+      id = crypto.randomUUID();
+      sessionStorage.setItem(TAB_ID_KEY, id);
+    }
+    return id;
+  } catch {
+    return crypto.randomUUID();
+  }
+}
 
 /**
- * Keeps a presence socket open while the app is mounted and returns
- * how many players currently have Sportivia open.
+ * Counts how many browser tabs currently have Sportivia open.
+ * Uses per-tab IDs + HTTP heartbeats (and a live WS when available).
  */
 export function useOnlineCount(): number | null {
   const [online, setOnline] = useState<number | null>(null);
 
   useEffect(() => {
-    let ws: WebSocket | null = null;
+    const id = tabId();
     let closed = false;
+    let ws: WebSocket | null = null;
     let retryTimer: ReturnType<typeof setTimeout> | undefined;
-    let pollTimer: ReturnType<typeof setInterval> | undefined;
+    let beatTimer: ReturnType<typeof setInterval> | undefined;
 
-    async function pollFallback() {
+    async function heartbeat() {
       try {
-        const res = await fetch(onlineApiUrl(), { cache: 'no-store' });
+        const res = await fetch(presenceApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id }),
+          cache: 'no-store',
+          keepalive: true,
+        });
         if (!res.ok) return;
         const data = (await res.json()) as { online?: number };
         if (!closed && typeof data.online === 'number') setOnline(data.online);
       } catch {
-        /* ignore — server may be offline in pure static preview */
+        try {
+          const res = await fetch(onlineApiUrl(), { cache: 'no-store' });
+          if (!res.ok) return;
+          const data = (await res.json()) as { online?: number };
+          if (!closed && typeof data.online === 'number') setOnline(data.online);
+        } catch {
+          /* server offline */
+        }
       }
     }
 
-    function connect() {
+    function connectWs() {
       if (closed) return;
       try {
         ws = new WebSocket(liveWsUrl());
       } catch {
-        void pollFallback();
-        pollTimer = setInterval(() => void pollFallback(), 15_000);
         return;
       }
+
+      ws.onopen = () => {
+        ws?.send(JSON.stringify({ type: 'hello', id }));
+      };
 
       ws.onmessage = ev => {
         try {
@@ -48,7 +80,7 @@ export function useOnlineCount(): number | null {
 
       ws.onclose = () => {
         if (closed) return;
-        retryTimer = setTimeout(connect, 4_000);
+        retryTimer = setTimeout(connectWs, 4_000);
       };
 
       ws.onerror = () => {
@@ -56,12 +88,37 @@ export function useOnlineCount(): number | null {
       };
     }
 
-    connect();
+    function leave() {
+      const body = JSON.stringify({ id, leave: true });
+      try {
+        navigator.sendBeacon(presenceApiUrl(), new Blob([body], { type: 'application/json' }));
+      } catch {
+        void fetch(presenceApiUrl(), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body,
+          keepalive: true,
+        });
+      }
+    }
+
+    void heartbeat();
+    beatTimer = setInterval(() => {
+      void heartbeat();
+      if (ws?.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'ping', id }));
+      }
+    }, 8_000);
+    connectWs();
+
+    window.addEventListener('pagehide', leave);
 
     return () => {
       closed = true;
+      window.removeEventListener('pagehide', leave);
       if (retryTimer) clearTimeout(retryTimer);
-      if (pollTimer) clearInterval(pollTimer);
+      if (beatTimer) clearInterval(beatTimer);
+      leave();
       ws?.close();
     };
   }, []);

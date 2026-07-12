@@ -56,6 +56,32 @@ const rooms = new Map<string, Room>();
 const socketRoom = new WeakMap<WebSocket, string>();
 const socketPlayer = new WeakMap<WebSocket, string>();
 const liveClients = new Set<WebSocket>();
+/** Tab-scoped presence ids → last seen (ms). More reliable than raw socket count. */
+const presence = new Map<string, number>();
+const presenceSocket = new WeakMap<WebSocket, string>();
+const PRESENCE_TTL_MS = 45_000;
+
+function prunePresence() {
+  const cutoff = Date.now() - PRESENCE_TTL_MS;
+  for (const [id, seen] of presence) {
+    if (seen < cutoff) presence.delete(id);
+  }
+}
+
+function onlineCount() {
+  prunePresence();
+  return presence.size;
+}
+
+function touchPresence(id: string) {
+  const clean = id.trim().slice(0, 64);
+  if (!clean) return;
+  presence.set(clean, Date.now());
+}
+
+function dropPresence(id: string) {
+  presence.delete(id);
+}
 
 const MIME: Record<string, string> = {
   '.html': 'text/html; charset=utf-8',
@@ -252,14 +278,26 @@ function serveStatic(reqUrl: string, res: import('http').ServerResponse) {
 const server = createServer((req, res) => {
   const url = req.url || '/';
 
+  const cors = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET,POST,OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type',
+  };
+
+  if (req.method === 'OPTIONS' && url.startsWith('/api/')) {
+    res.writeHead(204, cors);
+    res.end();
+    return;
+  }
+
   if (url.startsWith('/api/health') || url === '/health') {
-    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', ...cors });
     res.end(
       JSON.stringify({
         ok: true,
         service: 'sportivia',
         rooms: rooms.size,
-        online: liveClients.size,
+        online: onlineCount(),
       }),
     );
     return;
@@ -268,9 +306,42 @@ const server = createServer((req, res) => {
   if (url.startsWith('/api/online')) {
     res.writeHead(200, {
       'Content-Type': 'application/json; charset=utf-8',
-      'Access-Control-Allow-Origin': '*',
+      ...cors,
     });
-    res.end(JSON.stringify({ online: liveClients.size }));
+    res.end(JSON.stringify({ online: onlineCount() }));
+    return;
+  }
+
+  if (url.startsWith('/api/presence')) {
+    const readBody = (cb: (raw: string) => void) => {
+      const chunks: Buffer[] = [];
+      req.on('data', c => chunks.push(Buffer.isBuffer(c) ? c : Buffer.from(c)));
+      req.on('end', () => cb(Buffer.concat(chunks).toString('utf8')));
+    };
+
+    if (req.method === 'POST') {
+      readBody(raw => {
+        let id = '';
+        let leave = false;
+        try {
+          const parsed = JSON.parse(raw || '{}') as { id?: string; leave?: boolean };
+          id = typeof parsed.id === 'string' ? parsed.id : '';
+          leave = Boolean(parsed.leave);
+        } catch {
+          /* ignore */
+        }
+        if (leave) dropPresence(id);
+        else touchPresence(id);
+        const online = onlineCount();
+        broadcastOnline();
+        res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', ...cors });
+        res.end(JSON.stringify({ online }));
+      });
+      return;
+    }
+
+    res.writeHead(405, cors);
+    res.end();
     return;
   }
 
@@ -278,7 +349,7 @@ const server = createServer((req, res) => {
 });
 
 function broadcastOnline() {
-  const payload = JSON.stringify({ type: 'online', online: liveClients.size });
+  const payload = JSON.stringify({ type: 'online', online: onlineCount() });
   for (const client of liveClients) {
     if (client.readyState === WebSocket.OPEN) client.send(payload);
   }
@@ -290,20 +361,44 @@ liveWss.on('connection', ws => {
   const c = ws as WebSocket & { isAlive?: boolean };
   c.isAlive = true;
   liveClients.add(ws);
-  send(ws, { type: 'online', online: liveClients.size });
-  broadcastOnline();
+  send(ws, { type: 'online', online: onlineCount() });
+
+  ws.on('message', raw => {
+    try {
+      const msg = JSON.parse(String(raw)) as { type?: string; id?: string };
+      if (msg.type === 'hello' && typeof msg.id === 'string') {
+        const prev = presenceSocket.get(ws);
+        if (prev && prev !== msg.id) dropPresence(prev);
+        presenceSocket.set(ws, msg.id);
+        touchPresence(msg.id);
+        broadcastOnline();
+      } else if (msg.type === 'ping') {
+        const id = presenceSocket.get(ws);
+        if (id) touchPresence(id);
+        send(ws, { type: 'online', online: onlineCount() });
+      }
+    } catch {
+      /* ignore */
+    }
+  });
 
   ws.on('pong', () => {
     c.isAlive = true;
+    const id = presenceSocket.get(ws);
+    if (id) touchPresence(id);
   });
 
   ws.on('close', () => {
     liveClients.delete(ws);
+    const id = presenceSocket.get(ws);
+    if (id) dropPresence(id);
     broadcastOnline();
   });
 
   ws.on('error', () => {
     liveClients.delete(ws);
+    const id = presenceSocket.get(ws);
+    if (id) dropPresence(id);
     broadcastOnline();
   });
 });
@@ -312,6 +407,8 @@ const liveHeartbeat = setInterval(() => {
   for (const client of liveWss.clients) {
     const c = client as WebSocket & { isAlive?: boolean };
     if (c.isAlive === false) {
+      const id = presenceSocket.get(client);
+      if (id) dropPresence(id);
       liveClients.delete(client);
       client.terminate();
       continue;
@@ -319,6 +416,7 @@ const liveHeartbeat = setInterval(() => {
     c.isAlive = false;
     if (client.readyState === WebSocket.OPEN) client.ping();
   }
+  prunePresence();
   broadcastOnline();
 }, 25_000);
 
