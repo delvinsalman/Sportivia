@@ -16,6 +16,8 @@ interface VisualMeta {
   initials?: string;
   logoUrl?: string;
   logoBackground?: string;
+  /** Scale logo inside its box (1 = default). Use >1 for emblems that look small. */
+  logoScale?: number;
   jerseyPattern?: JerseyPattern;
   allStarVariant?: 'nba' | 'mlb';
   awardVariant?: 'mvp' | 'scoring' | 'championship' | 'olympic';
@@ -54,9 +56,9 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'pos-mid': { type: 'position', colors: ['#23a559'], initials: 'MF' },
   'pos-def': { type: 'position', colors: ['#5865f2'], initials: 'DF' },
   'trophy-wc': { type: 'trophy', colors: ['#f0b232'] },
-  'trophy-bdo': { type: 'trophy', colors: ['#ffd700'] },
-  'trophy-ucl': { type: 'trophy', logoUrl: '/icons/trophies/ucl.png' },
-  'trophy-euro': { type: 'trophy', logoUrl: '/icons/trophies/euro.png' },
+  'trophy-ucl': { type: 'trophy', logoUrl: '/icons/trophies/ucl.png', logoScale: 1.15 },
+  'trophy-euro': { type: 'trophy', logoUrl: '/icons/trophies/euro-trophy.png', logoScale: 1.35 },
+  'trophy-bdo': { type: 'trophy', logoUrl: '/icons/trophies/ballon-dor-nobg.png', logoScale: 1.25 },
   'cont-europe': { type: 'region' },
   'cont-sa': { type: 'region' },
   'decade-00s': { type: 'era', initials: '00' },
@@ -79,7 +81,7 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'club-marseille': { type: 'jersey', jerseyPattern: 'solid', colors: ['#2fa3e0'], accent: '#ffffff', logoUrl: '/icons/teams/soccer/marseille.svg' },
   'club-aston-villa': { type: 'jersey', jerseyPattern: 'solid', colors: ['#670e36'], accent: '#95bfe5', logoUrl: '/icons/teams/soccer/aston-villa.png' },
   'league-mls': { type: 'league', logoUrl: '/icons/leagues/mls.svg' },
-  'league-saudi': { type: 'league', logoUrl: '/icons/leagues/saudi-pro-league.svg' },
+  'league-saudi': { type: 'league', logoUrl: '/icons/leagues/saudi-pro-league.svg', logoBackground: '#ffffff' },
   'nat-uruguay': { type: 'flag', flagCode: 'uy', colors: ['#0038a8', '#fff', '#0038a8'] },
   'nat-ivory-coast': { type: 'flag', flagCode: 'ci', colors: ['#f77f00', '#fff', '#009e60'] },
   'nat-morocco': { type: 'flag', flagCode: 'ma', colors: ['#c1272d', '#006233'] },
@@ -112,8 +114,8 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'nat-northern-ireland': { type: 'flag', flagCode: 'gb-nir', colors: ['#fff', '#c8102e', '#00247d'] },
   'trophy-europa': { type: 'trophy', logoUrl: '/icons/trophies/europa.png' },
   'trophy-fa-cup': { type: 'trophy', logoUrl: '/icons/trophies/fa-cup.svg' },
-  'trophy-copa-america': { type: 'trophy', logoUrl: '/icons/trophies/copa-america.svg' },
-  'trophy-afcon': { type: 'trophy', logoUrl: '/icons/trophies/afcon.svg' },
+  'trophy-copa-america': { type: 'trophy', logoUrl: '/icons/trophies/copa-america-2024.png', logoScale: 1.2 },
+  'trophy-afcon': { type: 'trophy', logoUrl: '/icons/trophies/caf-afcon.svg' },
   'cont-north-america': { type: 'region' },
   'decade-2020s': { type: 'era', initials: '20' },
   'pos-gk': { type: 'position', colors: ['#f59e0b'], initials: 'GK', logoUrl: '/icons/positions/goalkeeper.png' },
@@ -229,6 +231,29 @@ function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMet
 
 function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
   const code = meta.flagCode;
+
+  // Canada: circular object-cover crops to just the maple leaf — draw the full flag.
+  if (code === 'ca') {
+    return (
+      <div
+        className="rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 flex"
+        style={{ width: size, height: size }}
+        aria-hidden
+      >
+        <div className="h-full" style={{ width: '25%', background: '#ff0000' }} />
+        <div className="h-full flex-1 bg-white flex items-center justify-center relative">
+          <svg viewBox="0 0 30 30" className="w-[72%] h-[72%]" aria-hidden>
+            <path
+              fill="#ff0000"
+              d="M14.9 2.2c.2 1.6.8 2.9 1.6 3.7.3-1.2 1.1-2.2 2.1-2.8.2 1.5-.1 2.9-.8 3.9 1.1-.5 2.4-.5 3.5.1-.4 1.4-1.4 2.4-2.6 2.9 1.3.2 2.5.9 3.2 1.9-.9 1.1-2.3 1.6-3.6 1.5.9.8 1.5 1.9 1.6 3.1-1.4-.2-2.6-.9-3.3-1.9.1 1.5-.3 3-1.2 4.1-.2-2.1-.9-3.5-1.7-4.4-.8.9-1.5 2.3-1.7 4.4-.9-1.1-1.3-2.6-1.2-4.1-.7 1-1.9 1.7-3.3 1.9.1-1.2.7-2.3 1.6-3.1-1.3.1-2.7-.4-3.6-1.5.7-1 1.9-1.7 3.2-1.9-1.2-.5-2.2-1.5-2.6-2.9 1.1-.6 2.4-.6 3.5-.1-.7-1-1-2.4-.8-3.9 1 .6 1.8 1.6 2.1 2.8.8-.8 1.4-2.1 1.6-3.7zM14.9 20.4v7.4h1.4v-7.4h-1.4z"
+            />
+          </svg>
+        </div>
+        <div className="h-full" style={{ width: '25%', background: '#ff0000' }} />
+      </div>
+    );
+  }
+
   if (code) {
     return (
       <div
@@ -264,20 +289,23 @@ function LeagueLogo({
   logoUrl,
   size = 36,
   background,
+  scale = 1,
 }: {
   logoUrl: string;
   size?: number;
   background?: string;
+  scale?: number;
 }) {
   const pad = background ? Math.max(4, size * 0.1) : 0;
+  const imgPct = Math.min(130, (background ? 92 : 100) * scale);
 
   return (
     <div
-      className="shrink-0 flex items-center justify-center drop-shadow-md"
+      className="shrink-0 flex items-center justify-center drop-shadow-md overflow-visible"
       style={{ width: size, height: size }}
     >
       <div
-        className="flex items-center justify-center w-full h-full"
+        className="flex items-center justify-center w-full h-full overflow-visible"
         style={background ? {
           background,
           borderRadius: size * 0.22,
@@ -290,7 +318,7 @@ function LeagueLogo({
           alt=""
           draggable={false}
           className="select-none object-contain"
-          style={{ width: background ? '92%' : '88%', height: background ? '92%' : '88%' }}
+          style={{ width: `${imgPct}%`, height: `${imgPct}%`, maxWidth: 'none' }}
           loading="lazy"
         />
       </div>
@@ -305,6 +333,7 @@ function LeagueBadge({ meta, size = 36, sport }: { meta: VisualMeta; size?: numb
         logoUrl={meta.logoUrl}
         size={size}
         background={meta.logoBackground}
+        scale={meta.logoScale}
       />
     );
   }
@@ -461,6 +490,7 @@ export function CategoryIcon({ categoryId, tag, size = 38, sport }: CategoryIcon
             logoUrl={meta.logoUrl}
             size={size}
             background={meta.logoBackground}
+            scale={meta.logoScale ?? 1.1}
           />
         );
       }

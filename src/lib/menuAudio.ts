@@ -1,5 +1,7 @@
 /** Soft synthesized menu SFX (no asset files). */
 
+import { canPlayMenuSound, effectiveMenuVolume } from './settings';
+
 let ctx: AudioContext | null = null;
 
 function getCtx(): AudioContext | null {
@@ -28,8 +30,12 @@ function tone(
     decay?: number;
   } = {},
 ) {
+  if (!canPlayMenuSound()) return;
   const audio = getCtx();
   if (!audio) return;
+
+  const vol = effectiveMenuVolume(gain);
+  if (vol <= 0) return;
 
   const now = audio.currentTime;
   const osc = audio.createOscillator();
@@ -43,7 +49,7 @@ function tone(
   filter.frequency.setValueAtTime(2400, now);
 
   amp.gain.setValueAtTime(0, now);
-  amp.gain.linearRampToValueAtTime(gain, now + attack);
+  amp.gain.linearRampToValueAtTime(vol, now + attack);
   amp.gain.exponentialRampToValueAtTime(0.0001, now + attack + decay);
 
   osc.connect(filter);

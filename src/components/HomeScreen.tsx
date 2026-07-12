@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pencil, Play, ShoppingBag, X, Check, Info, Zap, Trophy, Timer, Swords } from 'lucide-react';
+import { Pencil, Play, ShoppingBag, X, Check, Info, Zap, Trophy, Timer, Swords, Settings } from 'lucide-react';
 import type { Sport, GameMode } from '../types';
 import type { PlayerProfile } from '../types/profile';
 import { getTodayKey } from '../lib/seed';
@@ -12,6 +12,7 @@ import { HeaderStats, LevelCorner } from './LevelBar';
 import { getCharacterDef, getPetDef } from '../types/profile';
 import { SPORT_ACCENT, SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
+import { useSettings } from '../hooks/useSettings';
 
 interface HomeScreenProps {
   sport: Sport;
@@ -20,6 +21,7 @@ interface HomeScreenProps {
   profile: PlayerProfile;
   onOpenStore: () => void;
   onOpenAbout: () => void;
+  onOpenSettings: () => void;
   onSaveName: (name: string) => void;
   online?: number | null;
 }
@@ -111,15 +113,18 @@ export function HomeScreen({
   profile,
   onOpenStore,
   onOpenAbout,
+  onOpenSettings,
   onSaveName,
   online,
 }: HomeScreenProps) {
   const [showModes, setShowModes] = useState(false);
+  const { settings } = useSettings();
   const s = profile.stats[sport];
   const today = getTodayKey();
   const dailyDone = s.dailyCompleted.includes(today);
   const accent = SPORT_ACCENT[sport];
   const character = getCharacterDef(profile.equippedCharacter);
+  const showOnline = settings.showOnlineCount ? online : null;
 
   return (
     <div className="relative h-svh overflow-hidden">
@@ -193,7 +198,19 @@ export function HomeScreen({
         animate={{ opacity: 1, x: 0 }}
         className="fixed top-0 right-0 z-30 p-3 sm:p-4 flex items-center gap-1.5 sm:gap-2"
       >
-        <HeaderStats profile={profile} online={online} />
+        <HeaderStats profile={profile} online={showOnline} />
+        <button
+          type="button"
+          onClick={() => {
+            playMenuClick();
+            onOpenSettings();
+          }}
+          className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#f0b232] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          aria-label="Settings"
+        >
+          <Settings className="w-3.5 h-3.5 text-[#949ba4]" />
+          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1] hidden sm:inline">Settings</span>
+        </button>
         <button
           type="button"
           onClick={() => {

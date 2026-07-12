@@ -1,14 +1,14 @@
 import { useEffect, useRef } from 'react';
+import { effectiveMusicVolume, subscribeSettings } from '../lib/settings';
 
 const TRACK = '/audio/starlight-strut.mp3';
-const TARGET_VOLUME = 0.12;
 const PLAYBACK_RATE = 0.82;
 const FADE_MS = 1100;
 
-type AmbientScreen = 'home' | 'about' | 'store' | 'lobby' | 'intro' | 'game';
+type AmbientScreen = 'home' | 'about' | 'store' | 'settings' | 'lobby' | 'intro' | 'game';
 
 function isMenuScreen(screen: AmbientScreen) {
-  return screen === 'home' || screen === 'store' || screen === 'about';
+  return screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings';
 }
 
 function fadeVolume(
@@ -48,13 +48,14 @@ function fadeVolume(
   };
 }
 
-/** Loops menu music on home/store; fades out when entering lobby/intro/game. */
+/** Loops menu music on home/store/settings; fades out in lobby/intro/game. */
 export function useAmbientMusic(screen: AmbientScreen) {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const cancelFadeRef = useRef<(() => void) | null>(null);
   const wantsMusicRef = useRef(isMenuScreen(screen));
   const playMenuRef = useRef<() => void>(() => {});
   const fadeOutRef = useRef<() => void>(() => {});
+  const syncVolumeRef = useRef<() => void>(() => {});
 
   wantsMusicRef.current = isMenuScreen(screen);
 
@@ -76,10 +77,17 @@ export function useAmbientMusic(screen: AmbientScreen) {
       cancelFadeRef.current = fadeVolume(audio, to, FADE_MS, onDone);
     };
 
+    const targetVol = () => effectiveMusicVolume();
+
     const playMenu = () => {
       if (!wantsMusicRef.current) return;
+      const to = targetVol();
+      if (to <= 0) {
+        fadeTo(0, () => audio.pause());
+        return;
+      }
 
-      const startFade = () => fadeTo(TARGET_VOLUME);
+      const startFade = () => fadeTo(to);
 
       if (audio.paused) {
         audio.volume = 0;
@@ -95,8 +103,23 @@ export function useAmbientMusic(screen: AmbientScreen) {
       fadeTo(0, () => audio.pause());
     };
 
+    const syncVolume = () => {
+      if (!wantsMusicRef.current) return;
+      const to = targetVol();
+      if (to <= 0) {
+        fadeTo(0, () => audio.pause());
+        return;
+      }
+      if (audio.paused) {
+        playMenu();
+      } else {
+        fadeTo(to);
+      }
+    };
+
     playMenuRef.current = playMenu;
     fadeOutRef.current = fadeOut;
+    syncVolumeRef.current = syncVolume;
 
     const detachGestures = () => {
       document.removeEventListener('pointerdown', onGesture);
@@ -106,9 +129,10 @@ export function useAmbientMusic(screen: AmbientScreen) {
 
     const onGesture = () => {
       if (!wantsMusicRef.current) return;
+      if (targetVol() <= 0) return;
       audio.volume = 0;
       void audio.play().then(() => {
-        fadeTo(TARGET_VOLUME);
+        fadeTo(targetVol());
         detachGestures();
       }).catch(() => {
         // Keep listening until a gesture succeeds
@@ -119,11 +143,14 @@ export function useAmbientMusic(screen: AmbientScreen) {
     document.addEventListener('keydown', onGesture);
     document.addEventListener('touchstart', onGesture, { passive: true });
 
+    const unsub = subscribeSettings(() => syncVolumeRef.current());
+
     playMenu();
 
     return () => {
       stopFade();
       detachGestures();
+      unsub();
       audio.pause();
       audio.src = '';
       audioRef.current = null;

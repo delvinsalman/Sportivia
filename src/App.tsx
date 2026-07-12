@@ -7,6 +7,7 @@ import { BallRainIntro } from './components/BallRainIntro';
 import { StoreScreen } from './components/StoreScreen';
 import { LobbyScreen } from './components/LobbyScreen';
 import { AboutScreen } from './components/AboutScreen';
+import { SettingsScreen } from './components/SettingsScreen';
 import {
   loadProfile,
   equipCharacter,
@@ -21,8 +22,9 @@ import type { CharacterId, PetId } from './types/profile';
 import { useDuel } from './hooks/useDuel';
 import { useAmbientMusic } from './hooks/useAmbientMusic';
 import { useOnlineCount } from './hooks/useOnlineCount';
+import { useSettings } from './hooks/useSettings';
 
-type Screen = 'home' | 'about' | 'store' | 'lobby' | 'intro' | 'game';
+type Screen = 'home' | 'about' | 'settings' | 'store' | 'lobby' | 'intro' | 'game';
 
 const modeLabels: Record<GameMode, string> = {
   training: 'TRAINING',
@@ -47,11 +49,14 @@ export default function App() {
   });
 
   const online = useOnlineCount();
+  const { settings } = useSettings();
 
   useAmbientMusic(screen);
 
   useEffect(() => {
-    if (screen === 'home' || screen === 'store' || screen === 'about') setProfile(loadProfile());
+    if (screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings') {
+      setProfile(loadProfile());
+    }
   }, [screen]);
 
   // When both players ready, server sends start → go to intro/game
@@ -144,8 +149,17 @@ export default function App() {
             profile={profile}
             onOpenStore={() => setScreen('store')}
             onOpenAbout={() => setScreen('about')}
+            onOpenSettings={() => setScreen('settings')}
             onSaveName={handleSaveName}
-            online={online}
+            online={settings.showOnlineCount ? online : null}
+          />
+        )}
+
+        {screen === 'settings' && (
+          <SettingsScreen
+            key="settings"
+            sport={sport}
+            onBack={() => setScreen('home')}
           />
         )}
 

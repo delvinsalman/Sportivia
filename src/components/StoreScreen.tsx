@@ -110,14 +110,14 @@ export function StoreScreen({
       <SportBackground sport={sport} />
 
       <div className="relative z-10 h-svh flex flex-col">
-        <header className="shrink-0 flex items-center justify-between px-5 py-4 border-b-[3px] border-[#2b2d31] bg-[#0a0a0b]/80 backdrop-blur-md">
+        <header className="shrink-0 flex items-center justify-between px-4 sm:px-6 py-3 backdrop-blur-md bg-[#0a0a0b]/40 border-b border-white/5">
           <button
             type="button"
             onClick={() => {
               playMenuBack();
               onBack();
             }}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5] bg-[#1e1f22] border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5] bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5c5e66] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
             Back

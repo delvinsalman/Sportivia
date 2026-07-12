@@ -7,7 +7,7 @@ import { RESET_EVERY } from '../lib/scoring';
 import { SportBall } from './SportBall';
 import { CategoryIcon } from './CategoryIcon';
 
-const PANEL_W = 'w-full max-w-[540px]';
+const PANEL_W = 'w-full';
 
 interface CategoryGridProps {
   cells: BoardCell[];
@@ -39,7 +39,7 @@ export function CategoryGrid({
           animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
           exit={{ opacity: 0, scale: 0.97, filter: 'blur(6px)' }}
           transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-          className="grid grid-cols-3 gap-2.5 sm:gap-3"
+          className="grid grid-cols-3 gap-1.5 sm:gap-2"
         >
           {cells.map((cell, i) => {
             const isFilled = cell.filled;
@@ -60,34 +60,34 @@ export function CategoryGrid({
                   ease: [0.22, 1, 0.36, 1],
                 }}
                 className={`
-                  relative aspect-square rounded-2xl flex flex-col items-center justify-center gap-1 p-2.5 sm:p-3
+                  relative aspect-square rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2
                   transition-colors duration-150 select-none
                   ${isFilled
-                    ? 'bg-[#142d1e]/95 border-[3px] border-[#23a559] shadow-[0_4px_0_#14532d] cursor-default'
+                    ? 'bg-[#142d1e]/95 border-[2.5px] border-[#23a559] shadow-[0_3px_0_#14532d] cursor-default'
                     : isWrong
-                      ? 'bg-[#3d1a1a] border-[3px] border-[#ed4245] shadow-[0_4px_0_#8f1e22] animate-shake'
+                      ? 'bg-[#3d1a1a] border-[2.5px] border-[#ed4245] shadow-[0_3px_0_#8f1e22] animate-shake'
                       : isCorrect
-                        ? 'bg-[#142d1e] border-[3px] border-[#23a559] shadow-[0_4px_0_#14532d]'
-                        : 'bg-[#18191c]/95 border-[3px] border-[#3f4147] shadow-[0_4px_0_#0c0d0f] hover:bg-[#1e1f24] hover:border-[#5c5e66] cursor-pointer backdrop-blur-sm'
+                        ? 'bg-[#142d1e] border-[2.5px] border-[#23a559] shadow-[0_3px_0_#14532d]'
+                        : 'bg-[#18191c]/95 border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#0c0d0f] hover:bg-[#1e1f24] hover:border-[#5c5e66] cursor-pointer backdrop-blur-sm'
                   }
                 `}
               >
                 {isFilled ? (
                   <>
-                    <span className="text-[9px] font-bold text-[#23a559]/90 uppercase tracking-widest leading-none">
+                    <span className="text-[8px] font-bold text-[#23a559]/90 uppercase tracking-widest leading-none">
                       {cell.category.tag}
                     </span>
-                    <span className="text-[11px] sm:text-xs font-bold text-[#f2f3f5] leading-tight text-center line-clamp-2 mt-0.5">
+                    <span className="text-[10px] sm:text-[11px] font-bold text-[#f2f3f5] leading-tight text-center line-clamp-2 mt-0.5">
                       {cell.playerName}
                     </span>
                   </>
                 ) : (
                   <>
-                    <CategoryIcon categoryId={cell.category.id} tag={cell.category.tag} size={42} sport={sport} />
-                    <span className="text-[8px] sm:text-[9px] font-semibold text-[#949ba4] uppercase tracking-widest leading-none">
+                    <CategoryIcon categoryId={cell.category.id} tag={cell.category.tag} size={30} sport={sport} />
+                    <span className="text-[7px] sm:text-[8px] font-semibold text-[#949ba4] uppercase tracking-widest leading-none">
                       {cell.category.tag}
                     </span>
-                    <span className="text-[10px] sm:text-[11px] font-extrabold text-[#e3e5e8] leading-tight text-center line-clamp-2">
+                    <span className="text-[9px] sm:text-[10px] font-extrabold text-[#f2f3f5] leading-tight text-center line-clamp-2">
                       {cell.category.label}
                     </span>
                   </>
@@ -101,7 +101,7 @@ export function CategoryGrid({
   );
 }
 
-const actionBox = 'flex flex-col items-center justify-center rounded-2xl bg-[#18191c] border-[3px] border-[#3f4147] shadow-[0_3px_0_#0c0d0f] shrink-0 w-[62px] h-[58px]';
+const actionBox = 'flex flex-col items-center justify-center rounded-xl bg-[#18191c] border-[2.5px] border-[#3f4147] shadow-[0_2px_0_#0c0d0f] shrink-0 w-[52px] h-[48px] sm:w-[56px] sm:h-[52px]';
 
 interface PlayerBarProps {
   playerName: string | undefined;
@@ -115,34 +115,46 @@ export function PlayerBar({ playerName, roundTime, score, onSkip, showPoints }: 
   const pct = (roundTime / 10) * 100;
 
   return (
-    <div className={`relative ${PANEL_W} h-[62px] mb-1`}>
-      {/* Timer — pinned left */}
-      <div className="absolute left-0 top-1/2 -translate-y-1/2">
-        <div className="relative w-11 h-11">
-          <svg className="w-full h-full -rotate-90" viewBox="0 0 44 44">
-            <circle cx="22" cy="22" r="18" fill="none" stroke="#2b2d31" strokeWidth="2.5" />
-            <circle
-              cx="22" cy="22" r="18" fill="none"
-              stroke={roundTime <= 3 ? '#ed4245' : '#23a559'}
-              strokeWidth="2.5"
-              strokeDasharray={`${2 * Math.PI * 18}`}
-              strokeDashoffset={`${2 * Math.PI * 18 * (1 - pct / 100)}`}
-              strokeLinecap="round"
-              className="transition-all duration-1000"
-            />
-          </svg>
-          <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-[#f2f3f5] font-mono">
-            {roundTime}
-          </span>
-        </div>
+    <div className={`relative ${PANEL_W} flex items-center gap-2 sm:gap-2.5 min-h-[48px]`}>
+      <div className="relative w-9 h-9 sm:w-10 sm:h-10 shrink-0">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 44 44">
+          <circle cx="22" cy="22" r="18" fill="none" stroke="#2b2d31" strokeWidth="2.5" />
+          <circle
+            cx="22" cy="22" r="18" fill="none"
+            stroke={roundTime <= 3 ? '#ed4245' : '#23a559'}
+            strokeWidth="2.5"
+            strokeDasharray={`${2 * Math.PI * 18}`}
+            strokeDashoffset={`${2 * Math.PI * 18 * (1 - pct / 100)}`}
+            strokeLinecap="round"
+            className="transition-all duration-1000"
+          />
+        </svg>
+        <span className="absolute inset-0 flex items-center justify-center text-xs sm:text-sm font-bold text-[#f2f3f5] font-mono">
+          {roundTime}
+        </span>
       </div>
 
-      {/* Skip + Score — pinned right */}
-      <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-2">
+      <div className="flex-1 min-w-0">
+        <AnimatePresence mode="wait">
+          <motion.span
+            key={playerName ?? 'pending'}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.2 }}
+            className="block min-w-0 truncate text-base sm:text-xl font-extrabold text-[#f0b232] text-left leading-normal"
+            style={{ filter: 'drop-shadow(0 0 5px rgba(240,178,50,0.55))' }}
+          >
+            {playerName ?? '\u00A0'}
+          </motion.span>
+        </AnimatePresence>
+      </div>
+
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
         <button onClick={onSkip} className={`${actionBox} hover:bg-[#232428] transition-colors cursor-pointer group`}>
-          <SkipForward className="w-4 h-4 text-[#949ba4] group-hover:text-[#dbdee1]" />
-          <span className="text-[8px] font-black text-[#949ba4] uppercase tracking-wider mt-0.5">Skip</span>
-          <span className="text-[7px] text-[#5c5e66] font-mono font-bold">SPACE</span>
+          <SkipForward className="w-3.5 h-3.5 text-[#949ba4] group-hover:text-[#dbdee1]" />
+          <span className="text-[7px] font-black text-[#949ba4] uppercase tracking-wider mt-0.5">Skip</span>
+          <span className="text-[6px] text-[#5c5e66] font-mono font-bold">SPACE</span>
         </button>
 
         <div className={`${actionBox} relative overflow-visible`}>
@@ -162,26 +174,9 @@ export function PlayerBar({ playerName, roundTime, score, onSkip, showPoints }: 
               )}
             </AnimatePresence>
           </div>
-          <span className="text-[8px] font-black text-[#949ba4] uppercase tracking-wider">Score</span>
-          <span className="text-base font-black text-[#f2f3f5] font-mono leading-none mt-0.5">{score}</span>
+          <span className="text-[7px] font-black text-[#949ba4] uppercase tracking-wider">Score</span>
+          <span className="text-sm font-black text-[#f2f3f5] font-mono leading-none mt-0.5">{score}</span>
         </div>
-      </div>
-
-      {/* Player name */}
-      <div className="absolute inset-0 flex flex-col justify-center pl-14 pr-[136px] pointer-events-none">
-        <AnimatePresence mode="wait">
-          <motion.span
-            key={playerName ?? 'pending'}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
-            className="inline-block min-w-0 max-w-full truncate text-xl sm:text-2xl font-extrabold text-[#f0b232] text-left leading-normal"
-            style={{ filter: 'drop-shadow(0 0 5px rgba(240,178,50,0.55))' }}
-          >
-            {playerName ?? '\u00A0'}
-          </motion.span>
-        </AnimatePresence>
       </div>
     </div>
   );
@@ -252,7 +247,7 @@ export function TopBar({ gameTimeLeft, totalGameTime, mode, sport, onClose, corr
         </div>
       )}
 
-      <div className="flex items-center justify-between px-5 py-3">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-2 sm:py-2.5">
         <div className="flex items-center gap-2.5">
           {totalGameTime > 0 && (
             <span className="font-mono text-sm font-medium text-[#b5bac1]">{formatTime(gameTimeLeft)}</span>
@@ -327,26 +322,29 @@ interface BoardProgressProps {
 
 export function BoardProgress({ filled, total, streak }: BoardProgressProps) {
   return (
-    <div className="flex flex-col items-center justify-center py-2 w-5 min-h-[148px]">
-      <span className="text-xs font-bold text-[#f0b232] mb-1 h-4 leading-4">
-        {streak >= 2 ? `+${streak}` : '\u00A0'}
-      </span>
-      {Array.from({ length: total }, (_, i) => (
-        <div
-          key={i}
-          className={`w-1.5 rounded-full transition-all duration-300 ${
-            i < filled ? 'bg-[#f0b232]' : 'bg-[#2b2d31]'
-          }`}
-          style={{ height: i < filled ? 22 : 14 }}
-        />
-      ))}
+    <div className="flex items-center justify-center gap-2 w-full mb-1.5 sm:mb-2">
+      <div className="flex items-center gap-1">
+        {Array.from({ length: total }, (_, i) => (
+          <div
+            key={i}
+            className={`rounded-full transition-all duration-300 ${
+              i < filled ? 'bg-[#f0b232] w-2 h-2' : 'bg-[#2b2d31] w-1.5 h-1.5'
+            }`}
+          />
+        ))}
+      </div>
+      {streak >= 2 && (
+        <span className="text-[10px] font-black text-[#f0b232] font-mono leading-none">
+          +{streak}
+        </span>
+      )}
     </div>
   );
 }
 
 export function GamePanel({ children }: { children: ReactNode }) {
   return (
-    <div className={`${PANEL_W} mx-auto rounded-[28px] bg-[#111214]/90 border-[3px] border-[#3f4147] backdrop-blur-md p-4 sm:p-5 shadow-[0_8px_0_#0c0d0f]`}>
+    <div className="w-full rounded-[22px] sm:rounded-[28px] bg-[#111214]/90 border-[2.5px] sm:border-[3px] border-[#3f4147] backdrop-blur-md p-2.5 sm:p-3.5 shadow-[0_6px_0_#0c0d0f]">
       {children}
     </div>
   );

@@ -1,4 +1,5 @@
 import type { Sport } from '../types';
+import { canPlaySfx, effectiveSfxVolume, getSettings } from './settings';
 
 let ctx: AudioContext | null = null;
 
@@ -24,6 +25,7 @@ function pickSource(sources: string[]): string {
 }
 
 function playSample(sources: string[], volume = 0.75) {
+  if (!canPlaySfx()) return;
   getCtx();
   const src = pickSource(sources);
   let audio = audioCache.get(src);
@@ -33,7 +35,7 @@ function playSample(sources: string[], volume = 0.75) {
     audioCache.set(src, audio);
   }
   const clip = audio.cloneNode() as HTMLAudioElement;
-  clip.volume = volume;
+  clip.volume = effectiveSfxVolume(volume);
   clip.play().catch(() => {});
 }
 
@@ -44,12 +46,15 @@ function tone(
   volume = 0.15,
   when = 0,
 ) {
+  if (!canPlaySfx()) return;
   const c = getCtx();
   const osc = c.createOscillator();
   const gain = c.createGain();
+  const vol = effectiveSfxVolume(volume);
+  if (vol <= 0) return;
   osc.type = type;
   osc.frequency.value = freq;
-  gain.gain.setValueAtTime(volume, c.currentTime + when);
+  gain.gain.setValueAtTime(vol, c.currentTime + when);
   gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + when + duration);
   osc.connect(gain);
   gain.connect(c.destination);
@@ -58,7 +63,10 @@ function tone(
 }
 
 function noise(duration: number, volume = 0.08, lowpass = 800) {
+  if (!canPlaySfx()) return;
   const c = getCtx();
+  const vol = effectiveSfxVolume(volume);
+  if (vol <= 0) return;
   const bufferSize = Math.floor(c.sampleRate * duration);
   const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
   const data = buffer.getChannelData(0);
@@ -66,7 +74,7 @@ function noise(duration: number, volume = 0.08, lowpass = 800) {
   const source = c.createBufferSource();
   source.buffer = buffer;
   const gain = c.createGain();
-  gain.gain.setValueAtTime(volume, c.currentTime);
+  gain.gain.setValueAtTime(vol, c.currentTime);
   gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
   const filter = c.createBiquadFilter();
   filter.type = 'lowpass';
@@ -79,8 +87,11 @@ function noise(duration: number, volume = 0.08, lowpass = 800) {
 
 /** Referee whistle — used for wrong answers in all sports */
 function playWhistle() {
+  if (!canPlaySfx()) return;
   const c = getCtx();
   const t = c.currentTime;
+  const volScale = effectiveSfxVolume(1);
+  if (volScale <= 0) return;
   const osc = c.createOscillator();
   const gain = c.createGain();
   osc.type = 'sine';
@@ -89,8 +100,8 @@ function playWhistle() {
   osc.frequency.setValueAtTime(3200, t + 0.18);
   osc.frequency.exponentialRampToValueAtTime(1900, t + 0.42);
   gain.gain.setValueAtTime(0.001, t);
-  gain.gain.linearRampToValueAtTime(0.22, t + 0.02);
-  gain.gain.setValueAtTime(0.18, t + 0.2);
+  gain.gain.linearRampToValueAtTime(0.22 * volScale, t + 0.02);
+  gain.gain.setValueAtTime(0.18 * volScale, t + 0.2);
   gain.gain.exponentialRampToValueAtTime(0.001, t + 0.48);
   osc.connect(gain);
   gain.connect(c.destination);
@@ -174,6 +185,7 @@ export function playStreakFire() {
 
 /** Soft clock tick for the last 3 seconds */
 export function playClockTick(secondsLeft = 3) {
+  if (!canPlaySfx() || !getSettings().clockTicks) return;
   const c = getCtx();
   const t = c.currentTime;
   // Higher / sharper as time runs out
@@ -183,10 +195,12 @@ export function playClockTick(secondsLeft = 3) {
   const tick = (freq: number, when: number, vol: number, dur: number) => {
     const osc = c.createOscillator();
     const gain = c.createGain();
+    const v = effectiveSfxVolume(vol);
+    if (v <= 0) return;
     osc.type = 'sine';
     osc.frequency.value = freq;
     gain.gain.setValueAtTime(0.001, when);
-    gain.gain.linearRampToValueAtTime(vol, when + 0.008);
+    gain.gain.linearRampToValueAtTime(v, when + 0.008);
     gain.gain.exponentialRampToValueAtTime(0.001, when + dur);
     osc.connect(gain);
     gain.connect(c.destination);
@@ -201,9 +215,12 @@ export function playClockTick(secondsLeft = 3) {
 
 /** Smooth match-end chime — soft descending bells, no harsh buzzer */
 export function playTimesUp() {
+  if (!canPlaySfx()) return;
   const c = getCtx();
   const t = c.currentTime;
   const notes = [660, 554, 440, 330];
+  const volScale = effectiveSfxVolume(1);
+  if (volScale <= 0) return;
 
   notes.forEach((freq, i) => {
     const when = t + i * 0.16;
@@ -213,7 +230,7 @@ export function playTimesUp() {
     osc.frequency.setValueAtTime(freq, when);
     osc.frequency.exponentialRampToValueAtTime(freq * 0.92, when + 0.45);
     gain.gain.setValueAtTime(0.001, when);
-    gain.gain.linearRampToValueAtTime(0.12 - i * 0.015, when + 0.04);
+    gain.gain.linearRampToValueAtTime((0.12 - i * 0.015) * volScale, when + 0.04);
     gain.gain.exponentialRampToValueAtTime(0.001, when + 0.55);
     osc.connect(gain);
     gain.connect(c.destination);
@@ -226,7 +243,7 @@ export function playTimesUp() {
     harm.type = 'triangle';
     harm.frequency.value = freq * 2;
     harmGain.gain.setValueAtTime(0.001, when);
-    harmGain.gain.linearRampToValueAtTime(0.035, when + 0.03);
+    harmGain.gain.linearRampToValueAtTime(0.035 * volScale, when + 0.03);
     harmGain.gain.exponentialRampToValueAtTime(0.001, when + 0.35);
     harm.connect(harmGain);
     harmGain.connect(c.destination);

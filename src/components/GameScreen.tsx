@@ -10,6 +10,7 @@ import type { Sport, GameMode, GameResult } from '../types';
 import type { CharacterId, PetId } from '../types/profile';
 import type { DuelMatchResult } from '../lib/duelTypes';
 import { Swords } from 'lucide-react';
+import { getSettings } from '../lib/settings';
 
 interface GameScreenProps {
   sport: Sport;
@@ -86,8 +87,10 @@ export function GameScreen({
     onHome();
   }
 
+  const showHints = getSettings().showHints;
+
   return (
-    <div className="min-h-svh flex flex-col bg-[#0a0a0b] relative overflow-hidden">
+    <div className="h-svh flex flex-col bg-[#0a0a0b] relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none">
         <span className="text-[200px] font-black text-white/[0.025] tracking-tighter">GIQ</span>
       </div>
@@ -102,7 +105,7 @@ export function GameScreen({
       />
 
       {mode === 'duel' && (
-        <div className="relative z-20 flex justify-center px-4 -mt-1 mb-1">
+        <div className="relative z-20 flex justify-center px-4 -mt-1 mb-0.5 shrink-0">
           <div className="inline-flex items-center gap-3 rounded-full border border-[#2b2d31]/80 bg-[#121316]/90 backdrop-blur-md px-3 py-1.5 text-xs">
             <Swords className="w-3.5 h-3.5 text-[#ed4245]" />
             <span className="font-bold text-[#f2f3f5]">{game.score}</span>
@@ -116,8 +119,9 @@ export function GameScreen({
         </div>
       )}
 
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-6 relative z-10">
-        <div className="relative w-full max-w-[540px]">
+      <main className="flex-1 min-h-0 flex flex-col items-center justify-center px-3 py-2 relative z-10 overflow-hidden">
+        {/* Width capped by viewport height so the 3×3 square grid never forces scroll */}
+        <div className="relative w-full max-w-[min(520px,calc(100svh-9.75rem))]">
           <GamePanel>
             <PlayerBar
               playerName={game.currentPlayer?.name}
@@ -127,8 +131,9 @@ export function GameScreen({
               showPoints={game.showPoints}
             />
 
-            <div className="relative flex items-center justify-center gap-3 mt-3">
-              <div className="relative w-full max-w-[540px]">
+            <div className="relative mt-2">
+              <BoardProgress filled={game.filledCount} total={9} streak={game.streak} />
+              <div className="relative w-full">
                 <BoardResetToast show={game.boardResetFlash} />
                 <CategoryGrid
                   cells={game.board}
@@ -141,15 +146,12 @@ export function GameScreen({
                   resetting={game.boardResetFlash}
                 />
               </div>
-              <div className="hidden sm:block shrink-0">
-                <BoardProgress filled={game.filledCount} total={9} streak={game.streak} />
-              </div>
             </div>
           </GamePanel>
         </div>
 
-        {game.phase === 'playing' && (
-          <p className="text-[10px] text-[#5c5e66] text-center mt-4 max-w-[540px]">
+        {game.phase === 'playing' && showHints && (
+          <p className="text-[10px] text-[#5c5e66] text-center mt-2 max-w-[520px] shrink-0 px-2">
             {mode === 'training'
               ? `1:00 sprint · ${game.roundsPlayed} rounds played · practice only — no rewards`
               : mode === 'duel'
