@@ -1,7 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="8" fill="#0a0f1a"/>
-  <rect x="4" y="4" width="10" height="10" rx="2" fill="#22c55e" opacity="0.9"/>
-  <rect x="18" y="4" width="10" height="10" rx="2" fill="#f97316" opacity="0.9"/>
-  <rect x="4" y="18" width="10" height="10" rx="2" fill="#f97316" opacity="0.6"/>
-  <rect x="18" y="18" width="10" height="10" rx="2" fill="#22c55e" opacity="0.6"/>
+  <!-- Dark tile matching app chrome -->
+  <rect width="32" height="32" rx="8" fill="#111214"/>
+  <rect x="1" y="1" width="30" height="30" rx="7" stroke="#23a559" stroke-width="1.5" opacity="0.85"/>
+
+  <!-- Soccer ball -->
+  <circle cx="16" cy="16" r="10.5" fill="#f2f3f5"/>
+  <circle cx="16" cy="16" r="10.5" fill="none" stroke="#2b2d31" stroke-width="0.75"/>
+
+  <!-- Center pentagon -->
+  <path
+    d="M16 10.2 L19.4 12.5 L18.2 16.4 L13.8 16.4 L12.6 12.5 Z"
+    fill="#18191c"
+  />
+
+  <!-- Surrounding panels (simplified for tiny sizes) -->
+  <path d="M16 10.2 L19.4 12.5 L21.6 9.2 C19.9 8.2 17.9 7.6 16 7.6 Z" fill="#18191c" opacity="0.92"/>
+  <path d="M19.4 12.5 L18.2 16.4 L22.1 17.6 L23.2 13.4 C22.4 12.7 20.9 12.4 19.4 12.5 Z" fill="#18191c" opacity="0.75"/>
+  <path d="M18.2 16.4 L13.8 16.4 L12.8 20.3 L16 22.4 L19.2 20.3 Z" fill="#18191c" opacity="0.92"/>
+  <path d="M13.8 16.4 L12.6 12.5 L8.8 13.4 C8.4 14.7 8.4 16.1 8.8 17.4 L12.8 20.3 Z" fill="#18191c" opacity="0.75"/>
+  <path d="M12.6 12.5 L16 10.2 L14.4 7.6 C12.5 8.1 10.7 9.1 9.4 10.6 L12.6 12.5 Z" fill="#18191c" opacity="0.85"/>
+
+  <!-- Green accent spark (trivia / Sportivia mark) -->
+  <circle cx="24.5" cy="7.5" r="2.6" fill="#23a559"/>
+  <path d="M24.5 6.2 L24.9 7.2 L26 7.3 L25.1 8 L25.4 9.1 L24.5 8.5 L23.6 9.1 L23.9 8 L23 7.3 L24.1 7.2 Z" fill="#f2f3f5"/>
 </svg>
