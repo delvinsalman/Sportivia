@@ -27,6 +27,8 @@ export interface BoardCell {
   category: Category;
   filled: boolean;
   playerName: string | null;
+  /** Set when filled — used for soccer face lookup (and later other sports). */
+  playerId: string | null;
 }
 
 export interface GameStats {

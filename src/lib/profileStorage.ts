@@ -218,3 +218,25 @@ export function purchasePet(id: PetId): { ok: boolean; profile: PlayerProfile; e
   saveProfile(profile);
   return { ok: true, profile };
 }
+
+export async function redeemPromoCode(raw: string): Promise<{
+  ok: boolean;
+  profile: PlayerProfile;
+  error?: string;
+  coinsGranted?: number;
+}> {
+  const { lookupPromo, markPromoRedeemed } = await import('./promoCodes');
+  const result = await lookupPromo(raw);
+  const profile = loadProfile();
+
+  if (!result.ok) {
+    if (result.error === 'empty') return { ok: false, profile, error: 'Enter a code' };
+    if (result.error === 'used') return { ok: false, profile, error: 'Code already used' };
+    return { ok: false, profile, error: 'Invalid code' };
+  }
+
+  profile.coins += result.reward.coins;
+  markPromoRedeemed(result.reward.id);
+  saveProfile(profile);
+  return { ok: true, profile, coinsGranted: result.reward.coins };
+}

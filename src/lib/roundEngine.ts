@@ -27,6 +27,7 @@ export function generateBoard(sport: Sport, seedKey: string): BoardCell[] {
     category: toBoardCategory(cat),
     filled: false,
     playerName: null,
+    playerId: null,
   }));
 }
 

@@ -6,6 +6,7 @@ import type { Feedback } from '../hooks/useRoundGame';
 import { RESET_EVERY } from '../lib/scoring';
 import { SportBall } from './SportBall';
 import { CategoryIcon } from './CategoryIcon';
+import { PlayerFace } from './PlayerFace';
 
 const PANEL_W = 'w-full';
 
@@ -77,6 +78,15 @@ export function CategoryGrid({
                     <span className="text-[8px] font-bold text-[#23a559]/90 uppercase tracking-widest leading-none">
                       {cell.category.tag}
                     </span>
+                    {cell.playerId && cell.playerName ? (
+                      <PlayerFace
+                        sport={sport}
+                        playerId={cell.playerId}
+                        playerName={cell.playerName}
+                        size={34}
+                        className="my-0.5 sm:my-1"
+                      />
+                    ) : null}
                     <span className="text-[10px] sm:text-[11px] font-bold text-[#f2f3f5] leading-tight text-center line-clamp-2 mt-0.5">
                       {cell.playerName}
                     </span>

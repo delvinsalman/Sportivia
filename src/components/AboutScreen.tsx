@@ -9,6 +9,7 @@ import { SportBackground } from './SportBackground';
 import { SportBall } from './SportBall';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { CategoryIcon } from './CategoryIcon';
+import { PlayerFace } from './PlayerFace';
 import { SPORT_ACCENT, SPORT_LABEL, SPORT_PODIUM_ACCENT, SPORTS } from '../lib/sportTheme';
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 
@@ -25,6 +26,8 @@ type DemoCell = {
   label: string;
   filled?: boolean;
   playerName?: string;
+  /** Soccer roster id — shows face in filled demo cells */
+  playerId?: string;
 };
 
 const BOARD_DEMOS: Record<Sport, { player: string; cells: DemoCell[] }> = {
@@ -36,7 +39,7 @@ const BOARD_DEMOS: Record<Sport, { player: string; cells: DemoCell[] }> = {
       { id: 'trophy-ucl', tag: 'WINNER', label: 'UCL' },
       { id: 'pos-fwd', tag: 'POSITION', label: 'FORWARD' },
       { id: 'league-pl', tag: 'LEAGUE', label: 'PREMIER LEAGUE' },
-      { id: 'nat-argentina', tag: 'NATIONALITY', label: 'ARGENTINA', filled: true, playerName: 'Messi' },
+      { id: 'nat-argentina', tag: 'NATIONALITY', label: 'ARGENTINA', filled: true, playerName: 'Messi', playerId: 'messi' },
       { id: 'club-barca', tag: 'PLAYED IN', label: 'BARCELONA' },
       { id: 'trophy-wc', tag: 'WINNER', label: 'WORLD CUP' },
       { id: 'decade-10s', tag: 'ERA', label: '2010s' },
@@ -45,7 +48,7 @@ const BOARD_DEMOS: Record<Sport, { player: string; cells: DemoCell[] }> = {
   basketball: {
     player: 'LeBron James',
     cells: [
-      { id: 'team-lakers', tag: 'TEAM', label: 'LAKERS', filled: true, playerName: 'LeBron' },
+      { id: 'team-lakers', tag: 'TEAM', label: 'LAKERS', filled: true, playerName: 'LeBron', playerId: 'lebron' },
       { id: 'team-celtics', tag: 'TEAM', label: 'CELTICS' },
       { id: 'pos-guard', tag: 'POSITION', label: 'GUARD' },
       { id: 'pos-forward', tag: 'POSITION', label: 'FORWARD' },
@@ -59,7 +62,7 @@ const BOARD_DEMOS: Record<Sport, { player: string; cells: DemoCell[] }> = {
   baseball: {
     player: 'Aaron Judge',
     cells: [
-      { id: 'team-yankees', tag: 'TEAM', label: 'YANKEES', filled: true, playerName: 'Judge' },
+      { id: 'team-yankees', tag: 'TEAM', label: 'YANKEES', filled: true, playerName: 'Judge', playerId: 'judge' },
       { id: 'team-redsox', tag: 'TEAM', label: 'RED SOX' },
       { id: 'pos-outfield', tag: 'POSITION', label: 'OUTFIELD' },
       { id: 'league-al', tag: 'LEAGUE', label: 'AL' },
@@ -149,6 +152,23 @@ function MiniBoard({
                 >
                   {cell.tag.split(' ')[0]}
                 </span>
+                {cell.playerId && cell.playerName ? (
+                  <PlayerFace
+                    sport={demoSport}
+                    playerId={cell.playerId}
+                    playerName={
+                      cell.playerName === 'Messi'
+                        ? 'Lionel Messi'
+                        : cell.playerName === 'LeBron'
+                          ? 'LeBron James'
+                          : cell.playerName === 'Judge'
+                            ? 'Aaron Judge'
+                            : cell.playerName
+                    }
+                    size={18}
+                    className="my-0.5"
+                  />
+                ) : null}
                 <span className="text-[8px] font-bold text-[#f2f3f5] text-center leading-tight">
                   {cell.playerName}
                 </span>
@@ -374,7 +394,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             </h1>
             <p className="text-base sm:text-lg text-[#b5bac1] leading-relaxed max-w-md mb-6">
               Match stars to categories on a live 3×3 board. Soccer, NBA, MLB —
-              no login, just knowledge and nerves.
+              with more coming soon.
             </p>
             <div className="flex flex-wrap gap-2">
               {SPORTS.map(s => (
@@ -440,7 +460,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
               The board
             </p>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#f2f3f5]">Every sport, same heat</h2>
-            <p className="text-sm text-[#949ba4] mt-1 max-w-lg">
+            <p className="text-sm text-[#949ba4] mt-1 whitespace-nowrap">
               Soccer, NBA, and MLB — same rules, different boards. Tap the fit before time runs out.
             </p>
           </div>

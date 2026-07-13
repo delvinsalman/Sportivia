@@ -12,6 +12,7 @@ import {
   playCorrect, playWrong, playPick, playSkip, playBoardReset,
   playCountdownTick, playGo, playStreakFire, playTimesUp, playClockTick,
 } from '../lib/sounds';
+import { prefetchPlayerFace } from '../lib/playerFaces';
 
 export type Feedback = 'correct' | 'wrong' | null;
 export type GamePhase = 'countdown' | 'playing' | 'over';
@@ -110,6 +111,7 @@ export function useRoundGame(sport: Sport, mode: GameMode, options?: RoundGameOp
       return false;
     }
     setCurrentPlayer(player);
+    prefetchPlayerFace(sport, player.id, player.name);
     setRoundTime(ROUND_TIME);
     locked.current = false;
     return true;
@@ -282,6 +284,7 @@ export function useRoundGame(sport: Sport, mode: GameMode, options?: RoundGameOp
         ...nextBoard[cellIndex],
         filled: true,
         playerName: currentPlayer.name,
+        playerId: currentPlayer.id,
       };
       setBoard(nextBoard);
       boardRef.current = nextBoard;

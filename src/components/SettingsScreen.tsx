@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import {
   ArrowLeft,
   Volume2,
@@ -12,6 +12,7 @@ import {
   MessageSquare,
   Timer,
   RotateCcw,
+  Ticket,
 } from 'lucide-react';
 import type { Sport } from '../types';
 import { SportBackground } from './SportBackground';
@@ -19,10 +20,12 @@ import { SportBall } from './SportBall';
 import { useSettings } from '../hooks/useSettings';
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 import { SPORT_ACCENT } from '../lib/sportTheme';
+import { redeemPromoCode } from '../lib/profileStorage';
 
 interface SettingsScreenProps {
   sport: Sport;
   onBack: () => void;
+  onPromoRedeemed?: () => void;
 }
 
 function Toggle({
@@ -125,6 +128,7 @@ function SettingRow({
 }
 
 function VolumeSlider({
+  icon: Icon,
   value,
   accent,
   disabled,
@@ -132,6 +136,7 @@ function VolumeSlider({
   label,
   last,
 }: {
+  icon: typeof Volume2;
   value: number;
   accent: string;
   disabled?: boolean;
@@ -142,15 +147,16 @@ function VolumeSlider({
   const pct = Math.round(value * 100);
   return (
     <div
-      className={`px-3.5 pb-2.5 -mt-0.5 ${!last ? 'border-b border-[#2b2d31]' : ''} ${
-        disabled ? 'opacity-40 pointer-events-none' : ''
-      }`}
+      className={`flex items-center gap-2.5 sm:gap-3 px-2.5 sm:px-3.5 py-2.5 sm:py-3 w-full ${
+        !last ? 'border-b border-[#2b2d31]' : ''
+      } ${disabled ? 'opacity-40 pointer-events-none' : ''}`}
     >
-      <div className="ml-11">
-        <div className="flex items-center justify-between mb-1.5">
-          <span className="text-[9px] font-black uppercase tracking-[0.14em] text-[#5c5e66]">
-            {label}
-          </span>
+      <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#232428] border-2 border-[#3f4147] shrink-0">
+        <Icon className="w-3.5 h-3.5 text-[#949ba4]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-sm font-black text-[#f2f3f5] leading-none">{label}</span>
           <span className="text-[10px] font-black font-mono text-[#b5bac1] tabular-nums">{pct}%</span>
         </div>
         <div className="relative h-1.5 rounded-full bg-[#2b2d31] border border-[#3f4147] overflow-hidden">
@@ -186,14 +192,40 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-export function SettingsScreen({ sport, onBack }: SettingsScreenProps) {
+export function SettingsScreen({ sport, onBack, onPromoRedeemed }: SettingsScreenProps) {
   const { settings, update, reset } = useSettings();
   const accent = SPORT_ACCENT[sport];
   const audioLocked = settings.muted;
+  const [promoDraft, setPromoDraft] = useState('');
+  const [promoBusy, setPromoBusy] = useState(false);
+  const [promoMsg, setPromoMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   function back() {
     playMenuBack();
     onBack();
+  }
+
+  async function submitPromo() {
+    if (promoBusy) return;
+    setPromoBusy(true);
+    setPromoMsg(null);
+    try {
+      const result = await redeemPromoCode(promoDraft);
+      if (!result.ok) {
+        playMenuClick();
+        setPromoMsg({ ok: false, text: result.error ?? 'Invalid code' });
+        return;
+      }
+      playMenuConfirm();
+      setPromoDraft('');
+      setPromoMsg({
+        ok: true,
+        text: `+${(result.coinsGranted ?? 0).toLocaleString()} coins unlocked`,
+      });
+      onPromoRedeemed?.();
+    } finally {
+      setPromoBusy(false);
+    }
   }
 
   return (
@@ -255,6 +287,7 @@ export function SettingsScreen({ sport, onBack }: SettingsScreenProps) {
               />
             </SettingRow>
             <VolumeSlider
+              icon={Volume2}
               label="Music volume"
               value={settings.musicVolume}
               accent={accent}
@@ -276,6 +309,7 @@ export function SettingsScreen({ sport, onBack }: SettingsScreenProps) {
               />
             </SettingRow>
             <VolumeSlider
+              icon={Volume2}
               label="Effects volume"
               value={settings.sfxVolume}
               accent={accent}
@@ -353,6 +387,61 @@ export function SettingsScreen({ sport, onBack }: SettingsScreenProps) {
                 onToggle={() => update({ showHints: !settings.showHints })}
               />
             </SettingRow>
+          </Section>
+
+          <Section title="Promo">
+            <div className="px-2.5 sm:px-3.5 py-3 space-y-2.5">
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-[#232428] border-2 border-[#3f4147] shrink-0">
+                  <Ticket className="w-3.5 h-3.5 text-[#949ba4]" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-black text-[#f2f3f5] leading-none">Promo code</p>
+                  <p className="text-[10px] font-semibold text-[#949ba4] mt-1 leading-snug">
+                    Special unlocks · one use each
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  value={promoDraft}
+                  onChange={e => {
+                    setPromoDraft(e.target.value);
+                    setPromoMsg(null);
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') void submitPromo();
+                  }}
+                  placeholder="Enter code"
+                  autoCapitalize="characters"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-[#0c0d0f] border-[2.5px] border-[#3f4147] text-sm font-black text-[#f2f3f5] placeholder:text-[#5c5e66] outline-none focus:border-[#5c5e66] font-mono tracking-wide"
+                />
+                <button
+                  type="button"
+                  disabled={promoBusy || !promoDraft.trim()}
+                  onClick={() => void submitPromo()}
+                  className="shrink-0 px-3.5 py-2.5 rounded-xl text-xs font-black border-[2.5px] border-white/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                  style={{
+                    background: accent,
+                    color: accent === '#f4f4f5' || accent === '#949ba4' ? '#18191c' : '#fff',
+                    boxShadow: `0 3px 0 ${accent}55`,
+                  }}
+                >
+                  Redeem
+                </button>
+              </div>
+              {promoMsg && (
+                <p
+                  className={`text-[11px] font-bold ${
+                    promoMsg.ok ? 'text-[#23a559]' : 'text-[#ed4245]'
+                  }`}
+                >
+                  {promoMsg.text}
+                </p>
+              )}
+            </div>
           </Section>
 
           <button

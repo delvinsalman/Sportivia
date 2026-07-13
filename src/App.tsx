@@ -160,6 +160,7 @@ export default function App() {
             key="settings"
             sport={sport}
             onBack={() => setScreen('home')}
+            onPromoRedeemed={refreshProfile}
           />
         )}
 

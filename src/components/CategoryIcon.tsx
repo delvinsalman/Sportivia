@@ -160,10 +160,10 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'pos-center': { type: 'position', colors: ['#06b6d4'], initials: 'C' },
   'champ-3plus': { type: 'trophy', colors: ['#ffd700'], awardVariant: 'championship' },
   'champ-1plus': { type: 'trophy', colors: ['#c0c0c0'], awardVariant: 'championship' },
-  'mvp': { type: 'award', awardVariant: 'mvp' },
+  'mvp': { type: 'trophy', logoUrl: '/icons/trophies/nba-mvp.png', logoScale: 1.25 },
   'allstar': { type: 'allstar', allStarVariant: 'nba' },
   'olympic': { type: 'award', awardVariant: 'olympic' },
-  'scoring': { type: 'award', awardVariant: 'scoring' },
+  'scoring': { type: 'trophy', logoUrl: '/icons/trophies/nba-scoring.png', logoScale: 1.15 },
   'college-duke': { type: 'college', jerseyPattern: 'solid', colors: ['#003087'], accent: '#ffffff', logoUrl: '/icons/teams/college/duke.png' },
   'college-kentucky': { type: 'college', jerseyPattern: 'solid', colors: ['#0033a0'], accent: '#ffffff', logoUrl: '/icons/teams/college/kentucky.png' },
   'draft-10s': { type: 'era', initials: '10' },
@@ -204,12 +204,12 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   // Baseball leagues & awards
   'league-al': { type: 'league', colors: ['#041e42', '#c8102e'], initials: 'AL' },
   'league-nl': { type: 'league', colors: ['#1e3a8a', '#dc2626'], initials: 'NL' },
-  'award-mvp': { type: 'award', awardVariant: 'mvp' },
+  'award-mvp': { type: 'trophy', logoUrl: '/icons/trophies/mlb-mvp.png', logoScale: 1.2 },
   'award-cy-young': { type: 'award', initials: 'CY' },
-  'award-world-series': { type: 'trophy', colors: ['#ffd700'] },
+  'award-world-series': { type: 'trophy', logoUrl: '/icons/trophies/mlb-world-series.png', logoScale: 1.2 },
   'award-allstar': { type: 'allstar', allStarVariant: 'mlb' },
-  'award-hof': { type: 'trophy', colors: ['#c0c0c0'] },
-  'award-gold-glove': { type: 'trophy', colors: ['#d4af37'] },
+  'award-hof': { type: 'trophy', logoUrl: '/icons/trophies/mlb-hof.png', logoScale: 1.2 },
+  'award-gold-glove': { type: 'trophy', logoUrl: '/icons/trophies/mlb-gold-glove.png', logoScale: 1.2 },
   'batting-title': { type: 'award', initials: 'AVG' },
   'decade-80s': { type: 'era', initials: '80' },
 };
@@ -232,24 +232,19 @@ function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMet
 function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
   const code = meta.flagCode;
 
-  // Canada: circular object-cover crops to just the maple leaf — draw the full flag.
   if (code === 'ca') {
     return (
       <div
-        className="rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 flex"
+        className="rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 bg-[#121316]"
         style={{ width: size, height: size }}
-        aria-hidden
       >
-        <div className="h-full" style={{ width: '25%', background: '#ff0000' }} />
-        <div className="h-full flex-1 bg-white flex items-center justify-center relative">
-          <svg viewBox="0 0 30 30" className="w-[72%] h-[72%]" aria-hidden>
-            <path
-              fill="#ff0000"
-              d="M14.9 2.2c.2 1.6.8 2.9 1.6 3.7.3-1.2 1.1-2.2 2.1-2.8.2 1.5-.1 2.9-.8 3.9 1.1-.5 2.4-.5 3.5.1-.4 1.4-1.4 2.4-2.6 2.9 1.3.2 2.5.9 3.2 1.9-.9 1.1-2.3 1.6-3.6 1.5.9.8 1.5 1.9 1.6 3.1-1.4-.2-2.6-.9-3.3-1.9.1 1.5-.3 3-1.2 4.1-.2-2.1-.9-3.5-1.7-4.4-.8.9-1.5 2.3-1.7 4.4-.9-1.1-1.3-2.6-1.2-4.1-.7 1-1.9 1.7-3.3 1.9.1-1.2.7-2.3 1.6-3.1-1.3.1-2.7-.4-3.6-1.5.7-1 1.9-1.7 3.2-1.9-1.2-.5-2.2-1.5-2.6-2.9 1.1-.6 2.4-.6 3.5-.1-.7-1-1-2.4-.8-3.9 1 .6 1.8 1.6 2.1 2.8.8-.8 1.4-2.1 1.6-3.7zM14.9 20.4v7.4h1.4v-7.4h-1.4z"
-            />
-          </svg>
-        </div>
-        <div className="h-full" style={{ width: '25%', background: '#ff0000' }} />
+        <img
+          src="/icons/flags/canada.svg"
+          alt=""
+          draggable={false}
+          className="w-full h-full object-cover select-none"
+          loading="lazy"
+        />
       </div>
     );
   }
