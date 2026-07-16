@@ -1,3 +1,5 @@
+import { assetUrl } from '../lib/assetUrl';
+
 const ALL_STAR_LOGOS = {
   nba: '/icons/nba-all-star-2021.png',
   mlb: '/icons/mlb-all-star-2021.png',
@@ -10,7 +12,7 @@ export function AllStarIcon({ variant = 'nba', size = 36 }: { variant?: 'nba' | 
       style={{ width: size, height: size }}
     >
       <img
-        src={ALL_STAR_LOGOS[variant]}
+        src={assetUrl(ALL_STAR_LOGOS[variant])}
         alt=""
         draggable={false}
         className="select-none object-contain pointer-events-none"

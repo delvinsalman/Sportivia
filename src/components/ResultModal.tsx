@@ -8,11 +8,13 @@ import { CharacterPodium } from './3d/CharacterPodium';
 import { SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { getCharacterDef, getPetDef } from '../types/profile';
 import type { CharacterId, PetId } from '../types/profile';
+import type { CreativeLoadout } from '../types/creativeCharacter';
 
 interface ResultModalProps {
   result: GameResult;
   characterId: CharacterId;
   petId?: PetId | null;
+  creativeLoadout?: CreativeLoadout;
   onPlayAgain: () => void;
   onHome: () => void;
   waitingForOpponent?: boolean;
@@ -29,6 +31,7 @@ export function ResultModal({
   result,
   characterId,
   petId,
+  creativeLoadout,
   onPlayAgain,
   onHome,
   waitingForOpponent = false,
@@ -108,6 +111,10 @@ export function ResultModal({
                 hero
                 height={340}
                 className="w-full"
+                sport={result.sport}
+                {...(characterId === 'creative' && creativeLoadout
+                  ? { creativeLoadout }
+                  : {})}
               />
             </div>
             {petId && pet && (

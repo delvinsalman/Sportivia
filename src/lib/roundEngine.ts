@@ -101,6 +101,7 @@ export function generateShareText(
   boardFilled: number,
   date: string,
 ): string {
-  const emoji = sport === 'soccer' ? '⚽' : sport === 'basketball' ? '🏀' : '⚾';
+  const emoji =
+    sport === 'soccer' ? '⚽' : sport === 'basketball' ? '🏀' : sport === 'football' ? '🏈' : '⚾';
   return `${emoji} Sportivia ${score} pts · ${correct} correct · ${boardFilled}/9 filled\n${mode === 'daily' ? `Daily ${date}` : 'Training'} — beat my score!`;
 }

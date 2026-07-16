@@ -5,6 +5,7 @@ import { RESET_EVERY, COUNTDOWN_STEPS, STEP_MS, READY_MS, wrongPenalty, BASE_POI
 import { generateBoard, pickNextPlayer, validateAnswer, pointsForDifficulty, streakMultiplier } from '../lib/roundEngine';
 import { getTodayKey, hashString } from '../lib/seed';
 import { recordGameWithRewards } from '../lib/profileStorage';
+import { collectPlayerFace } from '../lib/seasonMeta';
 import { isRunComplete } from '../lib/progression';
 import type { GameEndReason } from '../types';
 import type { PlayerUnion } from '../data/categories';
@@ -288,6 +289,7 @@ export function useRoundGame(sport: Sport, mode: GameMode, options?: RoundGameOp
       };
       setBoard(nextBoard);
       boardRef.current = nextBoard;
+      collectPlayerFace(sport, currentPlayer.id, currentPlayer.name);
       scheduleNext(450, nextBoard);
     } else {
       setFeedback('wrong');

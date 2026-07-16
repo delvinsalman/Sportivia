@@ -1,5 +1,6 @@
 import type { CSSProperties } from 'react';
 import type { Sport } from '../types';
+import { assetUrl } from '../lib/assetUrl';
 
 interface BallImageProps {
   src: string;
@@ -45,7 +46,7 @@ interface SoccerBallProps {
 export function SoccerBall({ size = 40, className = '', style }: SoccerBallProps) {
   return (
     <BallImage
-      src="/soccer-ball.svg"
+      src={assetUrl('/soccer-ball.svg')}
       size={size}
       className={className}
       style={style}
@@ -63,7 +64,7 @@ interface BasketballBallProps {
 export function BasketballBall({ size = 40, className = '', style }: BasketballBallProps) {
   return (
     <BallImage
-      src="/basketball-ball.png"
+      src={assetUrl('/basketball-ball.png')}
       size={size}
       className={className}
       style={style}
@@ -75,7 +76,7 @@ export function BasketballBall({ size = 40, className = '', style }: BasketballB
 export function BaseballBall({ size = 40, className = '', style }: BasketballBallProps) {
   return (
     <BallImage
-      src="/baseball-ball.png"
+      src={assetUrl('/baseball-ball.png')}
       size={size}
       className={className}
       style={style}
@@ -94,7 +95,7 @@ interface SvgBallProps {
 export function FootballBall({ size = 40, className = '', style }: SvgBallProps) {
   return (
     <BallImage
-      src="/football-ball.png"
+      src={assetUrl('/football-ball.png')}
       size={size}
       className={className}
       style={style}
@@ -107,7 +108,7 @@ export function FootballBall({ size = 40, className = '', style }: SvgBallProps)
 export function HockeyPuck({ size = 40, className = '', style }: SvgBallProps) {
   return (
     <BallImage
-      src="/hockey-icon.png"
+      src={assetUrl('/hockey-icon.png')}
       size={size}
       className={className}
       style={style}
@@ -119,5 +120,6 @@ export function HockeyPuck({ size = 40, className = '', style }: SvgBallProps) {
 export function SportBall({ sport, size = 40, className = '' }: { sport: Sport; size?: number; className?: string }) {
   if (sport === 'soccer') return <SoccerBall size={size} className={className} />;
   if (sport === 'basketball') return <BasketballBall size={size} className={className} />;
+  if (sport === 'football') return <FootballBall size={size} className={className} />;
   return <BaseballBall size={size} className={className} />;
 }

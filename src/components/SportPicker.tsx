@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { Sport } from '../types';
-import { FootballBall, HockeyPuck, SportBall } from './SportBall';
+import { HockeyPuck, SportBall } from './SportBall';
 import {
   COMING_SOON_ACCENT,
   COMING_SOON_LABEL,
@@ -41,7 +41,7 @@ function ComingSoonSportButton({ sport, isOpen, onToggle, rail }: ComingSoonSpor
         className="flex items-center gap-2.5 sm:gap-3 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-2xl border-[3px] border-[#2b2d31] opacity-40"
       >
         <span className="grayscale shrink-0">
-          {sport === 'football' ? <FootballBall size={28} /> : <HockeyPuck size={28} />}
+          <HockeyPuck size={28} />
         </span>
         <div className="min-w-0 flex flex-col gap-0.5">
           <span className="text-[11px] sm:text-sm font-black uppercase tracking-wide text-[#5c5e66] leading-none">
@@ -98,7 +98,7 @@ function ComingSoonSportButton({ sport, isOpen, onToggle, rail }: ComingSoonSpor
         )}
       </AnimatePresence>
       <span className="flex items-center justify-center shrink-0 grayscale">
-        {sport === 'football' ? <FootballBall size={22} /> : <HockeyPuck size={22} />}
+        <HockeyPuck size={22} />
       </span>
     </button>
   );

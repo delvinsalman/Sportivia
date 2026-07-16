@@ -8,6 +8,7 @@ import { StoreScreen } from './components/StoreScreen';
 import { LobbyScreen } from './components/LobbyScreen';
 import { AboutScreen } from './components/AboutScreen';
 import { SettingsScreen } from './components/SettingsScreen';
+import { CareerScreen } from './components/CareerScreen';
 import {
   loadProfile,
   equipCharacter,
@@ -16,15 +17,17 @@ import {
   purchaseCharacter,
   purchasePet,
   updatePlayerName,
+  saveCreativeLoadout,
 } from './lib/profileStorage';
 import type { PlayerProfile } from './types/profile';
 import type { CharacterId, PetId } from './types/profile';
+import type { CreativeLoadout } from './types/creativeCharacter';
 import { useDuel } from './hooks/useDuel';
 import { useAmbientMusic } from './hooks/useAmbientMusic';
 import { useOnlineCount } from './hooks/useOnlineCount';
 import { useSettings } from './hooks/useSettings';
 
-type Screen = 'home' | 'about' | 'settings' | 'store' | 'lobby' | 'intro' | 'game';
+type Screen = 'home' | 'about' | 'settings' | 'store' | 'career' | 'lobby' | 'intro' | 'game';
 
 const modeLabels: Record<GameMode, string> = {
   training: 'TRAINING',
@@ -54,7 +57,7 @@ export default function App() {
   useAmbientMusic(screen);
 
   useEffect(() => {
-    if (screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings') {
+    if (screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings' || screen === 'career') {
       setProfile(loadProfile());
     }
   }, [screen]);
@@ -133,6 +136,10 @@ export default function App() {
     setProfile(unequipPet());
   }
 
+  function handleSaveCreativeLoadout(loadout: CreativeLoadout) {
+    setProfile(saveCreativeLoadout(loadout));
+  }
+
   function handleSaveName(name: string) {
     setProfile(updatePlayerName(name));
   }
@@ -148,6 +155,7 @@ export default function App() {
             onStart={handleStart}
             profile={profile}
             onOpenStore={() => setScreen('store')}
+            onOpenCareer={() => setScreen('career')}
             onOpenAbout={() => setScreen('about')}
             onOpenSettings={() => setScreen('settings')}
             onSaveName={handleSaveName}
@@ -185,6 +193,17 @@ export default function App() {
             onPurchasePet={handlePurchasePet}
             onEquipPet={handleEquipPet}
             onUnequipPet={handleUnequipPet}
+            onSaveCreativeLoadout={handleSaveCreativeLoadout}
+          />
+        )}
+
+        {screen === 'career' && (
+          <CareerScreen
+            key="career"
+            sport={sport}
+            profile={profile}
+            onBack={() => setScreen('home')}
+            onSportChange={setSport}
           />
         )}
 
@@ -223,6 +242,7 @@ export default function App() {
             mode={mode}
             equippedCharacter={profile.equippedCharacter}
             equippedPet={profile.equippedPet}
+            creativeLoadout={profile.creativeLoadout}
             seedKey={mode === 'duel' ? duelSeed ?? undefined : undefined}
             opponentName={duel.opponent?.name}
             opponentScore={duel.opponentScore}

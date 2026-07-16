@@ -1,7 +1,9 @@
+import { assetUrl } from '../lib/assetUrl';
+
 export function AnimatedGlobeIcon({ size = 36 }: { size?: number }) {
   return (
     <img
-      src="/icons/earth-globe.webp"
+      src={assetUrl('/icons/earth-globe.webp')}
       alt=""
       width={size}
       height={size}

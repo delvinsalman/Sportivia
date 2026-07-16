@@ -47,15 +47,23 @@ function mergeSportStats(s?: Partial<GameStats>): GameStats {
 export function loadStats(): PlayerStats {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { soccer: defaultStats(), basketball: defaultStats(), baseball: defaultStats() };
+    if (!raw) {
+      return {
+        soccer: defaultStats(),
+        basketball: defaultStats(),
+        baseball: defaultStats(),
+        football: defaultStats(),
+      };
+    }
     const parsed = JSON.parse(raw) as PlayerStats;
     const next = {
       soccer: mergeSportStats(parsed.soccer),
       basketball: mergeSportStats(parsed.basketball),
       baseball: mergeSportStats(parsed.baseball),
+      football: mergeSportStats(parsed.football),
     };
     // Persist UTC→local date repairs so Record stays correct after reload
-    const changed = (['soccer', 'basketball', 'baseball'] as Sport[]).some(sp => {
+    const changed = (['soccer', 'basketball', 'baseball', 'football'] as Sport[]).some(sp => {
       const before = JSON.stringify(parsed[sp]?.dailyCompleted ?? []);
       const after = JSON.stringify(next[sp].dailyCompleted);
       return before !== after;
@@ -63,7 +71,12 @@ export function loadStats(): PlayerStats {
     if (changed) saveStats(next);
     return next;
   } catch {
-    return { soccer: defaultStats(), basketball: defaultStats(), baseball: defaultStats() };
+    return {
+      soccer: defaultStats(),
+      basketball: defaultStats(),
+      baseball: defaultStats(),
+      football: defaultStats(),
+    };
   }
 }
 
@@ -100,5 +113,6 @@ export function recordGameResult(sport: Sport, result: GameResult): PlayerStats 
     soccer: { ...all.soccer, dailyCompleted: [...all.soccer.dailyCompleted] },
     basketball: { ...all.basketball, dailyCompleted: [...all.basketball.dailyCompleted] },
     baseball: { ...all.baseball, dailyCompleted: [...all.baseball.dailyCompleted] },
+    football: { ...all.football, dailyCompleted: [...all.football.dailyCompleted] },
   };
 }

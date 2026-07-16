@@ -1,4 +1,6 @@
-export type JerseySport = 'soccer' | 'basketball' | 'baseball';
+import { assetUrl } from '../lib/assetUrl';
+
+export type JerseySport = 'soccer' | 'basketball' | 'baseball' | 'football';
 export type JerseyPattern = 'solid' | 'vertical' | 'horizontal' | 'pinstripes' | 'hoops' | 'split';
 
 export interface TeamJerseyMeta {
@@ -13,12 +15,20 @@ export interface TeamJerseyMeta {
 const LOGO_SIZE_RATIO = 0.3;
 const SOCCER_LOGO_SIZE_RATIO = 0.28;
 const BASKETBALL_LOGO_SIZE_RATIO = 0.28;
+const FOOTBALL_LOGO_SIZE_RATIO = 0.3;
 
 /** Detailed basketball tank — viewBox 0 0 200 250 */
 const BASKETBALL_KIT_BODY = `M 70 40 L 85 40 Q 100 68 115 40 L 130 40 Q 122 75 145 95 L 140 220 L 60 220 L 55 95 Q 78 75 70 40 Z`;
 
 const BASKETBALL_VIEW_W = 200;
 const BASKETBALL_VIEW_H = 250;
+
+/** NFL kit — viewBox 0 0 400 500 */
+const NFL_VIEW_W = 400;
+const NFL_VIEW_H = 500;
+const NFL_BODY = `M 80,60 C 80,60 70,65 60,80 L 55,100 L 50,120 L 45,200 L 40,280 L 38,320 L 40,360 L 45,400 L 55,440 L 65,460 L 75,470 L 85,475 L 100,478 L 150,480 L 200,482 L 250,480 L 300,478 L 315,475 L 325,470 L 335,460 L 345,440 L 355,400 L 360,360 L 362,320 L 360,280 L 355,200 L 350,120 L 345,100 L 340,80 C 330,65 320,60 320,60 L 200,50 Z`;
+const NFL_LEFT_SLEEVE = `M 60,80 L 40,95 L 25,120 L 20,150 L 25,180 L 35,200 L 45,210 L 55,200 L 50,150 L 55,120 L 60,100 Z`;
+const NFL_RIGHT_SLEEVE = `M 340,80 L 360,95 L 375,120 L 380,150 L 375,180 L 365,200 L 355,210 L 345,200 L 350,150 L 345,120 L 340,100 Z`;
 
 /** Detailed baseball button-up — viewBox 0 0 200 250 */
 const BASEBALL_KIT = {
@@ -249,6 +259,7 @@ function jerseyHeight(sport: JerseySport, size: number) {
   if (sport === 'soccer') return size * (SOCCER_VIEW_H / SOCCER_VIEW_W);
   if (sport === 'basketball') return size * (BASKETBALL_VIEW_H / BASKETBALL_VIEW_W);
   if (sport === 'baseball') return size * (BASEBALL_VIEW_H / BASEBALL_VIEW_W);
+  if (sport === 'football') return size * (NFL_VIEW_H / NFL_VIEW_W);
   return size * 1.12;
 }
 
@@ -264,6 +275,10 @@ function logoPlacement(sport: JerseySport, size: number, height: number) {
   if (sport === 'baseball') {
     const badgeSize = size * BASEBALL_LOGO_SIZE_RATIO;
     return { badgeSize, top: height * 0.34 };
+  }
+  if (sport === 'football') {
+    const badgeSize = size * FOOTBALL_LOGO_SIZE_RATIO;
+    return { badgeSize, top: height * 0.36 };
   }
   const badgeSize = size * LOGO_SIZE_RATIO;
   return { badgeSize, top: size * 0.28 };
@@ -646,6 +661,96 @@ function BaseballJerseyGraphic({
   );
 }
 
+function FootballJerseyGraphic({
+  uid,
+  meta,
+  size,
+}: {
+  uid: string;
+  meta: TeamJerseyMeta;
+  size: number;
+}) {
+  const colors = patternColors(meta);
+  const primary = colors[0];
+  const accent = meta.accent ?? colors[1] ?? '#ffffff';
+  const sleeve = adjustColor(primary, isLightColor(primary) ? -0.18 : -0.22);
+  const collar = adjustColor(primary, isLightColor(primary) ? -0.28 : -0.35);
+  const stroke = isLightColor(primary) ? adjustColor(primary, -0.35) : adjustColor(primary, -0.12);
+  const stripeLite = adjustColor(accent, isLightColor(accent) ? -0.05 : 0.18);
+  const height = size * (NFL_VIEW_H / NFL_VIEW_W);
+
+  return (
+    <svg width={size} height={height} viewBox={`0 0 ${NFL_VIEW_W} ${NFL_VIEW_H}`} className="block">
+      <defs>
+        <linearGradient id={`${uid}-jersey`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={adjustColor(primary, 0.12)} />
+          <stop offset="50%" stopColor={primary} />
+          <stop offset="100%" stopColor={adjustColor(primary, -0.18)} />
+        </linearGradient>
+        <linearGradient id={`${uid}-stripe`} x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor={accent} />
+          <stop offset="50%" stopColor={stripeLite} />
+          <stop offset="100%" stopColor={accent} />
+        </linearGradient>
+        <filter id={`${uid}-shadow`} x="-8%" y="-5%" width="116%" height="116%">
+          <feDropShadow dx="1" dy="3" stdDeviation="3" floodColor="#000" floodOpacity="0.3" />
+        </filter>
+        <pattern id={`${uid}-fabric`} width="4" height="4" patternUnits="userSpaceOnUse">
+          <rect width="4" height="4" fill="transparent" />
+          <line x1="0" y1="0" x2="4" y2="0" stroke="rgba(255,255,255,0.04)" strokeWidth="0.5" />
+          <line x1="0" y1="2" x2="4" y2="2" stroke="rgba(255,255,255,0.025)" strokeWidth="0.5" />
+        </pattern>
+      </defs>
+
+      <ellipse cx="200" cy="486" rx="88" ry="6" fill="#000" opacity="0.22" />
+
+      <g filter={`url(#${uid}-shadow)`}>
+        <path d={NFL_BODY} fill={`url(#${uid}-jersey)`} stroke={stroke} strokeWidth="1.5" />
+        <path d={NFL_BODY} fill={`url(#${uid}-fabric)`} opacity="0.45" />
+        <path d={NFL_LEFT_SLEEVE} fill={sleeve} stroke={stroke} strokeWidth="1" />
+        <path d={NFL_RIGHT_SLEEVE} fill={sleeve} stroke={stroke} strokeWidth="1" />
+      </g>
+
+      <ellipse cx="200" cy="58" rx="72" ry="18" fill={collar} stroke={stroke} strokeWidth="2" />
+      <ellipse cx="200" cy="56" rx="62" ry="14" fill={adjustColor(collar, 0.08)} stroke={stroke} strokeWidth="1.2" />
+      <path d="M 168,52 L 200,72 L 232,52" fill="none" stroke={stroke} strokeWidth="2" />
+      <path
+        d="M 172,54 L 200,70 L 228,54"
+        fill="none"
+        stroke={`url(#${uid}-stripe)`}
+        strokeWidth="1.5"
+        opacity="0.65"
+      />
+
+      <path d="M 35,130 L 50,120" stroke={`url(#${uid}-stripe)`} strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M 33,145 L 48,135" stroke={`url(#${uid}-stripe)`} strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M 32,160 L 47,150" stroke={`url(#${uid}-stripe)`} strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M 365,130 L 350,120" stroke={`url(#${uid}-stripe)`} strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M 367,145 L 352,135" stroke={`url(#${uid}-stripe)`} strokeWidth="4.5" strokeLinecap="round" />
+      <path d="M 368,160 L 353,150" stroke={`url(#${uid}-stripe)`} strokeWidth="4.5" strokeLinecap="round" />
+
+      <path
+        d="M 115,100 L 105,200 L 100,300 L 105,400 L 115,470"
+        stroke={accent}
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.18"
+      />
+      <path
+        d="M 285,100 L 295,200 L 300,300 L 295,400 L 285,470"
+        stroke={accent}
+        strokeWidth="1.5"
+        fill="none"
+        opacity="0.18"
+      />
+
+      <rect x="22" y="195" width="36" height="8" rx="3" fill={collar} stroke={stroke} strokeWidth="0.5" />
+      <rect x="342" y="195" width="36" height="8" rx="3" fill={collar} stroke={stroke} strokeWidth="0.5" />
+      <rect x="80" y="472" width="240" height="5" rx="2" fill={`url(#${uid}-stripe)`} opacity="0.45" />
+    </svg>
+  );
+}
+
 export function TeamJerseyIcon({
   meta,
   sport,
@@ -670,6 +775,8 @@ export function TeamJerseyIcon({
         <BasketballJerseyGraphic uid={uid} meta={meta} size={size} />
       ) : sport === 'baseball' ? (
         <BaseballJerseyGraphic uid={uid} meta={meta} size={size} />
+      ) : sport === 'football' ? (
+        <FootballJerseyGraphic uid={uid} meta={meta} size={size} />
       ) : (
         <svg width={size} height={height} viewBox="0 0 52 58" className="block">
           <defs>
@@ -692,7 +799,7 @@ export function TeamJerseyIcon({
 
       {meta.logoUrl ? (
         <img
-          src={meta.logoUrl}
+          src={assetUrl(meta.logoUrl)}
           alt=""
           className={`absolute object-contain drop-shadow-md pointer-events-none ${sport === 'baseball' ? '' : 'left-1/2 -translate-x-1/2'}`}
           style={{

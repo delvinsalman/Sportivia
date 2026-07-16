@@ -1,4 +1,4 @@
-export type Sport = 'soccer' | 'basketball' | 'baseball';
+export type Sport = 'soccer' | 'basketball' | 'baseball' | 'football';
 
 export type GameMode = 'training' | 'daily' | 'timed' | 'duel';
 
@@ -75,6 +75,7 @@ export interface PlayerStats {
   soccer: GameStats;
   basketball: GameStats;
   baseball: GameStats;
+  football: GameStats;
 }
 
 export const GRID_SIZE = 3;

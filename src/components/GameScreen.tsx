@@ -8,6 +8,7 @@ import {
 import { ResultModal } from './ResultModal';
 import type { Sport, GameMode, GameResult } from '../types';
 import type { CharacterId, PetId } from '../types/profile';
+import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { DuelMatchResult } from '../lib/duelTypes';
 import { Swords } from 'lucide-react';
 import { getSettings } from '../lib/settings';
@@ -17,6 +18,7 @@ interface GameScreenProps {
   mode: GameMode;
   equippedCharacter: CharacterId;
   equippedPet?: PetId | null;
+  creativeLoadout?: CreativeLoadout;
   seedKey?: string;
   opponentName?: string;
   opponentScore?: number;
@@ -45,6 +47,7 @@ export function GameScreen({
   mode,
   equippedCharacter,
   equippedPet,
+  creativeLoadout,
   seedKey,
   opponentName,
   opponentScore = 0,
@@ -177,6 +180,7 @@ export function GameScreen({
           result={resultWithDuel}
           characterId={equippedCharacter}
           petId={equippedPet}
+          creativeLoadout={creativeLoadout}
           onPlayAgain={onReplay}
           onHome={onHome}
           waitingForOpponent={mode === 'duel' && !duelResult}

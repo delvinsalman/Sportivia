@@ -15,12 +15,14 @@ const SPORTSDB_SPORT: Record<Sport, string> = {
   soccer: 'Soccer',
   basketball: 'Basketball',
   baseball: 'Baseball',
+  football: 'American Football',
 };
 
 const WIKI_SUFFIXES: Record<Sport, string[]> = {
   soccer: ['(footballer)', '(soccer)'],
   basketball: ['(basketball)', '(basketball player)'],
   baseball: ['(baseball)', '(baseball player)'],
+  football: ['(American football)', '(football)'],
 };
 
 /** Wikipedia titles for short / ambiguous names SportsDB often misses. */
@@ -66,6 +68,22 @@ const WIKI_TITLE_BY_ID: Record<Sport, Record<string, string>> = {
     yeli: 'Christian_Yelich',
     babe: 'Babe_Ruth',
     jackie: 'Jackie_Robinson',
+  },
+  football: {
+    mahomes: 'Patrick_Mahomes',
+    brady: 'Tom_Brady',
+    rice: 'Jerry_Rice',
+    lt: 'Lawrence_Taylor',
+    barry: 'Barry_Sanders',
+    sweetnes: 'Jim_Brown',
+    sweetness: 'Jim_Brown',
+    megatron: 'Calvin_Johnson',
+    moss: 'Randy_Moss',
+    gronk: 'Rob_Gronkowski',
+    kelce: 'Travis_Kelce',
+    lamar: 'Lamar_Jackson',
+    ap: 'Adrian_Peterson',
+    sandy: 'Deion_Sanders',
   },
 };
 

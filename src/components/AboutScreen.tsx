@@ -73,6 +73,20 @@ const BOARD_DEMOS: Record<Sport, { player: string; cells: DemoCell[] }> = {
       { id: 'decade-2020s', tag: 'ERA', label: '2020s' },
     ],
   },
+  football: {
+    player: 'Patrick Mahomes',
+    cells: [
+      { id: 'team-chiefs', tag: 'TEAM', label: 'CHIEFS', filled: true, playerName: 'Mahomes', playerId: 'mahomes' },
+      { id: 'team-patriots', tag: 'TEAM', label: 'PATRIOTS' },
+      { id: 'pos-qb', tag: 'POSITION', label: 'QB' },
+      { id: 'pos-wr', tag: 'POSITION', label: 'WR' },
+      { id: 'award-mvp', tag: 'AWARD', label: 'MVP' },
+      { id: 'award-probowl', tag: 'AWARD', label: 'PRO BOWL' },
+      { id: 'nat-usa', tag: 'NATIONALITY', label: 'USA' },
+      { id: 'champ-sb', tag: 'WINNER', label: 'SUPER BOWL' },
+      { id: 'draft-10s', tag: 'DRAFT', label: '2010s' },
+    ],
+  },
 };
 
 const STEPS = [
@@ -393,8 +407,8 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
               <span className="block" style={{ color: accent }}>built for speed</span>
             </h1>
             <p className="text-base sm:text-lg text-[#b5bac1] leading-relaxed max-w-md mb-6">
-              Match stars to categories on a live 3×3 board. Soccer, NBA, MLB —
-              with more coming soon.
+              Match stars to categories on a live 3×3 board. Soccer, NBA, MLB, NFL —
+              with NHL coming soon.
             </p>
             <div className="flex flex-wrap gap-2">
               {SPORTS.map(s => (
@@ -431,7 +445,11 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                 height={280}
                 bare
                 hero
+                sport={sport}
                 className="w-full max-w-[340px] mx-auto"
+                {...(profile.equippedCharacter === 'creative'
+                  ? { creativeLoadout: profile.creativeLoadout }
+                  : {})}
               />
               {pet && (
                 <div className="absolute right-[-2%] bottom-0 w-[52%] max-w-[200px] pointer-events-none">
@@ -461,7 +479,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             </p>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#f2f3f5]">Every sport, same heat</h2>
             <p className="text-sm text-[#949ba4] mt-1 whitespace-nowrap">
-              Soccer, NBA, and MLB — same rules, different boards. Tap the fit before time runs out.
+              Soccer, NBA, MLB, and NFL — same rules, different boards. Tap the fit before time runs out.
             </p>
           </div>
 
@@ -473,7 +491,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             style={{ boxShadow: `0 8px 0 #1e1f22, 0 16px 40px ${accent}22` }}
           >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-white/8 to-transparent" />
-            <div className="relative p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+            <div className="relative p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
               {SPORTS.map((s, i) => {
                 const demo = BOARD_DEMOS[s];
                 return (

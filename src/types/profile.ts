@@ -1,4 +1,6 @@
 import type { PlayerStats } from '../types';
+import type { CreativeLoadout } from './creativeCharacter';
+import { DEFAULT_CREATIVE_LOADOUT } from './creativeCharacter';
 
 export type CharacterId =
   | 'cube-man'
@@ -17,8 +19,9 @@ export type CharacterId =
   | 'bob'
   | 'bunny'
   | 'ninja'
-  | 'mako';
-export type PetId = 'pug' | 'cat' | 'raccoon' | 'wolf' | 'alpaca' | 'sheep' | 'deer' | 'horse' | 'shark' | 'frog';
+  | 'mako'
+  | 'creative';
+export type PetId = 'pug' | 'fish' | 'cat' | 'raccoon' | 'wolf' | 'alpaca' | 'sheep' | 'deer' | 'horse' | 'shark' | 'frog';
 
 export interface CharacterDef {
   id: CharacterId;
@@ -34,10 +37,15 @@ export interface CharacterDef {
   /**
    * procedural = bind pose + hop/lean flourishes (for Mixamo / single-clip models)
    * animated = use skeletal clips (default)
+   * skeletal = no clips; drive humanoid bones for idle/breath (Kit Creator)
    */
-  poseMode?: 'animated' | 'procedural';
+  poseMode?: 'animated' | 'procedural' | 'skeletal';
   /** Extra yaw so the model faces the camera */
   yawOffset?: number;
+  /** Modular outfit builder (Creative Character) */
+  customizable?: boolean;
+  /** Home showcase: min/max ms between flourishes */
+  showcaseRestMs?: [number, number];
 }
 
 export interface PetDef {
@@ -65,6 +73,8 @@ export interface PlayerProfile {
   unlockedCharacters: CharacterId[];
   equippedPet: PetId | null;
   unlockedPets: PetId[];
+  /** Outfit for the creative / customizable skin */
+  creativeLoadout: CreativeLoadout;
   stats: PlayerStats;
 }
 
@@ -199,6 +209,19 @@ export const CHARACTERS: CharacterDef[] = [
     footOffsetY: 0,
   },
   {
+    id: 'creative',
+    name: 'Fitness Geek',
+    tagline: 'Unlock once · customize forever',
+    price: 18_000,
+    modelPath: '/models/creative.glb',
+    accent: '#f472b6',
+    footOffsetY: 0,
+    targetHeight: 1.72,
+    poseMode: 'animated',
+    customizable: true,
+    showcaseRestMs: [14_000, 26_000],
+  },
+  {
     id: 'bob',
     name: 'Boxscore Bob',
     tagline: 'Does it all · always ready',
@@ -246,6 +269,18 @@ export const PETS: PetDef[] = [
     accent: '#d6a77a',
     footOffsetY: 0,
     targetHeight: 1.55,
+  },
+  {
+    id: 'fish',
+    name: 'Goldie Goal',
+    tagline: 'Budget bite · starter splash',
+    price: 100,
+    modelPath: '/models/pets/fish.glb',
+    accent: '#f59e0b',
+    footOffsetY: 0,
+    targetHeight: 1.35,
+    animTimeScale: 0.55,
+    showcaseRestMs: [8000, 15000],
   },
   {
     id: 'raccoon',
@@ -349,6 +384,7 @@ export const FREE_PETS: PetId[] = STARTER_PETS;
 export const DEFAULT_PLAYER_NAME = 'Pro';
 export const DEFAULT_CHARACTER: CharacterId = 'cube-man';
 export const DEFAULT_PET: PetId = 'pug';
+export { DEFAULT_CREATIVE_LOADOUT };
 
 export function getCharacterDef(id: CharacterId): CharacterDef {
   return CHARACTERS.find(c => c.id === id) ?? CHARACTERS[0];

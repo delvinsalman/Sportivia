@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, animate } from 'framer-motion';
 import type { Sport } from '../types';
-import { SoccerBall, BasketballBall, BaseballBall } from './SportBall';
+import { SoccerBall, BasketballBall, BaseballBall, FootballBall } from './SportBall';
 
 interface BallConfig {
   id: number;
@@ -38,6 +38,15 @@ const BASEBALLS: BallConfig[] = Array.from({ length: 8 }, (_, i) => ({
   size: 28 + (i % 3) * 14,
   driftDelay: i * 0.38,
   driftDuration: 5.5 + (i % 4) * 2,
+}));
+
+const FOOTBALLS: BallConfig[] = Array.from({ length: 8 }, (_, i) => ({
+  id: i,
+  xPct: 8 + (i * 14) % 84,
+  yPct: 13 + (i * 18) % 66,
+  size: 30 + (i % 3) * 15,
+  driftDelay: i * 0.36,
+  driftDuration: 5.2 + (i % 4) * 2,
 }));
 
 const REPEL_RADIUS = 130;
@@ -86,7 +95,14 @@ function ReactiveBall({
     }
   }, [mouse, containerSize, config, repelX, repelY]);
 
-  const Ball = sport === 'soccer' ? SoccerBall : sport === 'basketball' ? BasketballBall : BaseballBall;
+  const Ball =
+    sport === 'soccer'
+      ? SoccerBall
+      : sport === 'basketball'
+        ? BasketballBall
+        : sport === 'football'
+          ? FootballBall
+          : BaseballBall;
 
   return (
     <motion.div
@@ -226,7 +242,6 @@ function BaseballField({
         <path d="M 200 120 L 340 380 L 200 640 L 60 380 Z" fill="none" stroke="#f4f4f5" strokeWidth="2" />
         <circle cx="200" cy="380" r="50" fill="none" stroke="#f4f4f5" strokeWidth="1.5" />
         <rect x="170" y="600" width="60" height="50" fill="none" stroke="#f4f4f5" strokeWidth="1.5" />
-        <path d="M 120 380 Q 200 280 280 380" fill="none" stroke="#f4f4f5" strokeWidth="1.5" />
         <line x1="60" y1="380" x2="340" y2="380" stroke="#f4f4f5" strokeWidth="1" opacity="0.45" />
         <path d="M 200 200 Q 220 240 200 280" fill="none" stroke="#c41e3a" strokeWidth="1" opacity="0.35" />
         <path d="M 200 480 Q 180 520 200 560" fill="none" stroke="#c41e3a" strokeWidth="1" opacity="0.35" />
@@ -242,6 +257,56 @@ function BaseballField({
         />
       ))}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#f4f4f5]/8 to-transparent" />
+    </>
+  );
+}
+
+function FootballField({
+  mouse,
+  containerSize,
+}: {
+  mouse: { x: number; y: number } | null;
+  containerSize: { w: number; h: number };
+}) {
+  const leather = '#a67c52';
+  return (
+    <>
+      <div
+        className="absolute inset-0 transition-opacity duration-700"
+        style={{
+          background: `
+            radial-gradient(ellipse 95% 60% at 50% 45%, rgba(139,90,43,0.28) 0%, transparent 58%),
+            radial-gradient(ellipse 80% 50% at 50% 85%, rgba(92,61,46,0.22) 0%, transparent 62%),
+            radial-gradient(ellipse 50% 35% at 50% 20%, rgba(166,124,82,0.14) 0%, transparent 55%),
+            linear-gradient(180deg, #0a0a0b 0%, #14100c 40%, #100c09 70%, #0a0a0b 100%)
+          `,
+        }}
+      />
+      <svg className="absolute inset-0 w-full h-full opacity-[0.1]" preserveAspectRatio="xMidYMid slice" viewBox="0 0 400 800">
+        <rect x="40" y="60" width="320" height="680" fill="none" stroke={leather} strokeWidth="2.5" rx="4" />
+        <line x1="40" y1="400" x2="360" y2="400" stroke={leather} strokeWidth="2.5" />
+        {[140, 220, 280, 340, 460, 520, 580, 660].map(y => (
+          <line key={y} x1="40" y1={y} x2="360" y2={y} stroke={leather} strokeWidth="1" opacity="0.55" />
+        ))}
+        <rect x="120" y="60" width="160" height="80" fill="none" stroke={leather} strokeWidth="1.5" />
+        <rect x="120" y="660" width="160" height="80" fill="none" stroke={leather} strokeWidth="1.5" />
+        <circle cx="200" cy="400" r="28" fill="none" stroke={leather} strokeWidth="1.5" />
+        <line x1="70" y1="200" x2="100" y2="200" stroke={leather} strokeWidth="1.5" opacity="0.7" />
+        <line x1="300" y1="200" x2="330" y2="200" stroke={leather} strokeWidth="1.5" opacity="0.7" />
+        <line x1="70" y1="600" x2="100" y2="600" stroke={leather} strokeWidth="1.5" opacity="0.7" />
+        <line x1="300" y1="600" x2="330" y2="600" stroke={leather} strokeWidth="1.5" opacity="0.7" />
+      </svg>
+      {FOOTBALLS.map(b => (
+        <ReactiveBall
+          key={b.id}
+          config={b}
+          sport="football"
+          mouse={mouse}
+          containerSize={containerSize}
+          opacity={0.2}
+        />
+      ))}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#8b5a2b]/18 to-transparent" />
     </>
   );
 }
@@ -300,6 +365,8 @@ export function SportBackground({ sport }: SportBackgroundProps) {
           <SoccerPitch mouse={mouse} containerSize={containerSize} />
         ) : sport === 'basketball' ? (
           <BasketballCourt mouse={mouse} containerSize={containerSize} />
+        ) : sport === 'football' ? (
+          <FootballField mouse={mouse} containerSize={containerSize} />
         ) : (
           <BaseballField mouse={mouse} containerSize={containerSize} />
         )}

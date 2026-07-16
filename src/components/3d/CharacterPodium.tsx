@@ -11,9 +11,17 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, useAnimations, useFBX, useGLTF } from '@react-three/drei';
 import { Box3, LoopOnce, LoopRepeat, Vector3 } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
-import type { AnimationAction, AnimationClip, Group, Object3D, SkinnedMesh } from 'three';
+import type { AnimationAction, AnimationClip, Bone, Group, Object3D, SkinnedMesh } from 'three';
 import type { CharacterDef, CharacterId, PetDef, PetId } from '../../types/profile';
 import { CHARACTERS, getCharacterDef, getPetDef, PETS } from '../../types/profile';
+import type { CreativeLoadout } from '../../types/creativeCharacter';
+import {
+  creativeLoadoutKey,
+  creativeVisibleNodes,
+  DEFAULT_CREATIVE_LOADOUT,
+  isCreativePartNode,
+} from '../../types/creativeCharacter';
+import type { Sport } from '../../types';
 
 const TARGET_HEIGHT = 1.35;
 const PODIUM_GROUP_Y = -0.92;
@@ -97,14 +105,18 @@ const SHOWCASE_EXCLUDE = [
   'holding',
   'sword',
   'land',
-  'jump',
+  'jump_end',
+  'jump_loop',
+  'runningjump',
+  'man_jump',
 ];
 
-/** Cool one-shot flourishes — matched against clip names */
+/** Cool one-shot flourishes — matched against clip names (no sport moves here) */
 const FLOURISH_PATTERNS = [
+  'look_around',
+  'relaxed',
   'wave',
   'clap',
-  'punch',
   'duck',
   'yes',
   'cheer',
@@ -117,8 +129,18 @@ const FLOURISH_PATTERNS = [
   'no',
   'eating',
   'headbutt',
-  'attack',
+  'look',
+  'relax',
 ];
+
+/** Rare sport-themed flourishes — exact clip name prefixes */
+const SPORT_FLOURISH_PATTERNS: Partial<Record<Sport, string[]>> = {
+  soccer: ['^Soccer_'],
+  basketball: ['^Basketball_'],
+};
+
+const SPORT_FLOURISH_CHANCE = 0.14;
+const CLIP_FLOURISH_CHANCE = 0.55;
 
 type ProceduralMove = 'hop' | 'lean' | 'celebrate' | 'nod';
 
@@ -147,14 +169,36 @@ function findIdleName(names: string[]): string | undefined {
   );
 }
 
-function collectFlourishes(names: string[], idleName?: string): string[] {
+function isSportFlourish(name: string, sport?: Sport): boolean {
+  if (!sport) return false;
+  const patterns = SPORT_FLOURISH_PATTERNS[sport] ?? [];
+  return patterns.some(p => new RegExp(p, 'i').test(name));
+}
+
+function collectFlourishes(names: string[], idleName?: string, sport?: Sport): string[] {
   const pool = filterAnimNames(names, SHOWCASE_EXCLUDE).filter(n => n !== idleName);
   const found: string[] = [];
   for (const pattern of FLOURISH_PATTERNS) {
-    const hit = pool.find(n => new RegExp(pattern, 'i').test(n));
+    const hit = pool.find(
+      n => new RegExp(pattern, 'i').test(n) && !isSportFlourish(n, sport),
+    );
     if (hit && !found.includes(hit)) found.push(hit);
   }
+  // Other idle variants (Look Around, Relaxed) read more natural than big moves
+  for (const n of pool) {
+    if (/idle/i.test(n) && n !== idleName && !found.includes(n)) found.push(n);
+  }
   return found;
+}
+
+function collectSportFlourishes(names: string[], sport?: Sport): string[] {
+  if (!sport) return [];
+  const patterns = SPORT_FLOURISH_PATTERNS[sport] ?? [];
+  return names.filter(
+    n =>
+      !/idle/i.test(n) &&
+      patterns.some(p => new RegExp(p, 'i').test(n)),
+  );
 }
 
 function randBetween(min: number, max: number) {
@@ -190,20 +234,24 @@ function useHomeShowcase(
   opts?: {
     timeScale?: number;
     restMs?: [number, number];
+    sport?: Sport;
   },
 ) {
   const restTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const endTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const lastFlourishRef = useRef<string | null>(null);
   const timeScale = opts?.timeScale ?? 1;
   const restMin = opts?.restMs?.[0] ?? 3800;
   const restMax = opts?.restMs?.[1] ?? 7000;
+  const sport = opts?.sport;
 
   useEffect(() => {
     if (!enabled) return;
 
     let cancelled = false;
     const idleName = findIdleName(names);
-    const flourishes = collectFlourishes(names, idleName);
+    const flourishes = collectFlourishes(names, idleName, sport);
+    const sportFlourishes = collectSportFlourishes(names, sport);
     const idleAction = idleName ? actions[idleName] : null;
     // Single Mixamo-style clip: keep it as ambient idle, never "flourish" with itself
     const onlyGenericClip =
@@ -242,9 +290,21 @@ function useHomeShowcase(
     const playFlourish = () => {
       if (cancelled) return;
 
-      const useClip = !onlyGenericClip && flourishes.length > 0 && Math.random() < 0.75;
+      const pickPool = (): string[] => {
+        const useSport =
+          sportFlourishes.length > 0 && Math.random() < SPORT_FLOURISH_CHANCE;
+        if (useSport) return sportFlourishes;
+        return flourishes;
+      };
+
+      const pool = pickPool().filter(n => n !== lastFlourishRef.current);
+      const candidates = pool.length > 0 ? pool : pickPool();
+      const useClip =
+        !onlyGenericClip && candidates.length > 0 && Math.random() < CLIP_FLOURISH_CHANCE;
+
       if (useClip) {
-        const clipName = pickRandom(flourishes);
+        const clipName = pickRandom(candidates);
+        lastFlourishRef.current = clipName;
         const action = actions[clipName];
         if (!action) {
           const move = pickRandom(PROCEDURAL_MOVES);
@@ -290,7 +350,7 @@ function useHomeShowcase(
     }
     restTimerRef.current = setTimeout(() => {
       if (!cancelled) playFlourish();
-    }, randBetween(Math.max(restMin, 2800), restMax));
+    }, randBetween(Math.max(restMin, 6000), restMax));
 
     return () => {
       cancelled = true;
@@ -300,7 +360,7 @@ function useHomeShowcase(
         a?.stop();
       });
     };
-  }, [actions, names, enabled, onProcedural, timeScale, restMin, restMax]);
+  }, [actions, names, enabled, onProcedural, timeScale, restMin, restMax, sport]);
 }
 
 function useSimpleIdle(
@@ -339,34 +399,126 @@ type PodiumModelDef = {
   accent: string;
   modelPath: string;
   name: string;
-  poseMode?: 'animated' | 'procedural';
+  poseMode?: 'animated' | 'procedural' | 'skeletal';
   yawOffset?: number;
   animTimeScale?: number;
   showcaseRestMs?: [number, number];
 };
+
+/** Kit Creator: free GLB has a humanoid rig but no animation clips — drive bones. */
+function useCreativeSkeletalIdle(scene: Object3D, enabled: boolean, showcase: boolean) {
+  const bonesRef = useRef<Record<string, Bone>>({});
+  const restRef = useRef<Record<string, { x: number; y: number; z: number }>>({});
+  const lookRef = useRef({ next: 2, yaw: 0, pitch: 0, targetYaw: 0, targetPitch: 0 });
+
+  useEffect(() => {
+    const map: Record<string, Bone> = {};
+    scene.traverse(obj => {
+      const bone = obj as Bone;
+      if (bone.isBone && bone.name) map[bone.name] = bone;
+    });
+    bonesRef.current = map;
+    const rest: Record<string, { x: number; y: number; z: number }> = {};
+    for (const [name, bone] of Object.entries(map)) {
+      rest[name] = { x: bone.rotation.x, y: bone.rotation.y, z: bone.rotation.z };
+    }
+    restRef.current = rest;
+  }, [scene]);
+
+  useFrame(({ clock }) => {
+    if (!enabled) return;
+    const bones = bonesRef.current;
+    const rest = restRef.current;
+    const t = clock.elapsedTime;
+    const breath = Math.sin(t * 1.7) * 0.5 + 0.5;
+    const sway = Math.sin(t * 0.85);
+
+    const set = (name: string, dx: number, dy: number, dz: number) => {
+      const bone = bones[name];
+      const base = rest[name];
+      if (!bone || !base) return;
+      bone.rotation.x = base.x + dx;
+      bone.rotation.y = base.y + dy;
+      bone.rotation.z = base.z + dz;
+    };
+
+    // Drop T-pose arms into a resting A-pose (local Z is the drop axis on this rig)
+    const armDrop = 1.15;
+    const elbow = 0.35;
+    set('LeftShoulder', 0.05 + breath * 0.02, 0.08, 0.12);
+    set('RightShoulder', 0.05 + breath * 0.02, -0.08, -0.12);
+    set('LeftArm', 0.08 + sway * 0.03, 0.12, armDrop + breath * 0.03);
+    set('RightArm', 0.08 - sway * 0.03, -0.12, -armDrop - breath * 0.03);
+    set('LeftForeArm', 0.05, 0.05, elbow + sway * 0.02);
+    set('RightForeArm', 0.05, -0.05, -elbow - sway * 0.02);
+    set('LeftHand', 0.1, 0, 0.08);
+    set('RightHand', 0.1, 0, -0.08);
+
+    // Breathing torso + soft weight shift
+    set('Spine', 0.03 + breath * 0.035, sway * 0.015, 0);
+    set('Spine1', 0.025 + breath * 0.03, sway * 0.02, 0);
+    set('Hips', 0, sway * 0.02, Math.sin(t * 0.55) * 0.015);
+
+    // Look-around on showcase; subtle on store
+    const look = lookRef.current;
+    if (t > look.next) {
+      look.next = t + (showcase ? randBetween(2.2, 4.5) : randBetween(4, 7));
+      look.targetYaw = (Math.random() - 0.5) * (showcase ? 0.55 : 0.28);
+      look.targetPitch = (Math.random() - 0.5) * 0.12;
+    }
+    look.yaw += (look.targetYaw - look.yaw) * 0.04;
+    look.pitch += (look.targetPitch - look.pitch) * 0.04;
+    set('Neck', look.pitch * 0.4, look.yaw * 0.35, 0);
+    set('Head', look.pitch * 0.7 + Math.sin(t * 2.1) * 0.015, look.yaw * 0.75, sway * 0.02);
+
+    // Soft knee ease so stance isn't locked
+    set('LeftUpLeg', 0.04 + breath * 0.01, 0.03, 0.02);
+    set('RightUpLeg', 0.04 + breath * 0.01, -0.03, -0.02);
+    set('LeftLeg', -0.08 - breath * 0.02, 0, 0);
+    set('RightLeg', -0.08 - breath * 0.02, 0, 0);
+
+    if (showcase) {
+      // Occasional “hey” wrist flick on a slow sinusoid cycle
+      const wave = Math.max(0, Math.sin(t * 0.55 - 1.2));
+      if (wave > 0.15) {
+        set('RightArm', 0.2, -0.35, -0.35 - wave * 0.9);
+        set('RightForeArm', 0.15, -0.2, -0.5 - wave * 0.4);
+        set('RightHand', 0.2 + wave * 0.3, 0, -0.15);
+      }
+    }
+
+    scene.updateMatrixWorld(true);
+  });
+}
 
 function PodiumRig({
   scene,
   animations,
   def,
   showcase = false,
+  sport,
 }: {
   scene: Object3D;
   animations: AnimationClip[];
   def: PodiumModelDef;
   showcase?: boolean;
+  sport?: Sport;
 }) {
   const group = useRef<Group>(null);
   const targetHeight = def.targetHeight ?? TARGET_HEIGHT;
   const faceYaw = PODIUM_FACE_Y + (def.yawOffset ?? 0);
   const proceduralOnly = def.poseMode === 'procedural';
+  const skeletalIdle = def.poseMode === 'skeletal';
   const animTimeScale = def.animTimeScale ?? 1;
   const { scale, position } = useMemo(
     () => fitModel(scene, def.footOffsetY ?? 0, targetHeight),
     [scene, def.footOffsetY, targetHeight],
   );
   const baseY = useRef(position[1]);
-  const { actions, names } = useAnimations(proceduralOnly ? [] : animations, scene);
+  const { actions, names } = useAnimations(
+    proceduralOnly || skeletalIdle ? [] : animations,
+    scene,
+  );
   const procedural = useRef<ProceduralState>({ move: null, start: 0, duration: 1 });
 
   useEffect(() => {
@@ -381,11 +533,14 @@ function PodiumRig({
     };
   }, []);
 
-  useHomeShowcase(actions, names, showcase && !proceduralOnly, triggerProcedural, {
+  useCreativeSkeletalIdle(scene, skeletalIdle, showcase);
+
+  useHomeShowcase(actions, names, showcase && !proceduralOnly && !skeletalIdle, triggerProcedural, {
     timeScale: animTimeScale,
     restMs: def.showcaseRestMs,
+    sport,
   });
-  useSimpleIdle(actions, names, !showcase && !proceduralOnly, animTimeScale);
+  useSimpleIdle(actions, names, !showcase && !proceduralOnly && !skeletalIdle, animTimeScale);
 
   useEffect(() => {
     if (!showcase || !proceduralOnly) return;
@@ -409,15 +564,35 @@ function PodiumRig({
     group.current.position.x = position[0];
     group.current.position.z = position[2];
 
+    const t = state.clock.elapsedTime;
+
     if (!showcase) {
-      group.current.position.y = baseY.current;
-      group.current.rotation.x = 0;
-      group.current.rotation.z = 0;
+      if (proceduralOnly) {
+        group.current.position.y = baseY.current + Math.sin(t * 1.1) * 0.012;
+        group.current.rotation.x = 0;
+        group.current.rotation.z = Math.sin(t * 0.65) * 0.01;
+      } else if (skeletalIdle) {
+        group.current.position.y = baseY.current + Math.sin(t * 1.5) * 0.008;
+        group.current.rotation.x = 0;
+        group.current.rotation.z = 0;
+      } else {
+        group.current.position.y = baseY.current;
+        group.current.rotation.x = 0;
+        group.current.rotation.z = 0;
+      }
       group.current.scale.setScalar(scale);
       return;
     }
 
-    const t = state.clock.elapsedTime;
+    // Showcase + skeletal: light root motion only — bones carry the personality
+    if (skeletalIdle) {
+      group.current.position.y = baseY.current + Math.sin(t * 1.35) * 0.016;
+      group.current.rotation.x = Math.sin(t * 0.9) * 0.012;
+      group.current.rotation.z = Math.sin(t * 0.7) * 0.014;
+      group.current.scale.setScalar(scale);
+      return;
+    }
+
     const proc = procedural.current;
     let y = baseY.current;
     let rotX = 0;
@@ -471,9 +646,11 @@ function PodiumRig({
 function FbxCharacterModel({
   def,
   showcase = false,
+  sport,
 }: {
   def: CharacterDef;
   showcase?: boolean;
+  sport?: Sport;
 }) {
   const fbx = useFBX(def.modelPath);
   const scene = useMemo(() => SkeletonUtils.clone(fbx), [fbx]);
@@ -483,25 +660,53 @@ function FbxCharacterModel({
       animations={fbx.animations}
       def={def}
       showcase={showcase}
+      sport={sport}
     />
   );
+}
+
+function applyCreativeLoadout(scene: Object3D, loadout: CreativeLoadout) {
+  const visible = creativeVisibleNodes(loadout);
+  scene.traverse(child => {
+    if (!child.name || !isCreativePartNode(child.name)) return;
+    child.visible = visible.has(child.name);
+  });
 }
 
 function GlbModel({
   def,
   showcase = false,
+  creativeLoadout,
+  sport,
 }: {
   def: CharacterDef | PetDef;
   showcase?: boolean;
+  creativeLoadout?: CreativeLoadout;
+  sport?: Sport;
 }) {
-  const { scene, animations } = useGLTF(def.modelPath);
-  const clone = useMemo(() => SkeletonUtils.clone(scene), [scene]);
+  const isCreative =
+    'customizable' in def && !!def.customizable && def.modelPath.includes('creative');
+  const { scene, animations: embeddedAnims } = useGLTF(def.modelPath);
+  const animations = useMemo(
+    () => embeddedAnims.map(clip => clip.clone()),
+    [embeddedAnims],
+  );
+  const loadout = creativeLoadout ?? DEFAULT_CREATIVE_LOADOUT;
+  const loadoutKey = isCreative ? creativeLoadoutKey(loadout) : '';
+  const clone = useMemo(() => {
+    const next = SkeletonUtils.clone(scene);
+    if (isCreative) applyCreativeLoadout(next, loadout);
+    return next;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scene, isCreative, loadoutKey]);
+
   return (
     <PodiumRig
       scene={clone}
       animations={animations}
       def={def}
       showcase={showcase}
+      sport={sport}
     />
   );
 }
@@ -509,23 +714,34 @@ function GlbModel({
 function CharacterModel({
   characterId,
   showcase = false,
-}: CharacterModelProps) {
+  creativeLoadout,
+  sport,
+}: CharacterModelProps & { creativeLoadout?: CreativeLoadout; sport?: Sport }) {
   const def = getCharacterDef(characterId);
   if (def.modelPath.endsWith('.glb')) {
-    return <GlbModel def={def} showcase={showcase} />;
+    return (
+      <GlbModel
+        def={def}
+        showcase={showcase}
+        creativeLoadout={creativeLoadout}
+        sport={sport}
+      />
+    );
   }
-  return <FbxCharacterModel def={def} showcase={showcase} />;
+  return <FbxCharacterModel def={def} showcase={showcase} sport={sport} />;
 }
 
 function PetModel({
   petId,
   showcase = false,
+  sport,
 }: {
   petId: PetId;
   showcase?: boolean;
+  sport?: Sport;
 }) {
   const def = getPetDef(petId);
-  return <GlbModel def={def} showcase={showcase} />;
+  return <GlbModel def={def} showcase={showcase} sport={sport} />;
 }
 
 function PodiumStage({ accent }: { accent: string }) {
@@ -587,6 +803,8 @@ function Scene({
   hero,
   showcase = false,
   hidePodium = false,
+  creativeLoadout,
+  sport,
 }: {
   characterId?: CharacterId;
   petId?: PetId;
@@ -594,6 +812,8 @@ function Scene({
   hero?: boolean;
   showcase?: boolean;
   hidePodium?: boolean;
+  creativeLoadout?: CreativeLoadout;
+  sport?: Sport;
 }) {
   return (
     <>
@@ -613,9 +833,14 @@ function Scene({
       {!hidePodium && <PodiumStage accent={accent} />}
       <ModelErrorBoundary characterId={characterId ?? 'cube-man'}>
         {petId ? (
-          <PetModel petId={petId} showcase={showcase} />
+          <PetModel petId={petId} showcase={showcase} sport={sport} />
         ) : characterId ? (
-          <CharacterModel characterId={characterId} showcase={showcase} />
+          <CharacterModel
+            characterId={characterId}
+            showcase={showcase}
+            creativeLoadout={creativeLoadout}
+            sport={sport}
+          />
         ) : null}
       </ModelErrorBoundary>
 
@@ -651,6 +876,10 @@ interface CharacterPodiumProps {
   peek?: boolean;
   /** Companion mode — model only, no disc */
   hidePodium?: boolean;
+  /** Outfit for Kit Creator skin */
+  creativeLoadout?: CreativeLoadout;
+  /** Prefer sport-themed flourishes when available (Fitness Geek) */
+  sport?: Sport;
 }
 
 export function CharacterPodium({
@@ -663,11 +892,17 @@ export function CharacterPodium({
   hero = false,
   peek = false,
   hidePodium = false,
+  creativeLoadout,
+  sport,
 }: CharacterPodiumProps) {
   const def = petId ? getPetDef(petId) : getCharacterDef(characterId ?? 'cube-man');
   const glow = accent ?? def.accent;
   const framed = hero || peek;
-  const sceneKey = petId ? `pet-${petId}` : `char-${characterId}`;
+  const loadoutKey =
+    characterId === 'creative' && creativeLoadout
+      ? creativeLoadoutKey(creativeLoadout)
+      : '';
+  const sceneKey = petId ? `pet-${petId}` : `char-${characterId}-${loadoutKey}`;
 
   return (
     <div
@@ -719,13 +954,15 @@ export function CharacterPodium({
       >
         <Suspense fallback={<LoadingFallback />}>
           <Scene
-            key={`${sceneKey}-${glow}-${hidePodium ? 'flat' : 'pod'}`}
+            key={`${sceneKey}-${glow}-${hidePodium ? 'flat' : 'pod'}-${sport ?? 'any'}`}
             characterId={characterId}
             petId={petId}
             accent={glow}
             hero={framed}
             showcase={hero}
             hidePodium={hidePodium}
+            creativeLoadout={creativeLoadout}
+            sport={sport}
           />
         </Suspense>
       </Canvas>

@@ -2,11 +2,13 @@ import type { Category, CategoryTag, Sport } from '../types';
 import type { SoccerPlayer } from './soccerPlayers';
 import type { BasketballPlayer } from './basketballPlayers';
 import type { BaseballPlayer } from './baseballPlayers';
+import type { FootballPlayer } from './footballPlayers';
 import { SOCCER_PLAYERS } from './soccerPlayers';
 import { BASKETBALL_PLAYERS } from './basketballPlayers';
 import { BASEBALL_PLAYERS } from './baseballPlayers';
+import { FOOTBALL_PLAYERS } from './footballPlayers';
 
-export type PlayerUnion = SoccerPlayer | BasketballPlayer | BaseballPlayer;
+export type PlayerUnion = SoccerPlayer | BasketballPlayer | BaseballPlayer | FootballPlayer;
 
 export interface CategoryDef extends Category {
   sport: Sport;
@@ -23,7 +25,7 @@ function tagFromId(id: string): CategoryTag {
   if (id.startsWith('decade-') || id.startsWith('draft-')) return 'ERA';
   if (id.startsWith('cont-') || id === 'intl') return 'REGION';
   if (id.startsWith('college-')) return 'COLLEGE';
-  if (id === 'mvp' || id === 'allstar' || id === 'olympic' || id === 'scoring') return 'AWARD';
+  if (id === 'mvp' || id === 'allstar' || id === 'olympic' || id === 'scoring' || id.startsWith('award-') || id === 'probowl') return 'AWARD';
   return 'TEAM';
 }
 
@@ -61,8 +63,16 @@ function countBaseball(predicate: (p: BaseballPlayer) => boolean) {
   return BASEBALL_PLAYERS.filter(predicate).length;
 }
 
+function countFootball(predicate: (p: FootballPlayer) => boolean) {
+  return FOOTBALL_PLAYERS.filter(predicate).length;
+}
+
 function isBaseball(p: PlayerUnion): p is BaseballPlayer {
   return 'mlbTeams' in p;
+}
+
+function isFootball(p: PlayerUnion): p is FootballPlayer {
+  return 'nflTeams' in p;
 }
 
 const rawSoccer: Omit<CategoryDef, 'tag' | 'icon'>[] = [
@@ -264,19 +274,71 @@ const rawBaseball: Omit<CategoryDef, 'tag' | 'icon'>[] = [
   { id: 'decade-2020s', sport: 'baseball', label: '2020s ERA', difficulty: 1, validate: (p) => isBaseball(p) && p.decades.includes('2020s'), poolSize: countBaseball(p => p.decades.includes('2020s')) },
 ];
 
+const rawFootball: Omit<CategoryDef, 'tag' | 'icon'>[] = [
+  { id: 'nat-usa', sport: 'football', label: 'USA', difficulty: 1, validate: (p) => isFootball(p) && p.nationality === 'USA', poolSize: countFootball(p => p.nationality === 'USA') },
+  { id: 'team-chiefs', sport: 'football', label: 'CHIEFS', difficulty: 1, validate: (p) => isFootball(p) && p.nflTeams.includes('Kansas City Chiefs'), poolSize: countFootball(p => p.nflTeams.includes('Kansas City Chiefs')) },
+  { id: 'team-patriots', sport: 'football', label: 'PATRIOTS', difficulty: 1, validate: (p) => isFootball(p) && p.nflTeams.includes('New England Patriots'), poolSize: countFootball(p => p.nflTeams.includes('New England Patriots')) },
+  { id: 'team-49ers', sport: 'football', label: '49ERS', difficulty: 1, validate: (p) => isFootball(p) && p.nflTeams.includes('San Francisco 49ers'), poolSize: countFootball(p => p.nflTeams.includes('San Francisco 49ers')) },
+  { id: 'team-cowboys', sport: 'football', label: 'COWBOYS', difficulty: 1, validate: (p) => isFootball(p) && p.nflTeams.includes('Dallas Cowboys'), poolSize: countFootball(p => p.nflTeams.includes('Dallas Cowboys')) },
+  { id: 'team-packers', sport: 'football', label: 'PACKERS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Green Bay Packers'), poolSize: countFootball(p => p.nflTeams.includes('Green Bay Packers')) },
+  { id: 'team-eagles', sport: 'football', label: 'EAGLES', difficulty: 1, validate: (p) => isFootball(p) && p.nflTeams.includes('Philadelphia Eagles'), poolSize: countFootball(p => p.nflTeams.includes('Philadelphia Eagles')) },
+  { id: 'team-ravens', sport: 'football', label: 'RAVENS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Baltimore Ravens'), poolSize: countFootball(p => p.nflTeams.includes('Baltimore Ravens')) },
+  { id: 'team-bills', sport: 'football', label: 'BILLS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Buffalo Bills'), poolSize: countFootball(p => p.nflTeams.includes('Buffalo Bills')) },
+  { id: 'team-seahawks', sport: 'football', label: 'SEAHAWKS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Seattle Seahawks'), poolSize: countFootball(p => p.nflTeams.includes('Seattle Seahawks')) },
+  { id: 'team-rams', sport: 'football', label: 'RAMS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Los Angeles Rams'), poolSize: countFootball(p => p.nflTeams.includes('Los Angeles Rams')) },
+  { id: 'team-broncos', sport: 'football', label: 'BRONCOS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Denver Broncos'), poolSize: countFootball(p => p.nflTeams.includes('Denver Broncos')) },
+  { id: 'team-steelers', sport: 'football', label: 'STEELERS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Pittsburgh Steelers'), poolSize: countFootball(p => p.nflTeams.includes('Pittsburgh Steelers')) },
+  { id: 'team-giants', sport: 'football', label: 'GIANTS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('New York Giants'), poolSize: countFootball(p => p.nflTeams.includes('New York Giants')) },
+  { id: 'team-bears', sport: 'football', label: 'BEARS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Chicago Bears'), poolSize: countFootball(p => p.nflTeams.includes('Chicago Bears')) },
+  { id: 'team-dolphins', sport: 'football', label: 'DOLPHINS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Miami Dolphins'), poolSize: countFootball(p => p.nflTeams.includes('Miami Dolphins')) },
+  { id: 'team-vikings', sport: 'football', label: 'VIKINGS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Minnesota Vikings'), poolSize: countFootball(p => p.nflTeams.includes('Minnesota Vikings')) },
+  { id: 'team-lions', sport: 'football', label: 'LIONS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Detroit Lions'), poolSize: countFootball(p => p.nflTeams.includes('Detroit Lions')) },
+  { id: 'team-bengals', sport: 'football', label: 'BENGALS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Cincinnati Bengals'), poolSize: countFootball(p => p.nflTeams.includes('Cincinnati Bengals')) },
+  { id: 'team-jets', sport: 'football', label: 'JETS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('New York Jets'), poolSize: countFootball(p => p.nflTeams.includes('New York Jets')) },
+  { id: 'team-buccaneers', sport: 'football', label: 'BUCCANEERS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Tampa Bay Buccaneers'), poolSize: countFootball(p => p.nflTeams.includes('Tampa Bay Buccaneers')) },
+  { id: 'team-colts', sport: 'football', label: 'COLTS', difficulty: 2, validate: (p) => isFootball(p) && p.nflTeams.includes('Indianapolis Colts'), poolSize: countFootball(p => p.nflTeams.includes('Indianapolis Colts')) },
+  { id: 'pos-qb', sport: 'football', label: 'QUARTERBACK', difficulty: 1, validate: (p) => isFootball(p) && p.positions.includes('QB'), poolSize: countFootball(p => p.positions.includes('QB')) },
+  { id: 'pos-rb', sport: 'football', label: 'RUNNING BACK', difficulty: 1, validate: (p) => isFootball(p) && p.positions.includes('RB'), poolSize: countFootball(p => p.positions.includes('RB')) },
+  { id: 'pos-wr', sport: 'football', label: 'WIDE RECEIVER', difficulty: 1, validate: (p) => isFootball(p) && p.positions.includes('WR'), poolSize: countFootball(p => p.positions.includes('WR')) },
+  { id: 'pos-te', sport: 'football', label: 'TIGHT END', difficulty: 2, validate: (p) => isFootball(p) && p.positions.includes('TE'), poolSize: countFootball(p => p.positions.includes('TE')) },
+  { id: 'pos-dl', sport: 'football', label: 'DEFENSIVE LINE', difficulty: 2, validate: (p) => isFootball(p) && p.positions.includes('DL'), poolSize: countFootball(p => p.positions.includes('DL')) },
+  { id: 'pos-lb', sport: 'football', label: 'LINEBACKER', difficulty: 2, validate: (p) => isFootball(p) && p.positions.includes('LB'), poolSize: countFootball(p => p.positions.includes('LB')) },
+  { id: 'pos-db', sport: 'football', label: 'DEFENSIVE BACK', difficulty: 2, validate: (p) => isFootball(p) && p.positions.includes('DB'), poolSize: countFootball(p => p.positions.includes('DB')) },
+  { id: 'pos-k', sport: 'football', label: 'KICKER', difficulty: 3, validate: (p) => isFootball(p) && p.positions.includes('K'), poolSize: countFootball(p => p.positions.includes('K')) },
+  { id: 'champ-sb', sport: 'football', label: 'SUPER BOWL', difficulty: 2, validate: (p) => isFootball(p) && p.superBowls >= 1, poolSize: countFootball(p => p.superBowls >= 1) },
+  { id: 'champ-sb3', sport: 'football', label: '3+ RINGS', difficulty: 3, validate: (p) => isFootball(p) && p.superBowls >= 3, poolSize: countFootball(p => p.superBowls >= 3) },
+  { id: 'award-mvp', sport: 'football', label: 'MVP', difficulty: 2, validate: (p) => isFootball(p) && p.mvp, poolSize: countFootball(p => p.mvp) },
+  { id: 'award-probowl', sport: 'football', label: 'PRO BOWL', difficulty: 1, validate: (p) => isFootball(p) && p.proBowl, poolSize: countFootball(p => p.proBowl) },
+  { id: 'draft-10s', sport: 'football', label: '2010s DRAFT', difficulty: 1, validate: (p) => isFootball(p) && p.draftDecade === '2010s', poolSize: countFootball(p => p.draftDecade === '2010s') },
+  { id: 'draft-00s', sport: 'football', label: '2000s DRAFT', difficulty: 2, validate: (p) => isFootball(p) && p.draftDecade === '2000s', poolSize: countFootball(p => p.draftDecade === '2000s') },
+  { id: 'draft-2020s', sport: 'football', label: '2020s DRAFT', difficulty: 1, validate: (p) => isFootball(p) && p.draftDecade === '2020s', poolSize: countFootball(p => p.draftDecade === '2020s') },
+  { id: 'draft-90s', sport: 'football', label: '1990s DRAFT', difficulty: 2, validate: (p) => isFootball(p) && p.draftDecade === '1990s', poolSize: countFootball(p => p.draftDecade === '1990s') },
+  { id: 'decade-10s', sport: 'football', label: '2010s ERA', difficulty: 1, validate: (p) => isFootball(p) && p.decades.includes('2010s'), poolSize: countFootball(p => p.decades.includes('2010s')) },
+  { id: 'decade-00s', sport: 'football', label: '2000s ERA', difficulty: 2, validate: (p) => isFootball(p) && p.decades.includes('2000s'), poolSize: countFootball(p => p.decades.includes('2000s')) },
+  { id: 'decade-2020s', sport: 'football', label: '2020s ERA', difficulty: 1, validate: (p) => isFootball(p) && p.decades.includes('2020s'), poolSize: countFootball(p => p.decades.includes('2020s')) },
+  { id: 'college-alabama', sport: 'football', label: 'ALABAMA', difficulty: 2, validate: (p) => isFootball(p) && p.college === 'Alabama', poolSize: countFootball(p => p.college === 'Alabama') },
+  { id: 'college-ohio-state', sport: 'football', label: 'OHIO STATE', difficulty: 2, validate: (p) => isFootball(p) && p.college === 'Ohio State', poolSize: countFootball(p => p.college === 'Ohio State') },
+  { id: 'college-michigan', sport: 'football', label: 'MICHIGAN', difficulty: 2, validate: (p) => isFootball(p) && p.college === 'Michigan', poolSize: countFootball(p => p.college === 'Michigan') },
+  { id: 'college-lsu', sport: 'football', label: 'LSU', difficulty: 2, validate: (p) => isFootball(p) && p.college === 'LSU', poolSize: countFootball(p => p.college === 'LSU') },
+  { id: 'college-oklahoma', sport: 'football', label: 'OKLAHOMA', difficulty: 2, validate: (p) => isFootball(p) && p.college === 'Oklahoma', poolSize: countFootball(p => p.college === 'Oklahoma') },
+];
+
 export const SOCCER_CATEGORIES: CategoryDef[] = rawSoccer.map(c => enrich(c));
 export const BASKETBALL_CATEGORIES: CategoryDef[] = rawBasketball.map(c => enrich(c));
 export const BASEBALL_CATEGORIES: CategoryDef[] = rawBaseball.map(c => enrich(c));
+export const FOOTBALL_CATEGORIES: CategoryDef[] = rawFootball.map(c => enrich(c));
 
 export function getCategories(sport: Sport): CategoryDef[] {
   if (sport === 'soccer') return SOCCER_CATEGORIES;
   if (sport === 'basketball') return BASKETBALL_CATEGORIES;
+  if (sport === 'football') return FOOTBALL_CATEGORIES;
   return BASEBALL_CATEGORIES;
 }
 
 export function getPlayers(sport: Sport): PlayerUnion[] {
   if (sport === 'soccer') return SOCCER_PLAYERS;
   if (sport === 'basketball') return BASKETBALL_PLAYERS;
+  if (sport === 'football') return FOOTBALL_PLAYERS;
   return BASEBALL_PLAYERS;
 }
 

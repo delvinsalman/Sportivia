@@ -3,14 +3,17 @@ import type { CharacterId, PetId, PlayerProfile } from '../types/profile';
 import {
   CHARACTERS,
   DEFAULT_CHARACTER,
+  DEFAULT_CREATIVE_LOADOUT,
   DEFAULT_PET,
   DEFAULT_PLAYER_NAME,
   PETS,
   STARTER_CHARACTERS,
   STARTER_PETS,
 } from '../types/profile';
+import { normalizeCreativeLoadout, type CreativeLoadout } from '../types/creativeCharacter';
 import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
+import { applySeasonFromResult } from './seasonMeta';
 
 const PROFILE_KEY = 'gridiq-profile-v4';
 const PAID_SKINS_MIGRATION_KEY = 'gridiq-paid-skins-v1';
@@ -56,6 +59,7 @@ function defaultProfile(): PlayerProfile {
     unlockedCharacters: [...STARTER_CHARACTERS],
     equippedPet: DEFAULT_PET,
     unlockedPets: [...STARTER_PETS],
+    creativeLoadout: { ...DEFAULT_CREATIVE_LOADOUT },
     stats: loadStats(),
   };
 }
@@ -83,6 +87,8 @@ export function loadProfile(): PlayerProfile {
       safePet = unlockedPets.includes(equippedPet) ? equippedPet : DEFAULT_PET;
     }
 
+    const creativeLoadout = normalizeCreativeLoadout(parsed.creativeLoadout);
+
     const profile: PlayerProfile = {
       ...base,
       playerName: parsed.playerName?.trim() || DEFAULT_PLAYER_NAME,
@@ -93,6 +99,7 @@ export function loadProfile(): PlayerProfile {
       unlockedCharacters: unlocked,
       equippedPet: safePet,
       unlockedPets,
+      creativeLoadout,
       stats: loadStats(),
     };
 
@@ -129,9 +136,14 @@ export function saveProfile(profile: PlayerProfile): void {
 export function recordGameWithRewards(
   sport: Sport,
   result: GameResult,
+  duelWon?: boolean,
 ): {
   profile: PlayerProfile;
   rewards: ReturnType<typeof computeGameRewards> | null;
+  season?: {
+    newlyUnlocked: string[];
+    dailyAlreadyClaimed: boolean;
+  };
 } {
   if (!result.completed || result.mode === 'training') {
     return { profile: loadProfile(), rewards: null };
@@ -139,15 +151,46 @@ export function recordGameWithRewards(
 
   const profileWithStats = loadProfile();
   profileWithStats.stats = recordGameResult(sport, result);
+  const dailyStreak = profileWithStats.stats[sport].dailyStreak;
+
+  const season = applySeasonFromResult(sport, result, {
+    profileLevel: profileWithStats.level,
+    profileCoins: profileWithStats.coins,
+    dailyStreak,
+    duelWon,
+  });
+
+  // Second Daily finish today keeps stats, skips payday
+  if (season.dailyAlreadyClaimed && result.mode === 'daily') {
+    saveProfile(profileWithStats);
+    return {
+      profile: profileWithStats,
+      rewards: null,
+      season: {
+        newlyUnlocked: season.newlyUnlocked,
+        dailyAlreadyClaimed: true,
+      },
+    };
+  }
 
   const baseRewards = computeGameRewards(result);
+  baseRewards.coinsEarned += season.bonusCoins;
+  baseRewards.xpEarned += season.bonusXp;
+
   const applied = applyRewards(profileWithStats.coins, profileWithStats.xp, baseRewards);
   profileWithStats.coins = applied.coins;
   profileWithStats.xp = applied.xp;
   profileWithStats.level = applied.rewards.newLevel;
 
   saveProfile(profileWithStats);
-  return { profile: profileWithStats, rewards: applied.rewards };
+  return {
+    profile: profileWithStats,
+    rewards: applied.rewards,
+    season: {
+      newlyUnlocked: season.newlyUnlocked,
+      dailyAlreadyClaimed: false,
+    },
+  };
 }
 
 export function equipCharacter(id: CharacterId): PlayerProfile {
@@ -217,6 +260,14 @@ export function purchasePet(id: PetId): { ok: boolean; profile: PlayerProfile; e
   profile.equippedPet = id;
   saveProfile(profile);
   return { ok: true, profile };
+}
+
+export function saveCreativeLoadout(loadout: CreativeLoadout): PlayerProfile {
+  const profile = loadProfile();
+  if (!profile.unlockedCharacters.includes('creative')) return profile;
+  profile.creativeLoadout = normalizeCreativeLoadout(loadout);
+  saveProfile(profile);
+  return profile;
 }
 
 export async function redeemPromoCode(raw: string): Promise<{

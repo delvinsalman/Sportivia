@@ -40,7 +40,9 @@ export function BallRainIntro({ sport, mode, onComplete }: BallRainIntroProps) {
     ? 'radial-gradient(ellipse at 50% 30%, rgba(35,165,89,0.25) 0%, #0a0a0b 70%)'
     : sport === 'basketball'
       ? 'radial-gradient(ellipse at 50% 30%, rgba(249,115,22,0.25) 0%, #0a0a0b 70%)'
-      : 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.14) 0%, #0a0a0b 70%)';
+      : sport === 'football'
+        ? 'radial-gradient(ellipse at 50% 30%, rgba(139,90,43,0.28) 0%, #0a0a0b 70%)'
+        : 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.14) 0%, #0a0a0b 70%)';
 
   return (
     <motion.div

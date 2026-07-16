@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pencil, Play, ShoppingBag, X, Check, Info, Zap, Trophy, Timer, Swords, Settings } from 'lucide-react';
+import { Pencil, Play, ShoppingBag, X, Check, Info, Zap, Trophy, Timer, Swords, Settings, Medal } from 'lucide-react';
 import type { Sport, GameMode } from '../types';
 import type { PlayerProfile } from '../types/profile';
 import { getTodayKey } from '../lib/seed';
@@ -20,6 +20,7 @@ interface HomeScreenProps {
   onStart: (mode: GameMode) => void;
   profile: PlayerProfile;
   onOpenStore: () => void;
+  onOpenCareer: () => void;
   onOpenAbout: () => void;
   onOpenSettings: () => void;
   onSaveName: (name: string) => void;
@@ -35,7 +36,7 @@ const modeLabels: Record<GameMode, string> = {
 
 const MODE_META: Record<GameMode, { tone: string; icon: typeof Zap; detail: string }> = {
   training: { tone: '#949ba4', icon: Zap, detail: '1 min · practice · no coins or XP' },
-  daily: { tone: '#23a559', icon: Trophy, detail: '2 min · finish for bonus coins' },
+  daily: { tone: '#23a559', icon: Trophy, detail: '2 min · first finish pays · missions count' },
   timed: { tone: '#5865f2', icon: Timer, detail: '2 min · finish for ranked bonus' },
   duel: { tone: '#ed4245', icon: Swords, detail: 'Lobby code · race a friend · highest score wins' },
 };
@@ -112,6 +113,7 @@ export function HomeScreen({
   onStart,
   profile,
   onOpenStore,
+  onOpenCareer,
   onOpenAbout,
   onOpenSettings,
   onSaveName,
@@ -227,6 +229,18 @@ export function HomeScreen({
           type="button"
           onClick={() => {
             playMenuClick();
+            onOpenCareer();
+          }}
+          className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:gap-1 sm:px-3 sm:py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#f0b232] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          aria-label="Career"
+        >
+          <Medal className="w-3.5 h-3.5 text-[#949ba4]" />
+          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1] hidden sm:inline">Career</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            playMenuClick();
             onOpenStore();
           }}
           className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:gap-1 sm:px-3 sm:py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5865f2] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
@@ -270,7 +284,11 @@ export function HomeScreen({
               height={330}
               bare
               hero
+              sport={sport}
               className="w-full max-w-[400px] sm:max-w-[450px] mx-auto"
+              {...(profile.equippedCharacter === 'creative'
+                ? { creativeLoadout: profile.creativeLoadout }
+                : {})}
             />
             </div>
             {profile.equippedPet && (
@@ -288,35 +306,37 @@ export function HomeScreen({
             )}
           </div>
 
-          <motion.button
-            type="button"
-            whileHover={{
-              scale: 1.05,
-              y: -3,
-              transition: { type: 'spring', stiffness: 420, damping: 18 },
-            }}
-            whileTap={{ scale: 0.96, y: 2 }}
-            onClick={() => {
-              playMenuClick();
-              setShowModes(true);
-            }}
-            className="group/play relative overflow-hidden mt-1 sm:mt-2 flex items-center gap-2.5 px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-black border-[3px] border-white/30 transition-[box-shadow] duration-200 shrink-0"
-            style={{
-              background: accent,
-              color: onAccentFg(accent),
-              boxShadow: `0 6px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}, 0 0 0 0 ${accent}00`,
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.boxShadow = `0 9px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}, 0 12px 32px ${accent}55`;
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.boxShadow = `0 6px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}, 0 0 0 0 ${accent}00`;
-            }}
-          >
-            <span className="play-btn-shine" aria-hidden />
-            <Play className="relative z-10 w-5 h-5 fill-current drop-shadow-sm transition-transform duration-300 ease-out group-hover/play:scale-125 group-hover/play:-rotate-12" />
-            <span className="relative z-10 tracking-wide">Play</span>
-          </motion.button>
+          <div className="flex flex-col items-center mt-1 sm:mt-2 shrink-0">
+            <motion.button
+              type="button"
+              whileHover={{
+                scale: 1.05,
+                y: -3,
+                transition: { type: 'spring', stiffness: 420, damping: 18 },
+              }}
+              whileTap={{ scale: 0.96, y: 2 }}
+              onClick={() => {
+                playMenuClick();
+                setShowModes(true);
+              }}
+              className="group/play relative overflow-hidden flex items-center gap-2.5 px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-black border-[3px] border-white/30 transition-[box-shadow] duration-200"
+              style={{
+                background: accent,
+                color: onAccentFg(accent),
+                boxShadow: `0 6px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}, 0 0 0 0 ${accent}00`,
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.boxShadow = `0 9px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}, 0 12px 32px ${accent}55`;
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.boxShadow = `0 6px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}, 0 0 0 0 ${accent}00`;
+              }}
+            >
+              <span className="play-btn-shine" aria-hidden />
+              <Play className="relative z-10 w-5 h-5 fill-current drop-shadow-sm transition-transform duration-300 ease-out group-hover/play:scale-125 group-hover/play:-rotate-12" />
+              <span className="relative z-10 tracking-wide">Play</span>
+            </motion.button>
+          </div>
         </motion.div>
       </div>
 

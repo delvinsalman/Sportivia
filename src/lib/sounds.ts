@@ -1,10 +1,17 @@
 import type { Sport } from '../types';
 import { canPlaySfx, effectiveSfxVolume, getSettings } from './settings';
+import { assetUrl } from './assetUrl';
 
 let ctx: AudioContext | null = null;
 
-const SOCCER_WRONG = ['/sounds/soccer/wrong-whistle.webm', '/sounds/soccer/wrong-whistle.m4a'];
-const SOCCER_CORRECT = ['/sounds/soccer/correct-kick.webm', '/sounds/soccer/correct-kick.m4a'];
+const SOCCER_WRONG = [
+  assetUrl('/sounds/soccer/wrong-whistle.webm'),
+  assetUrl('/sounds/soccer/wrong-whistle.m4a'),
+];
+const SOCCER_CORRECT = [
+  assetUrl('/sounds/soccer/correct-kick.webm'),
+  assetUrl('/sounds/soccer/correct-kick.m4a'),
+];
 
 const audioCache = new Map<string, HTMLAudioElement>();
 

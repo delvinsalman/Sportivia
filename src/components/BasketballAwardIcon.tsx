@@ -7,7 +7,7 @@ export function BasketballAwardIcon({
 }: {
   variant: BasketballAwardVariant;
   size?: number;
-  sport?: 'soccer' | 'basketball' | 'baseball';
+  sport?: 'soccer' | 'basketball' | 'baseball' | 'football';
 }) {
   const uid = `nba-award-${variant}`;
 

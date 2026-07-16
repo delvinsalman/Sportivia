@@ -1,11 +1,12 @@
 import type { CategoryTag, Sport } from '../types';
+import { assetUrl } from '../lib/assetUrl';
 import { TeamJerseyIcon } from './TeamJerseyIcon';
 import type { JerseyPattern } from './TeamJerseyIcon';
 import { AnimatedGlobeIcon } from './AnimatedGlobeIcon';
 import { AllStarIcon } from './AllStarIcon';
 import { BasketballAwardIcon } from './BasketballAwardIcon';
 
-export type VisualType = 'flag' | 'jersey' | 'league' | 'trophy' | 'position' | 'era' | 'region' | 'award' | 'college' | 'basketball' | 'mlb' | 'allstar';
+export type VisualType = 'flag' | 'jersey' | 'league' | 'trophy' | 'position' | 'era' | 'region' | 'award' | 'college' | 'basketball' | 'mlb' | 'nfl' | 'allstar';
 
 interface VisualMeta {
   type: VisualType;
@@ -212,6 +213,45 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'award-gold-glove': { type: 'trophy', logoUrl: '/icons/trophies/mlb-gold-glove.png', logoScale: 1.2 },
   'batting-title': { type: 'award', initials: 'AVG' },
   'decade-80s': { type: 'era', initials: '80' },
+
+  // NFL
+  'team-chiefs': { type: 'nfl', jerseyPattern: 'solid', colors: ['#e31837'], accent: '#ffb81c', logoUrl: '/icons/teams/nfl/chiefs.png' },
+  'team-patriots': { type: 'nfl', jerseyPattern: 'solid', colors: ['#002244'], accent: '#c60c30', logoUrl: '/icons/teams/nfl/patriots.png' },
+  'team-49ers': { type: 'nfl', jerseyPattern: 'solid', colors: ['#aa0000'], accent: '#b3995d', logoUrl: '/icons/teams/nfl/49ers.png' },
+  'team-cowboys': { type: 'nfl', jerseyPattern: 'solid', colors: ['#003594'], accent: '#869397', logoUrl: '/icons/teams/nfl/cowboys.png' },
+  'team-packers': { type: 'nfl', jerseyPattern: 'solid', colors: ['#203731'], accent: '#ffb612', logoUrl: '/icons/teams/nfl/packers.png' },
+  'team-eagles': { type: 'nfl', jerseyPattern: 'solid', colors: ['#004c54'], accent: '#a5acaf', logoUrl: '/icons/teams/nfl/eagles.png' },
+  'team-ravens': { type: 'nfl', jerseyPattern: 'solid', colors: ['#241773'], accent: '#9e7c0c', logoUrl: '/icons/teams/nfl/ravens.png' },
+  'team-bills': { type: 'nfl', jerseyPattern: 'solid', colors: ['#00338d'], accent: '#c60c30', logoUrl: '/icons/teams/nfl/bills.png' },
+  'team-seahawks': { type: 'nfl', jerseyPattern: 'solid', colors: ['#002244'], accent: '#69be28', logoUrl: '/icons/teams/nfl/seahawks.png' },
+  'team-rams': { type: 'nfl', jerseyPattern: 'solid', colors: ['#003594'], accent: '#ffd100', logoUrl: '/icons/teams/nfl/rams.png' },
+  'team-broncos': { type: 'nfl', jerseyPattern: 'solid', colors: ['#fb4f14'], accent: '#002244', logoUrl: '/icons/teams/nfl/broncos.png' },
+  'team-steelers': { type: 'nfl', jerseyPattern: 'solid', colors: ['#101820'], accent: '#ffb612', logoUrl: '/icons/teams/nfl/steelers.png' },
+  'team-giants': { type: 'nfl', jerseyPattern: 'solid', colors: ['#0b2265'], accent: '#a71930', logoUrl: '/icons/teams/nfl/giants.png' },
+  'team-bears': { type: 'nfl', jerseyPattern: 'solid', colors: ['#0b162a'], accent: '#c83803', logoUrl: '/icons/teams/nfl/bears.png' },
+  'team-dolphins': { type: 'nfl', jerseyPattern: 'solid', colors: ['#008e97'], accent: '#fc4c02', logoUrl: '/icons/teams/nfl/dolphins.png' },
+  'team-vikings': { type: 'nfl', jerseyPattern: 'solid', colors: ['#4f2683'], accent: '#ffc62f', logoUrl: '/icons/teams/nfl/vikings.png' },
+  'team-lions': { type: 'nfl', jerseyPattern: 'solid', colors: ['#0076b6'], accent: '#b0b7bc', logoUrl: '/icons/teams/nfl/lions.png' },
+  'team-bengals': { type: 'nfl', jerseyPattern: 'solid', colors: ['#fb4f14'], accent: '#000000', logoUrl: '/icons/teams/nfl/bengals.png' },
+  'team-jets': { type: 'nfl', jerseyPattern: 'solid', colors: ['#125740'], accent: '#ffffff', logoUrl: '/icons/teams/nfl/jets.png' },
+  'team-buccaneers': { type: 'nfl', jerseyPattern: 'solid', colors: ['#d50a0a'], accent: '#ff7900', logoUrl: '/icons/teams/nfl/buccaneers.png' },
+  'team-colts': { type: 'nfl', jerseyPattern: 'solid', colors: ['#002c5f'], accent: '#a2aaad', logoUrl: '/icons/teams/nfl/colts.png' },
+  'pos-qb': { type: 'position', colors: ['#8b5a2b'], initials: 'QB' },
+  'pos-rb': { type: 'position', colors: ['#8b5a2b'], initials: 'RB' },
+  'pos-wr': { type: 'position', colors: ['#8b5a2b'], initials: 'WR' },
+  'pos-te': { type: 'position', colors: ['#8b5a2b'], initials: 'TE' },
+  'pos-dl': { type: 'position', colors: ['#5c3d2e'], initials: 'DL' },
+  'pos-lb': { type: 'position', colors: ['#5c3d2e'], initials: 'LB' },
+  'pos-db': { type: 'position', colors: ['#5c3d2e'], initials: 'DB' },
+  'pos-k': { type: 'position', colors: ['#a67c52'], initials: 'K' },
+  'champ-sb': { type: 'trophy', logoUrl: '/icons/trophies/nfl-super-bowl.png', logoScale: 1.15 },
+  'champ-sb3': { type: 'trophy', logoUrl: '/icons/trophies/nfl-super-bowl.png', logoScale: 1.15 },
+  'award-probowl': { type: 'trophy', logoUrl: '/icons/awards/nfl-pro-bowl.svg', logoScale: 1.05 },
+  'college-alabama': { type: 'nfl', jerseyPattern: 'solid', colors: ['#9e1b32'], accent: '#ffffff', logoUrl: '/icons/teams/college/alabama.png' },
+  'college-ohio-state': { type: 'nfl', jerseyPattern: 'solid', colors: ['#bb0000'], accent: '#666666', logoUrl: '/icons/teams/college/ohio-state.png' },
+  'college-michigan': { type: 'nfl', jerseyPattern: 'solid', colors: ['#00274c'], accent: '#ffcb05', logoUrl: '/icons/teams/college/michigan.png' },
+  'college-lsu': { type: 'nfl', jerseyPattern: 'solid', colors: ['#461d7c'], accent: '#fdd023', logoUrl: '/icons/teams/college/lsu.png' },
+  'college-oklahoma': { type: 'nfl', jerseyPattern: 'solid', colors: ['#841617'], accent: '#ffffff', logoUrl: '/icons/teams/college/oklahoma.png' },
 };
 
 function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMeta {
@@ -220,6 +260,7 @@ function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMet
   if (tag === 'PLAYED IN' || tag === 'TEAM') {
     if (sport === 'basketball') return { type: 'basketball', colors: ['#1d428a', '#ffc72c'], initials: 'NBA' };
     if (sport === 'baseball') return { type: 'mlb', colors: ['#0c2340', '#0c2340'], accent: '#fff', initials: 'MLB' };
+    if (sport === 'football') return { type: 'nfl', colors: ['#013369', '#d50a0a'], accent: '#fff', initials: 'NFL' };
     return { type: 'jersey', colors: ['#1a472a', '#1a472a'], accent: '#fff' };
   }
 
@@ -239,7 +280,7 @@ function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
         style={{ width: size, height: size }}
       >
         <img
-          src="/icons/flags/canada.svg"
+          src={assetUrl('/icons/flags/canada.svg')}
           alt=""
           draggable={false}
           className="w-full h-full object-cover select-none"
@@ -309,7 +350,7 @@ function LeagueLogo({
         } : undefined}
       >
         <img
-          src={logoUrl}
+          src={assetUrl(logoUrl)}
           alt=""
           draggable={false}
           className="select-none object-contain"
@@ -372,6 +413,7 @@ function PositionIcon({ color, size = 36, role }: { color: string; size?: number
   const isSoccer = ['FW', 'MF', 'DF', 'GK'].includes(label);
   const isBasketball = ['G', 'F', 'C'].includes(label);
   const isBaseball = ['P', 'OF', 'IF', 'CAT', 'DH'].includes(label);
+  const isFootball = ['QB', 'RB', 'WR', 'TE', 'DL', 'LB', 'DB', 'K'].includes(label);
 
   const fontSize = label.length > 2 ? 8.5 : label.length > 1 ? 11 : 13;
 
@@ -388,6 +430,14 @@ function PositionIcon({ color, size = 36, role }: { color: string; size?: number
     if (label === 'IF') return { cx: 24, cy: 20 };
     if (label === 'CAT') return { cx: 24, cy: 28 };
     if (label === 'DH') return { cx: 31, cy: 19 };
+    if (label === 'QB') return { cx: 24, cy: 22 };
+    if (label === 'RB') return { cx: 24, cy: 26 };
+    if (label === 'WR') return { cx: 12, cy: 16 };
+    if (label === 'TE') return { cx: 34, cy: 18 };
+    if (label === 'DL') return { cx: 24, cy: 16 };
+    if (label === 'LB') return { cx: 24, cy: 13 };
+    if (label === 'DB') return { cx: 24, cy: 10 };
+    if (label === 'K') return { cx: 36, cy: 26 };
     return { cx: 24, cy: 19 };
   })();
 
@@ -416,6 +466,14 @@ function PositionIcon({ color, size = 36, role }: { color: string; size?: number
       {isBaseball && (
         <g opacity="0.4" stroke={color} strokeWidth="1" fill="none">
           <path d="M 24 9 L 34 19 L 24 29 L 14 19 Z" />
+        </g>
+      )}
+
+      {isFootball && (
+        <g opacity="0.4" stroke={color} strokeWidth="1" fill="none">
+          <rect x="11" y="8" width="26" height="22" rx="2" />
+          <line x1="11" y1="19" x2="37" y2="19" />
+          <line x1="24" y1="8" x2="24" y2="30" opacity="0.5" />
         </g>
       )}
 
@@ -494,6 +552,7 @@ export function CategoryIcon({ categoryId, tag, size = 38, sport }: CategoryIcon
         : <TrophyIcon size={size} color={meta.colors?.[0]} />;
     case 'basketball': return <TeamJerseyIcon meta={meta} sport="basketball" size={size} />;
     case 'mlb': return <TeamJerseyIcon meta={meta} sport="baseball" size={size} />;
+    case 'nfl': return <TeamJerseyIcon meta={meta} sport="football" size={size} />;
     case 'position':
       if (meta.logoUrl) {
         return (
