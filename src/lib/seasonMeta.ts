@@ -1,4 +1,4 @@
-import type { GameMode, GameResult, Sport } from '../types';
+import type { GameResult, Sport } from '../types';
 import { getTodayKey } from './seed';
 import {
   ACHIEVEMENTS,

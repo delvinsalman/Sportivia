@@ -227,7 +227,6 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'team-rams': { type: 'nfl', jerseyPattern: 'solid', colors: ['#003594'], accent: '#ffd100', logoUrl: '/icons/teams/nfl/rams.png' },
   'team-broncos': { type: 'nfl', jerseyPattern: 'solid', colors: ['#fb4f14'], accent: '#002244', logoUrl: '/icons/teams/nfl/broncos.png' },
   'team-steelers': { type: 'nfl', jerseyPattern: 'solid', colors: ['#101820'], accent: '#ffb612', logoUrl: '/icons/teams/nfl/steelers.png' },
-  'team-giants': { type: 'nfl', jerseyPattern: 'solid', colors: ['#0b2265'], accent: '#a71930', logoUrl: '/icons/teams/nfl/giants.png' },
   'team-bears': { type: 'nfl', jerseyPattern: 'solid', colors: ['#0b162a'], accent: '#c83803', logoUrl: '/icons/teams/nfl/bears.png' },
   'team-dolphins': { type: 'nfl', jerseyPattern: 'solid', colors: ['#008e97'], accent: '#fc4c02', logoUrl: '/icons/teams/nfl/dolphins.png' },
   'team-vikings': { type: 'nfl', jerseyPattern: 'solid', colors: ['#4f2683'], accent: '#ffc62f', logoUrl: '/icons/teams/nfl/vikings.png' },
@@ -255,6 +254,15 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
 };
 
 function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMeta {
+  if (categoryId === 'team-giants' && sport === 'football') {
+    return {
+      type: 'nfl',
+      jerseyPattern: 'solid',
+      colors: ['#0b2265'],
+      accent: '#a71930',
+      logoUrl: '/icons/teams/nfl/giants.png',
+    };
+  }
   if (CATEGORY_VISUALS[categoryId]) return CATEGORY_VISUALS[categoryId];
 
   if (tag === 'PLAYED IN' || tag === 'TEAM') {

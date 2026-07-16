@@ -95,6 +95,7 @@ export const CHARACTERS: CharacterDef[] = [
     modelPath: '/models/cube-man.fbx',
     accent: '#23a559',
     footOffsetY: 0.05,
+    poseMode: 'procedural',
   },
   {
     id: 'cube-woman',
@@ -104,6 +105,7 @@ export const CHARACTERS: CharacterDef[] = [
     modelPath: '/models/cube-woman.fbx',
     accent: '#f97316',
     footOffsetY: 0.05,
+    poseMode: 'procedural',
   },
   {
     id: 'ava',
