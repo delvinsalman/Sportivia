@@ -21,7 +21,7 @@ import type {
   CollectibleCard,
   OpenedCard,
 } from '../types/cards';
-import { CARD_CATALOG, CARD_PACKS, CARDS_BY_SPORT } from '../lib/cardCatalog';
+import { CARD_PACKS, CARDS_BY_SPORT } from '../lib/cardCatalog';
 import { openCardPack } from '../lib/profileStorage';
 import {
   cleanTeamName,
@@ -39,7 +39,6 @@ import {
   stopPackSuspense,
 } from '../lib/menuAudio';
 import { setAmbientDuck } from '../lib/ambientControl';
-import { assetUrl } from '../lib/assetUrl';
 import { SportBackground } from './SportBackground';
 import { SportBall } from './SportBall';
 
