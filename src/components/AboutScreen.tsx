@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import {
-  ArrowLeft, Grid3X3, Timer, Swords, Trophy, Coins, SkipForward, Play, Zap, Users,
+  ArrowLeft, Grid3X3, Timer, Swords, Trophy, Coins, SkipForward, Play, Zap, Users, Layers3, Sparkles,
 } from 'lucide-react';
 import type { Sport, CategoryTag } from '../types';
 import type { PlayerProfile } from '../types/profile';
@@ -84,6 +84,20 @@ const BOARD_DEMOS: Record<Sport, { player: string; cells: DemoCell[] }> = {
       { id: 'award-probowl', tag: 'AWARD', label: 'PRO BOWL' },
       { id: 'nat-usa', tag: 'NATIONALITY', label: 'USA' },
       { id: 'champ-sb', tag: 'WINNER', label: 'SUPER BOWL' },
+      { id: 'draft-10s', tag: 'DRAFT', label: '2010s' },
+    ],
+  },
+  hockey: {
+    player: 'Connor McDavid',
+    cells: [
+      { id: 'team-nhl-oilers', tag: 'TEAM', label: 'OILERS', filled: true, playerName: 'McDavid', playerId: 'connor-mcdavid' },
+      { id: 'team-nhl-penguins', tag: 'TEAM', label: 'PENGUINS' },
+      { id: 'pos-c', tag: 'POSITION', label: 'CENTER' },
+      { id: 'pos-g', tag: 'POSITION', label: 'GOALIE' },
+      { id: 'award-hart', tag: 'AWARD', label: 'HART MVP' },
+      { id: 'award-nhl-allstar', tag: 'AWARD', label: 'ALL-STAR' },
+      { id: 'nat-canada', tag: 'NATIONALITY', label: 'CANADA' },
+      { id: 'champ-stanley', tag: 'WINNER', label: 'STANLEY CUP' },
       { id: 'draft-10s', tag: 'DRAFT', label: '2010s' },
     ],
   },
@@ -407,8 +421,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
               <span className="block" style={{ color: accent }}>built for speed</span>
             </h1>
             <p className="text-base sm:text-lg text-[#b5bac1] leading-relaxed max-w-md mb-6">
-              Match stars to categories on a live 3×3 board. Soccer, NBA, MLB, NFL —
-              with NHL coming soon.
+              Match stars to categories on a live 3×3 board across Soccer, NBA, MLB, NFL, and NHL.
             </p>
             <div className="flex flex-wrap gap-2">
               {SPORTS.map(s => (
@@ -438,25 +451,28 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
               className="absolute inset-8 rounded-full blur-3xl opacity-40"
               style={{ background: accent }}
             />
-            <div className="relative w-full max-w-[420px] mx-auto">
+            <div className="relative w-full max-w-[520px] mx-auto">
               <CharacterPodium
                 characterId={profile.equippedCharacter}
                 accent={SPORT_PODIUM_ACCENT[sport]}
-                height={280}
+                height={400}
                 bare
                 hero
                 sport={sport}
-                className="w-full max-w-[340px] mx-auto"
+                className="w-full max-w-[460px] mx-auto"
                 {...(profile.equippedCharacter === 'creative'
                   ? { creativeLoadout: profile.creativeLoadout }
                   : {})}
+                {...(profile.equippedCharacter === 'bunny'
+                  ? { rabbitVariant: profile.rabbitVariant }
+                  : {})}
               />
               {pet && (
-                <div className="absolute right-[-2%] bottom-0 w-[52%] max-w-[200px] pointer-events-none">
+                <div className="absolute right-[-2%] bottom-0 w-[52%] max-w-[260px] pointer-events-none">
                   <CharacterPodium
                     petId={pet.id}
                     accent={pet.accent}
-                    height={240}
+                    height={340}
                     bare
                     hero
                     hidePodium
@@ -479,7 +495,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             </p>
             <h2 className="text-2xl sm:text-3xl font-extrabold text-[#f2f3f5]">Every sport, same heat</h2>
             <p className="text-sm text-[#949ba4] mt-1 whitespace-nowrap">
-              Soccer, NBA, MLB, and NFL — same rules, different boards. Tap the fit before time runs out.
+              Soccer, NBA, MLB, NFL, and NHL — same rules, different boards. Tap the fit before time runs out.
             </p>
           </div>
 
@@ -491,7 +507,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             style={{ boxShadow: `0 8px 0 #1e1f22, 0 16px 40px ${accent}22` }}
           >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-white/8 to-transparent" />
-            <div className="relative p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+            <div className="relative p-3 sm:p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3">
               {SPORTS.map((s, i) => {
                 const demo = BOARD_DEMOS[s];
                 return (
@@ -597,6 +613,85 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
           </div>
         </section>
 
+        {/* Card packs */}
+        <section className="mb-12 md:mb-16">
+          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#949ba4] mb-2">
+            Collect
+          </p>
+          <h2
+            className="text-2xl sm:text-3xl font-black text-white mb-2"
+            style={{ textShadow: '0 3px 0 rgba(0,0,0,0.3)' }}
+          >
+            Card packs
+          </h2>
+          <p className="text-sm font-medium text-[#c5c7cc] mb-5 max-w-2xl leading-relaxed">
+            Spend coins on packs to pull real athletes for each sport. Higher tiers mean better odds —
+            build your collection and chase legendaries.
+          </p>
+          <div className="grid sm:grid-cols-3 gap-3 sm:gap-4">
+            {[
+              {
+                name: 'Prospect',
+                detail: '3 cards · starter odds · build your base',
+                tone: '#94a3b8',
+                cost: '250',
+              },
+              {
+                name: 'Elite',
+                detail: '6 cards · rare+ guaranteed · stronger pulls',
+                tone: '#f0b232',
+                cost: '800',
+              },
+              {
+                name: 'Icon',
+                detail: '9 cards · epic+ guaranteed · chase legends',
+                tone: '#c084fc',
+                cost: '2,000',
+              },
+            ].map((pack, i) => (
+              <motion.div
+                key={pack.name}
+                initial={{ opacity: 0, y: 14 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.05 * i, type: 'spring', stiffness: 320, damping: 20 }}
+                className="relative overflow-hidden rounded-[24px] border-[3px] p-5"
+                style={{
+                  background: `linear-gradient(160deg, ${pack.tone}28 0%, #15161a 48%, #121316 100%)`,
+                  borderColor: `${pack.tone}aa`,
+                  boxShadow: `0 7px 0 ${pack.tone}55, 0 14px 28px rgba(0,0,0,0.28)`,
+                }}
+              >
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-8 bg-gradient-to-b from-white/12 to-transparent" />
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center border-[3px] mb-3 shadow-[0_4px_0_rgba(0,0,0,0.35)]"
+                  style={{
+                    background: pack.tone,
+                    borderColor: 'rgba(255,255,255,0.35)',
+                    color: pack.tone === '#94a3b8' || pack.tone === '#f0b232' ? '#18191c' : '#fff',
+                  }}
+                >
+                  <Layers3 className="w-6 h-6" />
+                </div>
+                <p className="text-lg font-black text-white">{pack.name} Pack</p>
+                <p className="text-sm font-semibold text-[#d0d2d8] mt-1 leading-snug">{pack.detail}</p>
+                <div className="mt-3 flex items-center gap-2">
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-wide px-2.5 py-1 rounded-full"
+                    style={{
+                      background: pack.tone,
+                      color: pack.tone === '#94a3b8' || pack.tone === '#f0b232' ? '#18191c' : '#fff',
+                    }}
+                  >
+                    <Coins className="w-3 h-3" />
+                    {pack.cost}
+                  </span>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
         {/* Progression */}
         <section className="mb-12">
           <motion.div
@@ -610,13 +705,13 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             }}
           >
             <div className="w-16 h-16 rounded-[20px] bg-[#f0b232] border-[3px] border-white/40 flex items-center justify-center shrink-0 shadow-[0_5px_0_#8a6814]">
-              <Coins className="w-8 h-8 text-[#18191c]" />
+              <Sparkles className="w-8 h-8 text-[#18191c]" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-black text-white">Coins, XP & the store</h2>
+              <h2 className="text-xl font-black text-white">Coins, levels & packs</h2>
               <p className="text-sm font-medium text-[#d7d9de] mt-1 leading-relaxed max-w-xl">
-                Finish Daily, Ranked, or Duels to earn coins and XP. Unlock skins and pets,
-                level up, and show off on your podium — progress stays on this device.
+                Finish Daily, Ranked, or Duels to earn coins and XP. Level up, unlock skins and pets,
+                then spend coins on card packs to collect athletes — progress stays on this device.
               </p>
             </div>
             <motion.button

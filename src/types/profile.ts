@@ -1,5 +1,6 @@
 import type { PlayerStats } from '../types';
 import type { CreativeLoadout } from './creativeCharacter';
+import type { CardCollectionState } from './cards';
 import { DEFAULT_CREATIVE_LOADOUT } from './creativeCharacter';
 
 export type CharacterId =
@@ -21,7 +22,14 @@ export type CharacterId =
   | 'ninja'
   | 'mako'
   | 'creative';
+export type RabbitVariantId = 'base' | 'grey' | 'blond' | 'pigtails' | 'cyan-hair';
 export type PetId = 'pug' | 'fish' | 'cat' | 'raccoon' | 'wolf' | 'alpaca' | 'sheep' | 'deer' | 'horse' | 'shark' | 'frog';
+
+export interface RabbitVariantDef {
+  id: RabbitVariantId;
+  name: string;
+  modelPath: string;
+}
 
 export interface CharacterDef {
   id: CharacterId;
@@ -75,6 +83,9 @@ export interface PlayerProfile {
   unlockedPets: PetId[];
   /** Outfit for the creative / customizable skin */
   creativeLoadout: CreativeLoadout;
+  /** Selected look included with the Rabbit skin bundle */
+  rabbitVariant: RabbitVariantId;
+  cardCollection: CardCollectionState;
   stats: PlayerStats;
 }
 
@@ -95,7 +106,7 @@ export const CHARACTERS: CharacterDef[] = [
     modelPath: '/models/cube-man.fbx',
     accent: '#23a559',
     footOffsetY: 0.05,
-    poseMode: 'procedural',
+    poseMode: 'skeletal',
   },
   {
     id: 'cube-woman',
@@ -105,7 +116,7 @@ export const CHARACTERS: CharacterDef[] = [
     modelPath: '/models/cube-woman.fbx',
     accent: '#f97316',
     footOffsetY: 0.05,
-    poseMode: 'procedural',
+    poseMode: 'skeletal',
   },
   {
     id: 'ava',
@@ -234,12 +245,14 @@ export const CHARACTERS: CharacterDef[] = [
   },
   {
     id: 'bunny',
-    name: 'Hop Shot',
-    tagline: 'Vertical threat · ears up',
-    price: 32_000,
-    modelPath: '/models/bunny.glb',
-    accent: '#f472b6',
+    name: 'Rabbit',
+    tagline: 'Five looks included · customize anytime',
+    price: 36_000,
+    modelPath: '/models/rabbit/base.glb',
+    accent: '#67e8f9',
     footOffsetY: 0,
+    customizable: true,
+    showcaseRestMs: [4_200, 7_800],
   },
   {
     id: 'ninja',
@@ -265,8 +278,8 @@ export const PETS: PetDef[] = [
   {
     id: 'pug',
     name: 'Bench Pug',
-    tagline: 'Loyal mascot · free buddy',
-    price: 0,
+    tagline: 'Loyal mascot · cheap buddy',
+    price: 50,
     modelPath: '/models/pets/pug.glb',
     accent: '#d6a77a',
     footOffsetY: 0,
@@ -312,7 +325,7 @@ export const PETS: PetDef[] = [
     modelPath: '/models/pets/alpaca.glb',
     accent: '#f5d0c5',
     footOffsetY: 0,
-    targetHeight: 1.65,
+    targetHeight: 1.8,
   },
   {
     id: 'sheep',
@@ -380,13 +393,28 @@ export const PETS: PetDef[] = [
 
 export const STARTER_CHARACTERS: CharacterId[] = ['cube-man', 'cube-woman', 'ava'];
 export const FREE_CHARACTERS: CharacterId[] = STARTER_CHARACTERS;
-export const STARTER_PETS: PetId[] = ['pug'];
+/** No free pets — first companion costs a little so new users buy in. */
+export const STARTER_PETS: PetId[] = [];
 export const FREE_PETS: PetId[] = STARTER_PETS;
 
 export const DEFAULT_PLAYER_NAME = 'Pro';
 export const DEFAULT_CHARACTER: CharacterId = 'cube-man';
+/** Fallback pet id for migrations only — new profiles start with none equipped. */
 export const DEFAULT_PET: PetId = 'pug';
+export const DEFAULT_RABBIT_VARIANT: RabbitVariantId = 'base';
 export { DEFAULT_CREATIVE_LOADOUT };
+
+export const RABBIT_VARIANTS: RabbitVariantDef[] = [
+  { id: 'base', name: 'Classic', modelPath: '/models/rabbit/base.glb' },
+  { id: 'grey', name: 'Grey', modelPath: '/models/rabbit/grey.glb' },
+  { id: 'blond', name: 'Blond', modelPath: '/models/rabbit/blond.glb' },
+  { id: 'pigtails', name: 'Pigtails', modelPath: '/models/rabbit/pigtails.glb' },
+  { id: 'cyan-hair', name: 'Cyan Hair', modelPath: '/models/rabbit/cyan-hair.glb' },
+];
+
+export function getRabbitVariantDef(id: RabbitVariantId): RabbitVariantDef {
+  return RABBIT_VARIANTS.find(variant => variant.id === id) ?? RABBIT_VARIANTS[0];
+}
 
 export function getCharacterDef(id: CharacterId): CharacterDef {
   return CHARACTERS.find(c => c.id === id) ?? CHARACTERS[0];

@@ -7,6 +7,7 @@ import { SPORT_ACCENT } from '../lib/sportTheme';
 interface BallRainIntroProps {
   sport: Sport;
   mode: string;
+  detail?: string;
   onComplete: () => void;
 }
 
@@ -16,7 +17,7 @@ function BallComponent({ sport, size }: { sport: Sport; size: number }) {
   return <SportBall sport={sport} size={size} />;
 }
 
-export function BallRainIntro({ sport, mode, onComplete }: BallRainIntroProps) {
+export function BallRainIntro({ sport, mode, detail, onComplete }: BallRainIntroProps) {
   const balls = useMemo(() =>
     Array.from({ length: RAIN_COUNT }, (_, i) => ({
       id: i,
@@ -42,7 +43,9 @@ export function BallRainIntro({ sport, mode, onComplete }: BallRainIntroProps) {
       ? 'radial-gradient(ellipse at 50% 30%, rgba(249,115,22,0.25) 0%, #0a0a0b 70%)'
       : sport === 'football'
         ? 'radial-gradient(ellipse at 50% 30%, rgba(139,90,43,0.28) 0%, #0a0a0b 70%)'
-        : 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.14) 0%, #0a0a0b 70%)';
+        : sport === 'hockey'
+          ? 'radial-gradient(ellipse at 50% 30%, rgba(56,189,248,0.25) 0%, #0a0a0b 70%)'
+          : 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.14) 0%, #0a0a0b 70%)';
 
   return (
     <motion.div
@@ -107,6 +110,7 @@ export function BallRainIntro({ sport, mode, onComplete }: BallRainIntroProps) {
           style={{ color: accent }}
         >
           {mode}
+          {detail ? ` · ${detail}` : ''}
         </motion.p>
       </motion.div>
 

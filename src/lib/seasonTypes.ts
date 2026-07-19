@@ -21,7 +21,7 @@ export interface AchievementDef {
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
-  { id: 'rookie', title: 'First Whistle', detail: 'Finish any Daily, Ranked, or Duel run', icon: 'zap', coinBonus: 50 },
+  { id: 'rookie', title: 'First Whistle', detail: 'Finish any Daily, Ranked, Vs AI, or Duel run', icon: 'zap', coinBonus: 50 },
   { id: 'sharpshooter', title: 'Sharpshooter', detail: 'Land 25 career correct answers', icon: 'target', coinBonus: 100 },
   { id: 'on_fire', title: 'On Fire', detail: 'Hit a 5+ streak in one run', icon: 'fire', coinBonus: 120 },
   { id: 'perfect', title: 'Clean Sheet', detail: 'Fill a full board without misses on that board', icon: 'crown', coinBonus: 200 },
@@ -30,7 +30,7 @@ export const ACHIEVEMENTS: AchievementDef[] = [
   { id: 'vault', title: 'Loaded', detail: 'Hold 5,000 coins at once', icon: 'coins', coinBonus: 100 },
   { id: 'veteran', title: 'Seasoned', detail: 'Reach level 5', icon: 'star', coinBonus: 200 },
   { id: 'duelist', title: 'Duelist', detail: 'Win a 1v1 duel', icon: 'swords', coinBonus: 150 },
-  { id: 'globetrotter', title: 'Globetrotter', detail: 'Play all four sports', icon: 'globe', coinBonus: 125 },
+  { id: 'globetrotter', title: 'Globetrotter', detail: 'Play all five sports', icon: 'globe', coinBonus: 125 },
 ];
 
 export type QuestId =

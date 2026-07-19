@@ -7,7 +7,7 @@ import { SportBall } from './SportBall';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import type { CharacterId, PetId } from '../types/profile';
+import type { CharacterId, PetId, RabbitVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 
 interface ResultModalProps {
@@ -15,6 +15,7 @@ interface ResultModalProps {
   characterId: CharacterId;
   petId?: PetId | null;
   creativeLoadout?: CreativeLoadout;
+  rabbitVariant?: RabbitVariantId;
   onPlayAgain: () => void;
   onHome: () => void;
   waitingForOpponent?: boolean;
@@ -24,6 +25,7 @@ const modeLabels: Record<GameResult['mode'], string> = {
   training: 'Training',
   daily: 'Daily Challenge',
   timed: 'Ranked',
+  bot: 'Vs AI',
   duel: '1v1 Duel',
 };
 
@@ -32,6 +34,7 @@ export function ResultModal({
   characterId,
   petId,
   creativeLoadout,
+  rabbitVariant,
   onPlayAgain,
   onHome,
   waitingForOpponent = false,
@@ -114,6 +117,9 @@ export function ResultModal({
                 sport={result.sport}
                 {...(characterId === 'creative' && creativeLoadout
                   ? { creativeLoadout }
+                  : {})}
+                {...(characterId === 'bunny' && rabbitVariant
+                  ? { rabbitVariant }
                   : {})}
               />
             </div>

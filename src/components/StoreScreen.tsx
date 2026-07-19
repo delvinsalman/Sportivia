@@ -1,8 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
-import { ArrowLeft, ChevronLeft, ChevronRight, Coins, Lock, Sparkles, SlidersHorizontal, Check } from 'lucide-react';
-import type { CharacterId, PetId, PlayerProfile } from '../types/profile';
-import { CHARACTERS, PETS, getCharacterDef, getPetDef } from '../types/profile';
+import { ArrowLeft, ChevronLeft, ChevronRight, Coins, Lock, Palette, PawPrint, Sparkles, SlidersHorizontal, Check } from 'lucide-react';
+import type {
+  CharacterId,
+  PetId,
+  PlayerProfile,
+  RabbitVariantId,
+} from '../types/profile';
+import {
+  CHARACTERS,
+  PETS,
+  RABBIT_VARIANTS,
+  getCharacterDef,
+  getPetDef,
+} from '../types/profile';
 import type { CreativeLoadout, CreativeSlotId } from '../types/creativeCharacter';
 import {
   CREATIVE_SLOTS,
@@ -12,7 +23,6 @@ import {
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SportBackground } from './SportBackground';
 import type { Sport } from '../types';
-import { SPORT_ACCENT, SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { playMenuBack, playMenuClick, playMenuConfirm, playMenuSelect } from '../lib/menuAudio';
 
 type StoreTab = 'skins' | 'pets';
@@ -27,6 +37,7 @@ interface StoreScreenProps {
   onEquipPet: (id: PetId) => void;
   onUnequipPet: () => void;
   onSaveCreativeLoadout: (loadout: CreativeLoadout) => void;
+  onSaveRabbitVariant: (variant: RabbitVariantId) => void;
 }
 
 const SWIPE_THRESHOLD = 56;
@@ -41,9 +52,8 @@ export function StoreScreen({
   onEquipPet,
   onUnequipPet,
   onSaveCreativeLoadout,
+  onSaveRabbitVariant,
 }: StoreScreenProps) {
-  const accent = SPORT_ACCENT[sport];
-  const podiumAccent = SPORT_PODIUM_ACCENT[sport];
   const [tab, setTab] = useState<StoreTab>('skins');
   const [previewCharId, setPreviewCharId] = useState<CharacterId>(() =>
     CHARACTERS.some(c => c.id === profile.equippedCharacter)
@@ -58,6 +68,9 @@ export function StoreScreen({
   const [customizing, setCustomizing] = useState(false);
   const [draftLoadout, setDraftLoadout] = useState<CreativeLoadout>(() =>
     normalizeCreativeLoadout(profile.creativeLoadout),
+  );
+  const [draftRabbitVariant, setDraftRabbitVariant] = useState<RabbitVariantId>(
+    profile.rabbitVariant,
   );
   const [slotId, setSlotId] = useState<CreativeSlotId>('face');
   const slotBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
@@ -79,6 +92,10 @@ export function StoreScreen({
     setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
   }, [profile.creativeLoadout]);
 
+  useEffect(() => {
+    setDraftRabbitVariant(profile.rabbitVariant);
+  }, [profile.rabbitVariant]);
+
   const isPets = tab === 'pets';
   const catalog = isPets ? PETS : CHARACTERS;
   const previewId = isPets ? previewPetId : previewCharId;
@@ -97,7 +114,8 @@ export function StoreScreen({
   const prevItem = previewIndex > 0 ? catalog[previewIndex - 1] : null;
   const nextItem = previewIndex < catalog.length - 1 ? catalog[previewIndex + 1] : null;
   const isCreativePreview = !isPets && safePreviewId === 'creative';
-  const canCustomize = isCreativePreview && owned;
+  const isRabbitPreview = !isPets && safePreviewId === 'bunny';
+  const canCustomize = (isCreativePreview || isRabbitPreview) && owned;
   const previewLoadout =
     isCreativePreview ? (customizing ? draftLoadout : profile.creativeLoadout) : undefined;
   const activeSlot = CREATIVE_SLOTS.find(s => s.id === slotId) ?? CREATIVE_SLOTS[0];
@@ -157,19 +175,22 @@ export function StoreScreen({
   const openCustomize = () => {
     playMenuClick();
     setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
+    setDraftRabbitVariant(profile.rabbitVariant);
     setSlotId('face');
     setCustomizing(true);
   };
 
   const saveCustomize = () => {
     playMenuConfirm();
-    onSaveCreativeLoadout(draftLoadout);
+    if (isRabbitPreview) onSaveRabbitVariant(draftRabbitVariant);
+    else onSaveCreativeLoadout(draftLoadout);
     setCustomizing(false);
   };
 
   const resetCustomize = () => {
     playMenuClick();
-    setDraftLoadout({ ...DEFAULT_CREATIVE_LOADOUT });
+    if (isRabbitPreview) setDraftRabbitVariant('base');
+    else setDraftLoadout({ ...DEFAULT_CREATIVE_LOADOUT });
   };
 
   return (
@@ -177,7 +198,7 @@ export function StoreScreen({
       <SportBackground sport={sport} />
 
       <div className="relative z-10 h-svh flex flex-col">
-        <header className="shrink-0 flex items-center justify-between gap-2 px-3 sm:px-6 pt-2 pb-0">
+        <header className="shrink-0 flex items-center justify-between gap-2 px-3 sm:px-6 pt-4 pb-0">
           <button
             type="button"
             onClick={() => {
@@ -185,6 +206,7 @@ export function StoreScreen({
                 playMenuBack();
                 setCustomizing(false);
                 setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
+                setDraftRabbitVariant(profile.rabbitVariant);
                 return;
               }
               playMenuBack();
@@ -195,64 +217,37 @@ export function StoreScreen({
             <ArrowLeft className="w-4 h-4" />
             {customizing ? 'Cancel' : 'Back'}
           </button>
-          <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#f0b232]/70 shadow-[0_3px_0_#8a6814] shrink-0">
-            <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#f0b232]" />
-            <span className="text-xs sm:text-sm font-black text-[#f0b232] font-mono">{profile.coins}</span>
+          <div className="flex items-center gap-3">
+            {!customizing && (
+              <div className="inline-flex items-center rounded-full bg-[#1e1f22] border-[2.5px] border-[#f0b232]/70 shadow-[0_3px_0_#8a6814]">
+                {([
+                  ['skins', 'Skins', Palette],
+                  ['pets', 'Pets', PawPrint],
+                ] as const).map(([id, label, Icon]) => {
+                  const active = tab === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      onClick={() => switchTab(id)}
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-black transition-all ${
+                        active
+                          ? 'bg-[#0f1216] text-[#f2f3f5]'
+                          : 'text-[#f0b232] hover:text-[#f2f3f5]'
+                      }`}>
+                      <Icon className="w-4 h-4" />
+                      <span>{label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#f0b232]/70 shadow-[0_3px_0_#8a6814] shrink-0">
+              <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#f0b232]" />
+              <span className="text-xs sm:text-sm font-black text-[#f0b232] font-mono">{profile.coins}</span>
+            </div>
           </div>
         </header>
-
-        <div className="shrink-0 flex flex-col items-center gap-3 px-3 pt-0.5 pb-1">
-          <motion.div
-            key={customizing ? 'kit' : 'store'}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, ease: 'easeOut' }}
-            className="relative rounded-2xl px-5 py-2 sm:px-7 sm:py-2.5"
-            style={{
-              border: `2.5px solid ${accent}55`,
-              background: 'rgba(14, 15, 18, 0.72)',
-              boxShadow: `0 0 0 1px rgba(0,0,0,0.35), 0 4px 20px ${accent}18`,
-            }}
-          >
-            <h1
-              className="text-[1.5rem] sm:text-5xl font-black tracking-tight text-[#f2f3f5] leading-[1.05] text-center"
-              style={{ textShadow: `0 2px 0 rgba(0,0,0,0.4), 0 0 18px ${accent}40` }}
-            >
-              {customizing ? 'Kit Creator' : 'Sportivia Store'}
-            </h1>
-          </motion.div>
-          {!customizing && (
-            <div className="inline-flex rounded-2xl border-[3px] border-[#3f4147] bg-[#0c0d0f]/80 p-1.5 gap-1 shadow-[0_5px_0_#0a0a0b]">
-              {([
-                ['skins', 'Skins'],
-                ['pets', 'Pets'],
-              ] as const).map(([id, label]) => {
-                const active = tab === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    onClick={() => switchTab(id)}
-                    className={`px-5 py-2 rounded-xl text-sm font-black transition-all ${
-                      active ? 'text-[#f2f3f5]' : 'text-[#949ba4] hover:text-[#dbdee1]'
-                    }`}
-                    style={
-                      active
-                        ? {
-                            background: '#1e1f22',
-                            border: `2.5px solid ${podiumAccent}aa`,
-                            boxShadow: `0 3px 0 ${podiumAccent}55`,
-                          }
-                        : undefined
-                    }
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
 
         <div className="flex-1 flex flex-col items-center min-h-0 overflow-y-auto overscroll-contain px-2 sm:px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
           <div className="w-full max-w-2xl flex flex-col items-center gap-3 sm:gap-5 py-2 sm:py-0 sm:justify-center sm:flex-1">
@@ -273,6 +268,9 @@ export function StoreScreen({
                               characterId: prevItem.id as CharacterId,
                               ...(prevItem.id === 'creative'
                                 ? { creativeLoadout: profile.creativeLoadout }
+                                : {}),
+                              ...(prevItem.id === 'bunny'
+                                ? { rabbitVariant: profile.rabbitVariant }
                                 : {}),
                             })}
                         accent={prevItem.accent}
@@ -311,6 +309,13 @@ export function StoreScreen({
                         : {
                             characterId: safePreviewId as CharacterId,
                             ...(previewLoadout ? { creativeLoadout: previewLoadout } : {}),
+                            ...(isRabbitPreview
+                              ? {
+                                  rabbitVariant: customizing
+                                    ? draftRabbitVariant
+                                    : profile.rabbitVariant,
+                                }
+                              : {}),
                           })}
                       accent={previewDef.accent}
                       height={customizing ? 280 : 300}
@@ -355,6 +360,9 @@ export function StoreScreen({
                               ...(nextItem.id === 'creative'
                                 ? { creativeLoadout: profile.creativeLoadout }
                                 : {}),
+                              ...(nextItem.id === 'bunny'
+                                ? { rabbitVariant: profile.rabbitVariant }
+                                : {}),
                             })}
                         accent={nextItem.accent}
                         height={240}
@@ -375,6 +383,31 @@ export function StoreScreen({
 
             {customizing ? (
               <div className="w-full max-w-lg px-2 flex flex-col gap-3">
+                {isRabbitPreview ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {RABBIT_VARIANTS.map(variant => {
+                      const active = draftRabbitVariant === variant.id;
+                      return (
+                        <button
+                          key={variant.id}
+                          type="button"
+                          onClick={() => {
+                            playMenuSelect();
+                            setDraftRabbitVariant(variant.id);
+                          }}
+                          className={`px-3 py-3 rounded-xl text-xs font-black border-[2.5px] transition-all ${
+                            active
+                              ? 'border-[#67e8f9] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#155e75]'
+                              : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
+                          }`}
+                        >
+                          {variant.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <>
                 <div className="flex items-center gap-1.5">
                   <button
                     type="button"
@@ -460,6 +493,8 @@ export function StoreScreen({
                     );
                   })}
                 </div>
+                  </>
+                )}
 
                 <div className="flex gap-2">
                   <button
@@ -475,7 +510,7 @@ export function StoreScreen({
                     className="flex-[1.4] py-3 rounded-2xl text-sm font-black border-[3px] border-white/25 bg-[#5865f2] hover:bg-[#4752c4] text-white shadow-[0_5px_0_#2f3aa8] flex items-center justify-center gap-2"
                   >
                     <Check className="w-4 h-4" />
-                    Save Look
+                    {isRabbitPreview ? 'Save Rabbit' : 'Save Look'}
                   </button>
                 </div>
               </div>
@@ -490,7 +525,7 @@ export function StoreScreen({
                         className="w-full py-3 rounded-2xl text-sm font-black border-[3px] border-[#f472b6]/70 bg-[#1e1f22] text-[#f2f3f5] shadow-[0_5px_0_#7a3a5c] hover:translate-y-[1px] hover:shadow-[0_4px_0_#7a3a5c] transition-all flex items-center justify-center gap-2"
                       >
                         <SlidersHorizontal className="w-4 h-4 text-[#f472b6]" />
-                        Customize Kit
+                        {isRabbitPreview ? 'Choose Rabbit Look' : 'Customize Kit'}
                       </button>
                     )}
                     <button

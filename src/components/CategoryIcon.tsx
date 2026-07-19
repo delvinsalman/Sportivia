@@ -5,8 +5,10 @@ import type { JerseyPattern } from './TeamJerseyIcon';
 import { AnimatedGlobeIcon } from './AnimatedGlobeIcon';
 import { AllStarIcon } from './AllStarIcon';
 import { BasketballAwardIcon } from './BasketballAwardIcon';
+import { HockeyAwardIcon } from './HockeyAwardIcon';
+import type { HockeyAwardVariant } from './HockeyAwardIcon';
 
-export type VisualType = 'flag' | 'jersey' | 'league' | 'trophy' | 'position' | 'era' | 'region' | 'award' | 'college' | 'basketball' | 'mlb' | 'nfl' | 'allstar';
+export type VisualType = 'flag' | 'jersey' | 'league' | 'trophy' | 'position' | 'era' | 'region' | 'award' | 'college' | 'basketball' | 'mlb' | 'nfl' | 'nhl' | 'allstar';
 
 interface VisualMeta {
   type: VisualType;
@@ -22,6 +24,7 @@ interface VisualMeta {
   jerseyPattern?: JerseyPattern;
   allStarVariant?: 'nba' | 'mlb';
   awardVariant?: 'mvp' | 'scoring' | 'championship' | 'olympic';
+  hockeyAwardVariant?: HockeyAwardVariant;
 }
 
 export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
@@ -251,6 +254,53 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'college-michigan': { type: 'nfl', jerseyPattern: 'solid', colors: ['#00274c'], accent: '#ffcb05', logoUrl: '/icons/teams/college/michigan.png' },
   'college-lsu': { type: 'nfl', jerseyPattern: 'solid', colors: ['#461d7c'], accent: '#fdd023', logoUrl: '/icons/teams/college/lsu.png' },
   'college-oklahoma': { type: 'nfl', jerseyPattern: 'solid', colors: ['#841617'], accent: '#ffffff', logoUrl: '/icons/teams/college/oklahoma.png' },
+
+  // NHL — long-sleeve team sweaters with the club mark centered on the chest
+  'team-nhl-ducks': { type: 'nhl', colors: ['#fc4c02'], accent: '#b9975b', logoUrl: '/icons/teams/nhl/ana.svg' },
+  'team-nhl-bruins': { type: 'nhl', colors: ['#000000'], accent: '#ffb81c', logoUrl: '/icons/teams/nhl/bos.svg' },
+  'team-nhl-sabres': { type: 'nhl', colors: ['#003087'], accent: '#ffb81c', logoUrl: '/icons/teams/nhl/buf.svg' },
+  'team-nhl-flames': { type: 'nhl', colors: ['#c8102e'], accent: '#f1be48', logoUrl: '/icons/teams/nhl/cgy.svg' },
+  'team-nhl-hurricanes': { type: 'nhl', colors: ['#cc0000'], accent: '#ffffff', logoUrl: '/icons/teams/nhl/car.svg' },
+  'team-nhl-blackhawks': { type: 'nhl', colors: ['#cf0a2c'], accent: '#000000', logoUrl: '/icons/teams/nhl/chi.svg' },
+  'team-nhl-avalanche': { type: 'nhl', colors: ['#6f263d'], accent: '#236192', logoUrl: '/icons/teams/nhl/col.svg' },
+  'team-nhl-blue-jackets': { type: 'nhl', colors: ['#041e42'], accent: '#ce1126', logoUrl: '/icons/teams/nhl/cbj.svg' },
+  'team-nhl-stars': { type: 'nhl', colors: ['#006847'], accent: '#8f8f8c', logoUrl: '/icons/teams/nhl/dal.svg' },
+  'team-nhl-red-wings': { type: 'nhl', colors: ['#ce1126'], accent: '#ffffff', logoUrl: '/icons/teams/nhl/det.svg' },
+  'team-nhl-oilers': { type: 'nhl', colors: ['#041e42'], accent: '#ff4c00', logoUrl: '/icons/teams/nhl/edm.svg' },
+  'team-nhl-panthers': { type: 'nhl', colors: ['#041e42'], accent: '#c8102e', logoUrl: '/icons/teams/nhl/fla.svg' },
+  'team-nhl-kings': { type: 'nhl', colors: ['#111111'], accent: '#a2aaad', logoUrl: '/icons/teams/nhl/lak.svg' },
+  'team-nhl-wild': { type: 'nhl', colors: ['#154734'], accent: '#a6192e', logoUrl: '/icons/teams/nhl/min.svg' },
+  'team-nhl-canadiens': { type: 'nhl', colors: ['#af1e2d'], accent: '#192168', logoUrl: '/icons/teams/nhl/mtl.svg' },
+  'team-nhl-predators': { type: 'nhl', colors: ['#ffb81c'], accent: '#041e42', logoUrl: '/icons/teams/nhl/nsh.svg' },
+  'team-nhl-devils': { type: 'nhl', colors: ['#ce1126'], accent: '#000000', logoUrl: '/icons/teams/nhl/njd.svg' },
+  'team-nhl-islanders': { type: 'nhl', colors: ['#00539b'], accent: '#f47d30', logoUrl: '/icons/teams/nhl/nyi.svg' },
+  'team-nhl-rangers': { type: 'nhl', colors: ['#0038a8'], accent: '#ce1126', logoUrl: '/icons/teams/nhl/nyr.svg' },
+  'team-nhl-senators': { type: 'nhl', colors: ['#c52032'], accent: '#c2912c', logoUrl: '/icons/teams/nhl/ott.svg' },
+  'team-nhl-flyers': { type: 'nhl', colors: ['#f74902'], accent: '#000000', logoUrl: '/icons/teams/nhl/phi.svg' },
+  'team-nhl-penguins': { type: 'nhl', colors: ['#000000'], accent: '#fcb514', logoUrl: '/icons/teams/nhl/pit.svg' },
+  'team-nhl-sharks': { type: 'nhl', colors: ['#006d75'], accent: '#ea7200', logoUrl: '/icons/teams/nhl/sjs.svg' },
+  'team-nhl-kraken': { type: 'nhl', colors: ['#001628'], accent: '#99d9d9', logoUrl: '/icons/teams/nhl/sea.svg' },
+  'team-nhl-blues': { type: 'nhl', colors: ['#002f87'], accent: '#fcb514', logoUrl: '/icons/teams/nhl/stl.svg' },
+  'team-nhl-lightning': { type: 'nhl', colors: ['#002868'], accent: '#ffffff', logoUrl: '/icons/teams/nhl/tbl.svg' },
+  'team-nhl-maple-leafs': { type: 'nhl', colors: ['#00205b'], accent: '#ffffff', logoUrl: '/icons/teams/nhl/tor.svg' },
+  'team-nhl-mammoth': { type: 'nhl', colors: ['#69b3e7'], accent: '#010101', logoUrl: '/icons/teams/nhl/uta.svg' },
+  'team-nhl-canucks': { type: 'nhl', colors: ['#00205b'], accent: '#00843d', logoUrl: '/icons/teams/nhl/van.svg' },
+  'team-nhl-golden-knights': { type: 'nhl', colors: ['#333f42'], accent: '#b4975a', logoUrl: '/icons/teams/nhl/vgk.svg' },
+  'team-nhl-capitals': { type: 'nhl', colors: ['#041e42'], accent: '#c8102e', logoUrl: '/icons/teams/nhl/wsh.svg' },
+  'team-nhl-jets': { type: 'nhl', colors: ['#041e42'], accent: '#7b303e', logoUrl: '/icons/teams/nhl/wpg.svg' },
+  'nat-russia': { type: 'flag', flagCode: 'ru', colors: ['#fff', '#0039a6', '#d52b1e'] },
+  'nat-finland': { type: 'flag', flagCode: 'fi', colors: ['#fff', '#003580'] },
+  'nat-slovakia': { type: 'flag', flagCode: 'sk', colors: ['#fff', '#0b4ea2', '#ee1c25'] },
+  'pos-c': { type: 'position', colors: ['#38bdf8'], initials: 'C' },
+  'pos-lw': { type: 'position', colors: ['#22c55e'], initials: 'LW' },
+  'pos-rw': { type: 'position', colors: ['#22c55e'], initials: 'RW' },
+  'pos-d': { type: 'position', colors: ['#8b5cf6'], initials: 'D' },
+  'pos-g': { type: 'position', colors: ['#f59e0b'], initials: 'G' },
+  'champ-stanley': { type: 'trophy', hockeyAwardVariant: 'stanley' },
+  'champ-stanley-3': { type: 'trophy', hockeyAwardVariant: 'stanley' },
+  'award-hart': { type: 'award', hockeyAwardVariant: 'hart' },
+  'award-nhl-allstar': { type: 'award', hockeyAwardVariant: 'allstar' },
+  'award-hockey-hof': { type: 'award', hockeyAwardVariant: 'hall' },
 };
 
 function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMeta {
@@ -269,6 +319,7 @@ function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMet
     if (sport === 'basketball') return { type: 'basketball', colors: ['#1d428a', '#ffc72c'], initials: 'NBA' };
     if (sport === 'baseball') return { type: 'mlb', colors: ['#0c2340', '#0c2340'], accent: '#fff', initials: 'MLB' };
     if (sport === 'football') return { type: 'nfl', colors: ['#013369', '#d50a0a'], accent: '#fff', initials: 'NFL' };
+    if (sport === 'hockey') return { type: 'nhl', colors: ['#041e42'], accent: '#38bdf8', initials: 'NHL' };
     return { type: 'jersey', colors: ['#1a472a', '#1a472a'], accent: '#fff' };
   }
 
@@ -416,12 +467,13 @@ function TrophyIcon({ size = 36, color = '#f0b232' }: { size?: number; color?: s
   );
 }
 
-function PositionIcon({ color, size = 36, role }: { color: string; size?: number; role?: string }) {
+function PositionIcon({ color, size = 36, role, sport }: { color: string; size?: number; role?: string; sport?: Sport }) {
   const label = role?.toUpperCase() ?? 'POS';
   const isSoccer = ['FW', 'MF', 'DF', 'GK'].includes(label);
-  const isBasketball = ['G', 'F', 'C'].includes(label);
+  const isBasketball = sport === 'basketball' && ['G', 'F', 'C'].includes(label);
   const isBaseball = ['P', 'OF', 'IF', 'CAT', 'DH'].includes(label);
   const isFootball = ['QB', 'RB', 'WR', 'TE', 'DL', 'LB', 'DB', 'K'].includes(label);
+  const isHockey = sport === 'hockey';
 
   const fontSize = label.length > 2 ? 8.5 : label.length > 1 ? 11 : 13;
 
@@ -485,6 +537,16 @@ function PositionIcon({ color, size = 36, role }: { color: string; size?: number
         </g>
       )}
 
+      {isHockey && (
+        <g opacity="0.4" stroke={color} strokeWidth="1" fill="none">
+          <rect x="9" y="8" width="30" height="22" rx="7" />
+          <line x1="9" y1="19" x2="39" y2="19" />
+          <line x1="18" y1="8" x2="18" y2="30" />
+          <line x1="30" y1="8" x2="30" y2="30" />
+          <circle cx="24" cy="19" r="3.5" />
+        </g>
+      )}
+
       <circle cx={marker.cx} cy={marker.cy} r="3.5" fill={color} stroke="#fff" strokeWidth="1.2" />
 
       <rect x="8" y="32" width="32" height="11" rx="5.5" fill={color} />
@@ -545,6 +607,9 @@ export function CategoryIcon({ categoryId, tag, size = 38, sport }: CategoryIcon
     case 'jersey': return <TeamJerseyIcon meta={meta} sport="soccer" size={size} />;
     case 'league': return <LeagueBadge meta={meta} size={size} sport={sport} />;
     case 'trophy':
+      if (meta.hockeyAwardVariant) {
+        return <HockeyAwardIcon variant={meta.hockeyAwardVariant} size={size} />;
+      }
       if (meta.logoUrl) {
         return (
           <LeagueLogo
@@ -561,6 +626,7 @@ export function CategoryIcon({ categoryId, tag, size = 38, sport }: CategoryIcon
     case 'basketball': return <TeamJerseyIcon meta={meta} sport="basketball" size={size} />;
     case 'mlb': return <TeamJerseyIcon meta={meta} sport="baseball" size={size} />;
     case 'nfl': return <TeamJerseyIcon meta={meta} sport="football" size={size} />;
+    case 'nhl': return <TeamJerseyIcon meta={meta} sport="hockey" size={size} />;
     case 'position':
       if (meta.logoUrl) {
         return (
@@ -571,9 +637,12 @@ export function CategoryIcon({ categoryId, tag, size = 38, sport }: CategoryIcon
           />
         );
       }
-      return <PositionIcon color={meta.colors?.[0] ?? '#f0b232'} size={size} role={meta.initials} />;
+      return <PositionIcon color={meta.colors?.[0] ?? '#f0b232'} size={size} role={meta.initials} sport={sport} />;
     case 'era': return <EraBadge initials={meta.initials} size={size} />;
     case 'award':
+      if (meta.hockeyAwardVariant) {
+        return <HockeyAwardIcon variant={meta.hockeyAwardVariant} size={size} />;
+      }
       return meta.awardVariant
         ? <BasketballAwardIcon variant={meta.awardVariant} size={size} sport={sport} />
         : <AwardBadge initials={meta.initials} size={size} />;

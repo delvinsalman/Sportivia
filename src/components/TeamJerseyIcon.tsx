@@ -1,6 +1,6 @@
 import { assetUrl } from '../lib/assetUrl';
 
-export type JerseySport = 'soccer' | 'basketball' | 'baseball' | 'football';
+export type JerseySport = 'soccer' | 'basketball' | 'baseball' | 'football' | 'hockey';
 export type JerseyPattern = 'solid' | 'vertical' | 'horizontal' | 'pinstripes' | 'hoops' | 'split';
 
 export interface TeamJerseyMeta {
@@ -16,6 +16,7 @@ const LOGO_SIZE_RATIO = 0.3;
 const SOCCER_LOGO_SIZE_RATIO = 0.28;
 const BASKETBALL_LOGO_SIZE_RATIO = 0.28;
 const FOOTBALL_LOGO_SIZE_RATIO = 0.3;
+const HOCKEY_LOGO_SIZE_RATIO = 0.34;
 
 /** Detailed basketball tank — viewBox 0 0 200 250 */
 const BASKETBALL_KIT_BODY = `M 70 40 L 85 40 Q 100 68 115 40 L 130 40 Q 122 75 145 95 L 140 220 L 60 220 L 55 95 Q 78 75 70 40 Z`;
@@ -29,6 +30,14 @@ const NFL_VIEW_H = 500;
 const NFL_BODY = `M 80,60 C 80,60 70,65 60,80 L 55,100 L 50,120 L 45,200 L 40,280 L 38,320 L 40,360 L 45,400 L 55,440 L 65,460 L 75,470 L 85,475 L 100,478 L 150,480 L 200,482 L 250,480 L 300,478 L 315,475 L 325,470 L 335,460 L 345,440 L 355,400 L 360,360 L 362,320 L 360,280 L 355,200 L 350,120 L 345,100 L 340,80 C 330,65 320,60 320,60 L 200,50 Z`;
 const NFL_LEFT_SLEEVE = `M 60,80 L 40,95 L 25,120 L 20,150 L 25,180 L 35,200 L 45,210 L 55,200 L 50,150 L 55,120 L 60,100 Z`;
 const NFL_RIGHT_SLEEVE = `M 340,80 L 360,95 L 375,120 L 380,150 L 375,180 L 365,200 L 355,210 L 345,200 L 350,150 L 345,120 L 340,100 Z`;
+
+/** Long-sleeve hockey sweater inspired by a classic NHL jersey silhouette. */
+const HOCKEY_VIEW_W = 200;
+const HOCKEY_VIEW_H = 220;
+const HOCKEY_BODY = `M 66 38 Q 82 30 100 30 Q 118 30 134 38
+  L 143 68 L 151 184 Q 126 192 100 192 Q 74 192 49 184 L 57 68 Z`;
+const HOCKEY_LEFT_SLEEVE = `M 61 43 Q 48 43 38 54 L 18 104 L 4 168 L 34 180 L 57 111 L 70 58 Z`;
+const HOCKEY_RIGHT_SLEEVE = `M 139 43 Q 152 43 162 54 L 182 104 L 196 168 L 166 180 L 143 111 L 130 58 Z`;
 
 /** Detailed baseball button-up — viewBox 0 0 200 250 */
 const BASEBALL_KIT = {
@@ -260,6 +269,7 @@ function jerseyHeight(sport: JerseySport, size: number) {
   if (sport === 'basketball') return size * (BASKETBALL_VIEW_H / BASKETBALL_VIEW_W);
   if (sport === 'baseball') return size * (BASEBALL_VIEW_H / BASEBALL_VIEW_W);
   if (sport === 'football') return size * (NFL_VIEW_H / NFL_VIEW_W);
+  if (sport === 'hockey') return size * (HOCKEY_VIEW_H / HOCKEY_VIEW_W);
   return size * 1.12;
 }
 
@@ -278,6 +288,10 @@ function logoPlacement(sport: JerseySport, size: number, height: number) {
   }
   if (sport === 'football') {
     const badgeSize = size * FOOTBALL_LOGO_SIZE_RATIO;
+    return { badgeSize, top: height * 0.36 };
+  }
+  if (sport === 'hockey') {
+    const badgeSize = size * HOCKEY_LOGO_SIZE_RATIO;
     return { badgeSize, top: height * 0.36 };
   }
   const badgeSize = size * LOGO_SIZE_RATIO;
@@ -751,6 +765,61 @@ function FootballJerseyGraphic({
   );
 }
 
+function HockeyJerseyGraphic({
+  uid,
+  meta,
+  size,
+}: {
+  uid: string;
+  meta: TeamJerseyMeta;
+  size: number;
+}) {
+  const colors = patternColors(meta);
+  const primary = colors[0];
+  const accent = meta.accent ?? colors[1] ?? '#ffffff';
+  const stroke = isLightColor(primary) ? adjustColor(primary, -0.38) : adjustColor(primary, -0.18);
+  const shadow = adjustColor(primary, -0.2);
+  const height = size * (HOCKEY_VIEW_H / HOCKEY_VIEW_W);
+
+  return (
+    <svg width={size} height={height} viewBox={`0 0 ${HOCKEY_VIEW_W} ${HOCKEY_VIEW_H}`} className="block">
+      <defs>
+        <linearGradient id={`${uid}-hockey`} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor={adjustColor(primary, 0.12)} />
+          <stop offset="52%" stopColor={primary} />
+          <stop offset="100%" stopColor={shadow} />
+        </linearGradient>
+        <filter id={`${uid}-hockey-shadow`} x="-10%" y="-10%" width="120%" height="130%">
+          <feDropShadow dx="0" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.3" />
+        </filter>
+        <pattern id={`${uid}-hockey-knit`} width="4" height="4" patternUnits="userSpaceOnUse">
+          <path d="M0 1 H4 M0 3 H4" stroke="#fff" strokeWidth="0.35" opacity="0.05" />
+        </pattern>
+      </defs>
+
+      <ellipse cx="100" cy="207" rx="48" ry="5" fill="#000" opacity="0.22" />
+      <g filter={`url(#${uid}-hockey-shadow)`}>
+        <path d={HOCKEY_LEFT_SLEEVE} fill={`url(#${uid}-hockey)`} stroke={stroke} strokeWidth="2" />
+        <path d={HOCKEY_RIGHT_SLEEVE} fill={`url(#${uid}-hockey)`} stroke={stroke} strokeWidth="2" />
+        <path d={HOCKEY_BODY} fill={`url(#${uid}-hockey)`} stroke={stroke} strokeWidth="2" />
+      </g>
+      <path d={HOCKEY_LEFT_SLEEVE} fill={`url(#${uid}-hockey-knit)`} />
+      <path d={HOCKEY_RIGHT_SLEEVE} fill={`url(#${uid}-hockey-knit)`} />
+      <path d={HOCKEY_BODY} fill={`url(#${uid}-hockey-knit)`} />
+
+      <path d="M72 35 Q100 62 128 35 L117 28 Q100 43 83 28 Z" fill={stroke} />
+      <path d="M82 29 Q100 44 118 29" fill="none" stroke={accent} strokeWidth="4" strokeLinecap="round" />
+
+      <path d="M48 151 L151 151 L151 166 L48 166 Z" fill={accent} opacity="0.96" />
+      <path d="M49 170 L151 170 L151 181 Q100 188 49 181 Z" fill={accent} opacity="0.55" />
+      <path d="M10 146 L39 156 L34 180 L4 168 Z" fill={accent} />
+      <path d="M190 146 L161 156 L166 180 L196 168 Z" fill={accent} />
+      <path d="M23 116 L48 126" stroke={accent} strokeWidth="8" opacity="0.7" />
+      <path d="M177 116 L152 126" stroke={accent} strokeWidth="8" opacity="0.7" />
+    </svg>
+  );
+}
+
 export function TeamJerseyIcon({
   meta,
   sport,
@@ -777,6 +846,8 @@ export function TeamJerseyIcon({
         <BaseballJerseyGraphic uid={uid} meta={meta} size={size} />
       ) : sport === 'football' ? (
         <FootballJerseyGraphic uid={uid} meta={meta} size={size} />
+      ) : sport === 'hockey' ? (
+        <HockeyJerseyGraphic uid={uid} meta={meta} size={size} />
       ) : (
         <svg width={size} height={height} viewBox="0 0 52 58" className="block">
           <defs>

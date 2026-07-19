@@ -1,6 +1,8 @@
-export type Sport = 'soccer' | 'basketball' | 'baseball' | 'football';
+export type Sport = 'soccer' | 'basketball' | 'baseball' | 'football' | 'hockey';
 
-export type GameMode = 'training' | 'daily' | 'timed' | 'duel';
+export type GameMode = 'training' | 'daily' | 'timed' | 'bot' | 'duel';
+
+export type BotDifficulty = 'beginner' | 'pro' | 'expert';
 
 export type CategoryTag =
   | 'NATIONALITY'
@@ -76,6 +78,7 @@ export interface PlayerStats {
   basketball: GameStats;
   baseball: GameStats;
   football: GameStats;
+  hockey: GameStats;
 }
 
 export const GRID_SIZE = 3;

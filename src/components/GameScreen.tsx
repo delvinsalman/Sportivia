@@ -1,24 +1,27 @@
 import { AnimatePresence } from 'framer-motion';
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoundGame } from '../hooks/useRoundGame';
 import {
   CategoryGrid, PlayerBar, TopBar, BoardProgress,
   CountdownOverlay, GamePanel, BoardResetToast,
 } from './GameUI';
 import { ResultModal } from './ResultModal';
-import type { Sport, GameMode, GameResult } from '../types';
-import type { CharacterId, PetId } from '../types/profile';
+import type { Sport, GameMode, GameResult, BotDifficulty } from '../types';
+import type { CharacterId, PetId, RabbitVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { DuelMatchResult } from '../lib/duelTypes';
-import { Swords } from 'lucide-react';
+import { Bot, Swords } from 'lucide-react';
 import { getSettings } from '../lib/settings';
+import { BOT_DIFFICULTIES, botName, nextBotDelay, rollBotPoints } from '../lib/botOpponent';
 
 interface GameScreenProps {
   sport: Sport;
   mode: GameMode;
+  botDifficulty?: BotDifficulty;
   equippedCharacter: CharacterId;
   equippedPet?: PetId | null;
   creativeLoadout?: CreativeLoadout;
+  rabbitVariant?: RabbitVariantId;
   seedKey?: string;
   opponentName?: string;
   opponentScore?: number;
@@ -39,15 +42,18 @@ const modeLabels: Record<GameMode, string> = {
   training: 'TRAINING',
   daily: 'DAILY',
   timed: 'RANKED',
+  bot: 'VS AI',
   duel: 'DUEL',
 };
 
 export function GameScreen({
   sport,
   mode,
+  botDifficulty = 'beginner',
   equippedCharacter,
   equippedPet,
   creativeLoadout,
+  rabbitVariant,
   seedKey,
   opponentName,
   opponentScore = 0,
@@ -63,9 +69,53 @@ export function GameScreen({
     onScoreChange,
     onFinished: onDuelFinished,
   });
+  const [botScore, setBotScore] = useState(0);
+  const botScoreRef = useRef(0);
+
+  useEffect(() => {
+    if (mode !== 'bot' || game.phase !== 'playing') return;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let active = true;
+    let attempts = 0;
+
+    const schedule = () => {
+      timer = setTimeout(() => {
+        if (!active) return;
+        const points = rollBotPoints(botDifficulty, Math.random, attempts === 0);
+        attempts += 1;
+        if (points > 0) {
+          botScoreRef.current += points;
+          setBotScore(botScoreRef.current);
+        }
+        schedule();
+      }, nextBotDelay(botDifficulty));
+    };
+
+    schedule();
+    return () => {
+      active = false;
+      if (timer) clearTimeout(timer);
+    };
+  }, [mode, botDifficulty, game.phase]);
 
   const resultWithDuel: GameResult | null = useMemo(() => {
     if (!game.result) return null;
+    if (mode === 'bot') {
+      const outcome =
+        game.result.score > botScore
+          ? 'win'
+          : game.result.score < botScore
+            ? 'loss'
+            : 'draw';
+      return {
+        ...game.result,
+        duel: {
+          opponentName: botName(botDifficulty),
+          opponentScore: botScore,
+          outcome,
+        },
+      };
+    }
     if (mode !== 'duel') return game.result;
 
     let outcome: 'win' | 'loss' | 'draw' | 'pending' = 'pending';
@@ -83,7 +133,7 @@ export function GameScreen({
         outcome,
       },
     };
-  }, [game.result, mode, duelResult, opponentName, opponentScore]);
+  }, [game.result, mode, duelResult, opponentName, opponentScore, botScore, botDifficulty]);
 
   function handleQuit() {
     game.abandonRun();
@@ -91,8 +141,11 @@ export function GameScreen({
   }
 
   const showHints = getSettings().showHints;
+  const versusMode = mode === 'duel' || mode === 'bot';
+  const versusScore = mode === 'bot' ? botScore : opponentScore;
+  const versusName = mode === 'bot' ? botName(botDifficulty) : opponentName ?? 'Opponent';
   const boardChromeRem =
-    mode === 'duel' && showHints ? 12.5 : mode === 'duel' ? 11 : showHints ? 10.5 : 9.75;
+    versusMode && showHints ? 12.5 : versusMode ? 11 : showHints ? 10.5 : 9.75;
 
   return (
     <div className="h-svh flex flex-col bg-[#0a0a0b] relative overflow-hidden">
@@ -109,16 +162,18 @@ export function GameScreen({
         correctInCycle={game.correctInCycle}
       />
 
-      {mode === 'duel' && (
+      {versusMode && (
         <div className="relative z-20 flex justify-center px-4 -mt-1 mb-0.5 shrink-0">
           <div className="inline-flex items-center gap-3 rounded-full border border-[#2b2d31]/80 bg-[#121316]/90 backdrop-blur-md px-3 py-1.5 text-xs">
-            <Swords className="w-3.5 h-3.5 text-[#ed4245]" />
+            {mode === 'bot'
+              ? <Bot className="w-3.5 h-3.5 text-[#a855f7]" />
+              : <Swords className="w-3.5 h-3.5 text-[#ed4245]" />}
             <span className="font-bold text-[#f2f3f5]">{game.score}</span>
             <span className="text-[#5c5e66]">vs</span>
-            <span className="font-bold text-[#f0b232]">{opponentScore}</span>
+            <span className="font-bold text-[#f0b232]">{versusScore}</span>
             <span className="text-[#6d6f78] max-w-[7rem] truncate">
-              {opponentName ?? 'Opponent'}
-              {opponentFinished ? ' · done' : ''}
+              {versusName}
+              {mode === 'duel' && opponentFinished ? ' · done' : ''}
             </span>
           </div>
         </div>
@@ -164,6 +219,8 @@ export function GameScreen({
               ? `1:00 sprint · ${game.roundsPlayed} rounds played · practice only — no rewards`
               : mode === 'duel'
                 ? `1v1 race · same board · highest score wins · ${5 - game.correctInCycle} until board reset`
+                : mode === 'bot'
+                  ? `${BOT_DIFFICULTIES[botDifficulty].label} bot · highest score wins · ${5 - game.correctInCycle} until board reset`
                 : `Tap the category that fits · ${5 - game.correctInCycle} until board reset · wrong −3 pts (worse if consecutive)`}
           </p>
         )}
@@ -181,6 +238,7 @@ export function GameScreen({
           characterId={equippedCharacter}
           petId={equippedPet}
           creativeLoadout={creativeLoadout}
+          rabbitVariant={rabbitVariant}
           onPlayAgain={onReplay}
           onHome={onHome}
           waitingForOpponent={mode === 'duel' && !duelResult}

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import type { Sport, GameMode } from './types';
+import type { Sport, GameMode, BotDifficulty } from './types';
 import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
 import { BallRainIntro } from './components/BallRainIntro';
@@ -9,6 +9,7 @@ import { LobbyScreen } from './components/LobbyScreen';
 import { AboutScreen } from './components/AboutScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { CareerScreen } from './components/CareerScreen';
+import { CardPacksScreen } from './components/CardPacksScreen';
 import {
   loadProfile,
   equipCharacter,
@@ -18,21 +19,23 @@ import {
   purchasePet,
   updatePlayerName,
   saveCreativeLoadout,
+  saveRabbitVariant,
 } from './lib/profileStorage';
 import type { PlayerProfile } from './types/profile';
-import type { CharacterId, PetId } from './types/profile';
+import type { CharacterId, PetId, RabbitVariantId } from './types/profile';
 import type { CreativeLoadout } from './types/creativeCharacter';
 import { useDuel } from './hooks/useDuel';
 import { useAmbientMusic } from './hooks/useAmbientMusic';
 import { useOnlineCount } from './hooks/useOnlineCount';
 import { useSettings } from './hooks/useSettings';
 
-type Screen = 'home' | 'about' | 'settings' | 'store' | 'career' | 'lobby' | 'intro' | 'game';
+type Screen = 'home' | 'about' | 'settings' | 'store' | 'career' | 'cards' | 'lobby' | 'intro' | 'game';
 
 const modeLabels: Record<GameMode, string> = {
   training: 'TRAINING',
   daily: 'DAILY',
   timed: 'RANKED',
+  bot: 'VS AI',
   duel: 'DUEL',
 };
 
@@ -40,6 +43,7 @@ export default function App() {
   const [screen, setScreen] = useState<Screen>('home');
   const [sport, setSport] = useState<Sport>('soccer');
   const [mode, setMode] = useState<GameMode>('training');
+  const [botDifficulty, setBotDifficulty] = useState<BotDifficulty>('beginner');
   const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
   const [gameKey, setGameKey] = useState(0);
   const [duelSeed, setDuelSeed] = useState<string | null>(null);
@@ -57,7 +61,7 @@ export default function App() {
   useAmbientMusic(screen);
 
   useEffect(() => {
-    if (screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings' || screen === 'career') {
+    if (screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings' || screen === 'career' || screen === 'cards') {
       setProfile(loadProfile());
     }
   }, [screen]);
@@ -73,11 +77,19 @@ export default function App() {
     setScreen('intro');
   }, [duel.match]);
 
+  // Peer rematch: leave the result screen so both players see ready state in lobby
+  useEffect(() => {
+    if (mode !== 'duel' || screen !== 'game' || duel.lobby?.status !== 'lobby') return;
+    startedMatchRef.current = null;
+    setDuelSeed(null);
+    setScreen('lobby');
+  }, [duel.lobby?.status, mode, screen]);
+
   function refreshProfile() {
     setProfile(loadProfile());
   }
 
-  function handleStart(m: GameMode) {
+  function handleStart(m: GameMode, difficulty?: BotDifficulty) {
     if (m === 'duel') {
       setMode('duel');
       setDuelSeed(null);
@@ -86,6 +98,7 @@ export default function App() {
       return;
     }
     setMode(m);
+    if (m === 'bot' && difficulty) setBotDifficulty(difficulty);
     setDuelSeed(null);
     setScreen('intro');
   }
@@ -140,6 +153,10 @@ export default function App() {
     setProfile(saveCreativeLoadout(loadout));
   }
 
+  function handleSaveRabbitVariant(variant: RabbitVariantId) {
+    setProfile(saveRabbitVariant(variant));
+  }
+
   function handleSaveName(name: string) {
     setProfile(updatePlayerName(name));
   }
@@ -154,6 +171,7 @@ export default function App() {
             onSportChange={setSport}
             onStart={handleStart}
             profile={profile}
+            onOpenCards={() => setScreen('cards')}
             onOpenStore={() => setScreen('store')}
             onOpenCareer={() => setScreen('career')}
             onOpenAbout={() => setScreen('about')}
@@ -194,6 +212,7 @@ export default function App() {
             onEquipPet={handleEquipPet}
             onUnequipPet={handleUnequipPet}
             onSaveCreativeLoadout={handleSaveCreativeLoadout}
+            onSaveRabbitVariant={handleSaveRabbitVariant}
           />
         )}
 
@@ -204,6 +223,16 @@ export default function App() {
             profile={profile}
             onBack={() => setScreen('home')}
             onSportChange={setSport}
+          />
+        )}
+
+        {screen === 'cards' && (
+          <CardPacksScreen
+            key="cards"
+            profile={profile}
+            initialSport={sport}
+            onBack={() => setScreen('home')}
+            onProfileChange={setProfile}
           />
         )}
 
@@ -231,6 +260,7 @@ export default function App() {
             key="intro"
             sport={sport}
             mode={modeLabels[mode]}
+            detail={mode === 'bot' ? botDifficulty.toUpperCase() : undefined}
             onComplete={handleIntroComplete}
           />
         )}
@@ -240,9 +270,11 @@ export default function App() {
             key={`${sport}-${mode}-${gameKey}`}
             sport={sport}
             mode={mode}
+            botDifficulty={botDifficulty}
             equippedCharacter={profile.equippedCharacter}
             equippedPet={profile.equippedPet}
             creativeLoadout={profile.creativeLoadout}
+            rabbitVariant={profile.rabbitVariant}
             seedKey={mode === 'duel' ? duelSeed ?? undefined : undefined}
             opponentName={duel.opponent?.name}
             opponentScore={duel.opponentScore}

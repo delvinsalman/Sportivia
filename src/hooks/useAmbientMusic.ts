@@ -1,15 +1,16 @@
 import { useEffect, useRef } from 'react';
 import { effectiveMusicVolume, subscribeSettings } from '../lib/settings';
+import { getAmbientDuck, subscribeAmbientDuck } from '../lib/ambientControl';
 import { assetUrl } from '../lib/assetUrl';
 
 const TRACK = assetUrl('/audio/starlight-strut.mp3');
 const PLAYBACK_RATE = 0.82;
 const FADE_MS = 1100;
 
-type AmbientScreen = 'home' | 'about' | 'store' | 'settings' | 'career' | 'lobby' | 'intro' | 'game';
+type AmbientScreen = 'home' | 'about' | 'store' | 'settings' | 'career' | 'cards' | 'lobby' | 'intro' | 'game';
 
 function isMenuScreen(screen: AmbientScreen) {
-  return screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings' || screen === 'career';
+  return screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings' || screen === 'career' || screen === 'cards';
 }
 
 function fadeVolume(
@@ -18,9 +19,11 @@ function fadeVolume(
   durationMs: number,
   onDone?: () => void,
 ) {
-  const from = audio.volume;
-  if (Math.abs(from - to) < 0.01) {
-    audio.volume = to;
+  const clamp = (value: number) => Math.min(1, Math.max(0, value));
+  const from = clamp(audio.volume);
+  const target = clamp(to);
+  if (Math.abs(from - target) < 0.01) {
+    audio.volume = target;
     onDone?.();
     return () => {};
   }
@@ -33,11 +36,11 @@ function fadeVolume(
     if (cancelled) return;
     const t = Math.min(1, (now - start) / durationMs);
     const eased = t * t * (3 - 2 * t);
-    audio.volume = from + (to - from) * eased;
+    audio.volume = clamp(from + (target - from) * eased);
     if (t < 1) {
       raf = requestAnimationFrame(tick);
     } else {
-      audio.volume = to;
+      audio.volume = target;
       onDone?.();
     }
   };
@@ -78,7 +81,7 @@ export function useAmbientMusic(screen: AmbientScreen) {
       cancelFadeRef.current = fadeVolume(audio, to, FADE_MS, onDone);
     };
 
-    const targetVol = () => effectiveMusicVolume();
+    const targetVol = () => effectiveMusicVolume() * getAmbientDuck();
 
     const playMenu = () => {
       if (!wantsMusicRef.current) return;
@@ -108,7 +111,16 @@ export function useAmbientMusic(screen: AmbientScreen) {
       if (!wantsMusicRef.current) return;
       const to = targetVol();
       if (to <= 0) {
-        fadeTo(0, () => audio.pause());
+        // Duck / mute: keep playing quietly, or pause only if music is off
+        if (effectiveMusicVolume() <= 0) {
+          fadeTo(0, () => audio.pause());
+          return;
+        }
+        if (audio.paused) {
+          void audio.play().then(() => fadeTo(to)).catch(() => {});
+        } else {
+          fadeTo(to);
+        }
         return;
       }
       if (audio.paused) {
@@ -130,7 +142,7 @@ export function useAmbientMusic(screen: AmbientScreen) {
 
     const onGesture = () => {
       if (!wantsMusicRef.current) return;
-      if (targetVol() <= 0) return;
+      if (targetVol() <= 0 && effectiveMusicVolume() <= 0) return;
       audio.volume = 0;
       void audio.play().then(() => {
         fadeTo(targetVol());
@@ -145,6 +157,7 @@ export function useAmbientMusic(screen: AmbientScreen) {
     document.addEventListener('touchstart', onGesture, { passive: true });
 
     const unsub = subscribeSettings(() => syncVolumeRef.current());
+    const unsubDuck = subscribeAmbientDuck(() => syncVolumeRef.current());
 
     playMenu();
 
@@ -152,6 +165,7 @@ export function useAmbientMusic(screen: AmbientScreen) {
       stopFade();
       detachGestures();
       unsub();
+      unsubDuck();
       audio.pause();
       audio.src = '';
       audioRef.current = null;

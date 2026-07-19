@@ -1,24 +1,29 @@
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Pencil, Play, ShoppingBag, X, Check, Info, Zap, Trophy, Timer, Swords, Settings, Medal } from 'lucide-react';
-import type { Sport, GameMode } from '../types';
+import {
+  Pencil, Play, ShoppingBag, Check, Info, Trophy, Settings,
+  Medal, Layers3, ArrowLeft,
+} from 'lucide-react';
+import type { Sport, GameMode, BotDifficulty } from '../types';
 import type { PlayerProfile } from '../types/profile';
 import { getTodayKey } from '../lib/seed';
 import { SportBackground } from './SportBackground';
 import { SportBall } from './SportBall';
-import { SportPicker, SportBadge } from './SportPicker';
+import { SportPicker } from './SportPicker';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { HeaderStats, LevelCorner } from './LevelBar';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import { SPORT_ACCENT, SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
+import { SPORT_ACCENT, SPORT_PODIUM_ACCENT, SPORT_LABEL } from '../lib/sportTheme';
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 import { useSettings } from '../hooks/useSettings';
+import { BOT_DIFFICULTIES } from '../lib/botOpponent';
 
 interface HomeScreenProps {
   sport: Sport;
   onSportChange: (sport: Sport) => void;
-  onStart: (mode: GameMode) => void;
+  onStart: (mode: GameMode, botDifficulty?: BotDifficulty) => void;
   profile: PlayerProfile;
+  onOpenCards: () => void;
   onOpenStore: () => void;
   onOpenCareer: () => void;
   onOpenAbout: () => void;
@@ -31,19 +36,17 @@ const modeLabels: Record<GameMode, string> = {
   training: 'Training',
   daily: 'Daily Challenge',
   timed: 'Ranked',
+  bot: 'Vs AI',
   duel: '1v1 Duel',
 };
 
-const MODE_META: Record<GameMode, { tone: string; icon: typeof Zap; detail: string }> = {
-  training: { tone: '#949ba4', icon: Zap, detail: '1 min · practice · no coins or XP' },
-  daily: { tone: '#23a559', icon: Trophy, detail: '2 min · first finish pays · missions count' },
-  timed: { tone: '#5865f2', icon: Timer, detail: '2 min · finish for ranked bonus' },
-  duel: { tone: '#ed4245', icon: Swords, detail: 'Lobby code · race a friend · highest score wins' },
+const MODE_META: Record<GameMode, { tone: string; icon: string; detail: string }> = {
+  training: { tone: '#949ba4', icon: '/icons/modes/training.png', detail: '1 min · practice · no rewards' },
+  daily: { tone: '#23a559', icon: '/icons/modes/daily.png', detail: '2 min · first finish pays' },
+  timed: { tone: '#5865f2', icon: '/icons/modes/ranked.png', detail: '2 min · ranked bonus' },
+  bot: { tone: '#a855f7', icon: '/icons/modes/bot.png', detail: 'Race a bot · pick skill' },
+  duel: { tone: '#ed4245', icon: '/icons/modes/duel.png', detail: 'Lobby code · highest score wins' },
 };
-
-function onAccentFg(color: string) {
-  return color === '#f4f4f5' || color === '#949ba4' || color === '#f0b232' ? '#18191c' : '#ffffff';
-}
 
 function EditableName({
   name,
@@ -112,6 +115,7 @@ export function HomeScreen({
   onSportChange,
   onStart,
   profile,
+  onOpenCards,
   onOpenStore,
   onOpenCareer,
   onOpenAbout,
@@ -120,6 +124,7 @@ export function HomeScreen({
   online,
 }: HomeScreenProps) {
   const [showModes, setShowModes] = useState(false);
+  const [showBotDifficulties, setShowBotDifficulties] = useState(false);
   const { settings } = useSettings();
   const s = profile.stats[sport];
   const today = getTodayKey();
@@ -132,14 +137,17 @@ export function HomeScreen({
     <div className="relative h-svh overflow-hidden">
       <SportBackground sport={sport} />
 
+      <div
+        className={`transition-opacity duration-300 ${showModes ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+      >
       {/* Sportivia — very top left */}
       <motion.div
         initial={{ opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
         className="fixed top-0 left-0 z-30 p-3 sm:p-4 flex items-center gap-2"
       >
-        <SportBall sport={sport} size={24} className="shrink-0 drop-shadow-sm" />
-        <h1 className="text-base sm:text-xl font-black tracking-tight text-[#f2f3f5] leading-none">
+        <SportBall sport={sport} size={32} className="shrink-0 drop-shadow-sm" />
+        <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-[#f2f3f5] leading-none">
           Sportivia
         </h1>
       </motion.div>
@@ -176,7 +184,7 @@ export function HomeScreen({
             <p className="text-sm sm:text-base font-black text-[#f2f3f5] font-mono leading-none">
               {s.bestScore > 0 ? s.bestScore : '—'}
               <span className="text-[10px] font-black text-[#949ba4] ml-1.5 tracking-wide">
-                BEST
+                ALL-TIME BEST
               </span>
             </p>
             {(s.dailyStreak > 0 || dailyDone) && (
@@ -205,13 +213,25 @@ export function HomeScreen({
           type="button"
           onClick={() => {
             playMenuClick();
+            onOpenCards();
+          }}
+          className="game-chip game-chip-active"
+          aria-label="Card Packs"
+        >
+          <Layers3 className="h-3.5 w-3.5 text-[#f0b232]" />
+          <span className="hidden sm:inline">Packs</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            playMenuClick();
             onOpenSettings();
           }}
-          className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:gap-1 sm:px-3 sm:py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#f0b232] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          className="game-chip"
           aria-label="Settings"
         >
-          <Settings className="w-3.5 h-3.5 text-[#949ba4]" />
-          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1] hidden sm:inline">Settings</span>
+          <Settings className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Settings</span>
         </button>
         <button
           type="button"
@@ -219,11 +239,11 @@ export function HomeScreen({
             playMenuClick();
             onOpenAbout();
           }}
-          className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:gap-1 sm:px-3 sm:py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#23a559] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          className="game-chip"
           aria-label="About"
         >
-          <Info className="w-3.5 h-3.5 text-[#949ba4]" />
-          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1] hidden sm:inline">About</span>
+          <Info className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">About</span>
         </button>
         <button
           type="button"
@@ -231,11 +251,11 @@ export function HomeScreen({
             playMenuClick();
             onOpenCareer();
           }}
-          className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:gap-1 sm:px-3 sm:py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#f0b232] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          className="game-chip"
           aria-label="Career"
         >
-          <Medal className="w-3.5 h-3.5 text-[#949ba4]" />
-          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1] hidden sm:inline">Career</span>
+          <Medal className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Career</span>
         </button>
         <button
           type="button"
@@ -243,11 +263,11 @@ export function HomeScreen({
             playMenuClick();
             onOpenStore();
           }}
-          className="flex items-center justify-center w-9 h-9 sm:w-auto sm:h-auto sm:gap-1 sm:px-3 sm:py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5865f2] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] backdrop-blur-md transition-all"
+          className="game-chip"
           aria-label="Store"
         >
-          <ShoppingBag className="w-3.5 h-3.5 text-[#949ba4]" />
-          <span className="text-[10px] sm:text-xs font-black text-[#b5bac1] hidden sm:inline">Store</span>
+          <ShoppingBag className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Store</span>
         </button>
       </motion.div>
 
@@ -289,6 +309,9 @@ export function HomeScreen({
               {...(profile.equippedCharacter === 'creative'
                 ? { creativeLoadout: profile.creativeLoadout }
                 : {})}
+              {...(profile.equippedCharacter === 'bunny'
+                ? { rabbitVariant: profile.rabbitVariant }
+                : {})}
             />
             </div>
             {profile.equippedPet && (
@@ -310,34 +333,24 @@ export function HomeScreen({
             <motion.button
               type="button"
               whileHover={{
-                scale: 1.05,
-                y: -3,
+                scale: 1.04,
+                y: -2,
                 transition: { type: 'spring', stiffness: 420, damping: 18 },
               }}
-              whileTap={{ scale: 0.96, y: 2 }}
+              whileTap={{ scale: 0.97, y: 2 }}
               onClick={() => {
                 playMenuClick();
+                setShowBotDifficulties(false);
                 setShowModes(true);
               }}
-              className="group/play relative overflow-hidden flex items-center gap-2.5 px-8 sm:px-10 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-black border-[3px] border-white/30 transition-[box-shadow] duration-200"
-              style={{
-                background: accent,
-                color: onAccentFg(accent),
-                boxShadow: `0 6px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}, 0 0 0 0 ${accent}00`,
-              }}
-              onMouseEnter={e => {
-                e.currentTarget.style.boxShadow = `0 9px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}, 0 12px 32px ${accent}55`;
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.boxShadow = `0 6px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}, 0 0 0 0 ${accent}00`;
-              }}
+              className="group/play flex items-center gap-2.5 rounded-2xl border-[3px] border-white/30 bg-gradient-to-b from-[#ffe08a] via-[#f0b232] to-[#d4921a] px-9 py-3.5 text-sm font-black text-[#3a2600] shadow-[0_5px_0_#a5711a] transition-all hover:brightness-105 sm:px-11 sm:py-4 sm:text-base"
             >
-              <span className="play-btn-shine" aria-hidden />
-              <Play className="relative z-10 w-5 h-5 fill-current drop-shadow-sm transition-transform duration-300 ease-out group-hover/play:scale-125 group-hover/play:-rotate-12" />
-              <span className="relative z-10 tracking-wide">Play</span>
+              <Play className="h-5 w-5 fill-current drop-shadow-sm transition-transform duration-300 ease-out group-hover/play:scale-110 group-hover/play:-rotate-12" />
+              <span className="tracking-wide">Play</span>
             </motion.button>
           </div>
         </motion.div>
+      </div>
       </div>
 
       {/* Mode picker modal */}
@@ -347,101 +360,148 @@ export function HomeScreen({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+            className="fixed inset-0 z-50 bg-black/40"
             onClick={() => {
               playMenuBack();
               setShowModes(false);
             }}
           >
+            <button
+              type="button"
+              onClick={() => {
+                playMenuBack();
+                setShowModes(false);
+              }}
+              className="fixed top-0 left-0 z-50 m-3 flex items-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-2.5 py-1.5 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] sm:m-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 40 }}
               transition={{ type: 'spring', stiffness: 400, damping: 32 }}
-              className="w-full max-w-md max-h-[85svh] overflow-y-auto overscroll-contain rounded-[28px] bg-[#151619] border-[3px] border-[#3f4147] p-4 sm:p-5 shadow-[0_10px_0_#0c0d0f]"
+              className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-8 sm:px-8"
               onClick={e => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <SportBadge sport={sport} size={24} />
-                  <div>
-                    <h3 className="text-lg font-black text-[#f2f3f5]">Choose Mode</h3>
-                    <p className="text-xs font-semibold text-[#949ba4] mt-0.5">Pick how you want to play</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    playMenuBack();
-                    setShowModes(false);
+              <div className="mx-auto mb-5 flex w-full max-w-lg items-center gap-3 sm:mb-6">
+                <h3 className="text-2xl font-black tracking-tight text-[#f2f3f5] sm:text-4xl">Game Modes</h3>
+                <span
+                  className="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
+                  style={{
+                    borderColor: `${accent}88`,
+                    background: `${accent}1a`,
+                    color: accent === '#f4f4f5' ? '#f2f3f5' : accent,
                   }}
-                  className="p-2 rounded-xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] hover:bg-[#2b2d31] text-[#949ba4] shadow-[0_3px_0_#1a1b1f] transition-colors"
                 >
-                  <X className="w-4 h-4" />
-                </button>
+                  {SPORT_LABEL[sport]}
+                </span>
               </div>
 
-              <div className="space-y-2.5">
-                {(['training', 'daily', 'timed', 'duel'] as GameMode[]).map(m => {
+              <div className="mx-auto flex w-full max-w-lg flex-col gap-3">
+                {(['daily', 'training', 'timed', 'bot', 'duel'] as GameMode[]).map(m => {
                   const meta = MODE_META[m];
-                  const Icon = meta.icon;
                   return (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => {
-                        playMenuConfirm();
-                        setShowModes(false);
-                        onStart(m);
-                      }}
-                      className="w-full flex items-center gap-3 px-3.5 py-3.5 rounded-[20px] border-[3px] text-left transition-all hover:translate-y-[1px]"
-                      style={{
-                        background: `linear-gradient(160deg, ${meta.tone}22 0%, #1a1b1f 55%)`,
-                        borderColor: `${meta.tone}88`,
-                        boxShadow: `0 5px 0 ${meta.tone}55`,
-                      }}
-                    >
-                      <div
-                        className="w-11 h-11 rounded-2xl flex items-center justify-center border-[3px] border-white/25 shrink-0 shadow-[0_3px_0_rgba(0,0,0,0.35)]"
+                    <div key={m}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          playMenuConfirm();
+                          if (m === 'bot') {
+                            setShowBotDifficulties(open => !open);
+                            return;
+                          }
+                          setShowModes(false);
+                          onStart(m);
+                        }}
+                        className="group/mode relative flex h-[88px] w-full items-center gap-4 overflow-hidden rounded-2xl border-[3px] px-4 text-left transition-all hover:translate-y-[1px] sm:h-[96px] sm:px-5"
                         style={{
-                          background: meta.tone,
-                          color: onAccentFg(meta.tone),
+                          background: `linear-gradient(160deg, ${meta.tone}22 0%, #1a1b1f 55%)`,
+                          borderColor: `${meta.tone}88`,
+                          boxShadow: `0 5px 0 ${meta.tone}55`,
                         }}
                       >
-                        <Icon className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="font-black text-[#f2f3f5] text-sm">
-                            {m === 'duel' ? '1v1 Duel' : modeLabels[m]}
-                          </p>
-                          {m === 'daily' && dailyDone && (
-                            <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#23a559] text-white font-black border-2 border-[#4ade80] shadow-[0_2px_0_#14532d]">
-                              DONE
-                            </span>
-                          )}
-                          {m === 'duel' && (
-                            <span className="text-[9px] px-2 py-0.5 rounded-full bg-[#ed4245] text-white font-black border-2 border-[#ff8a8c] shadow-[0_2px_0_#8f1e22]">
-                              LIVE
-                            </span>
-                          )}
+                        <div
+                          aria-hidden
+                          className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity group-hover/mode:opacity-[0.2]"
+                          style={{ backgroundImage: `radial-gradient(circle at 92% 12%, ${meta.tone}, transparent 42%)` }}
+                        />
+                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-[3px] border-white/15 bg-[#111214]/80 shadow-[0_3px_0_rgba(0,0,0,0.35)]">
+                          <img
+                            src={meta.icon}
+                            alt=""
+                            className="h-9 w-9 object-contain"
+                            draggable={false}
+                          />
                         </div>
-                        <p className="text-[11px] font-semibold text-[#949ba4] mt-0.5">
-                          {meta.detail}
-                        </p>
-                      </div>
-                      <span className="text-lg font-black shrink-0" style={{ color: meta.tone }}>→</span>
-                    </button>
+                        <div className="relative min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="text-lg font-black text-[#f2f3f5]">
+                              {modeLabels[m]}
+                            </p>
+                            {m === 'daily' && dailyDone && (
+                              <span className="rounded-full border-2 border-[#4ade80] bg-[#23a559] px-2 py-0.5 text-[9px] font-black text-white shadow-[0_2px_0_#14532d]">
+                                DONE
+                              </span>
+                            )}
+                            {m === 'duel' && (
+                              <span className="rounded-full border-2 border-[#ff8a8c] bg-[#ed4245] px-2 py-0.5 text-[9px] font-black text-white shadow-[0_2px_0_#8f1e22]">
+                                LIVE
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-1 truncate text-xs font-semibold whitespace-nowrap text-[#949ba4]">
+                            {meta.detail}
+                          </p>
+                        </div>
+                        <span className="relative shrink-0 text-lg font-black" style={{ color: meta.tone }}>
+                          {m === 'bot' && showBotDifficulties ? '↑' : '→'}
+                        </span>
+                      </button>
+
+                      <AnimatePresence initial={false}>
+                        {m === 'bot' && showBotDifficulties && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="grid grid-cols-3 gap-2 px-1 pt-3">
+                              {(Object.keys(BOT_DIFFICULTIES) as BotDifficulty[]).map(difficulty => {
+                                const config = BOT_DIFFICULTIES[difficulty];
+                                return (
+                                  <button
+                                    key={difficulty}
+                                    type="button"
+                                    onClick={() => {
+                                      playMenuConfirm();
+                                      setShowModes(false);
+                                      setShowBotDifficulties(false);
+                                      onStart('bot', difficulty);
+                                    }}
+                                    className="rounded-2xl border-[2.5px] bg-[#111214] px-2 py-3 text-center shadow-[0_3px_0_#0c0d0f] transition-transform hover:translate-y-[1px]"
+                                    style={{ borderColor: `${config.color}aa` }}
+                                  >
+                                    <p className="text-xs font-black" style={{ color: config.color }}>
+                                      {config.label}
+                                    </p>
+                                    <p className="mt-1 text-[8px] font-bold leading-tight text-[#7a7d86]">
+                                      {difficulty === 'beginner' ? 'Steady' : difficulty === 'pro' ? 'Competitive' : 'Fast'}
+                                    </p>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
                   );
                 })}
               </div>
-
-              {s.bestScore > 0 && (
-                <p className="text-center text-[10px] font-black uppercase tracking-wider text-[#5c5e66] mt-4">
-                  Best {s.bestScore}
-                  {s.dailyStreak > 0 && ` · 🔥 ${s.dailyStreak}d`}
-                </p>
-              )}
             </motion.div>
           </motion.div>
         )}

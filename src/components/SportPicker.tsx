@@ -1,16 +1,11 @@
-import { useState } from 'react';
-import { AnimatePresence, motion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import type { Sport } from '../types';
-import { HockeyPuck, SportBall } from './SportBall';
+import { SportBall } from './SportBall';
 import {
-  COMING_SOON_ACCENT,
-  COMING_SOON_LABEL,
-  COMING_SOON_SPORTS,
   SPORT_ACCENT,
   SPORT_LABEL,
   SPORT_PICKER_BG,
   SPORTS,
-  type ComingSoonSport,
 } from '../lib/sportTheme';
 import { playMenuClick } from '../lib/menuAudio';
 
@@ -20,98 +15,8 @@ interface SportPickerProps {
   layout?: 'bar' | 'rail';
 }
 
-interface ComingSoonSportButtonProps {
-  sport: ComingSoonSport;
-  isOpen: boolean;
-  onToggle: (sport: ComingSoonSport) => void;
-  rail?: boolean;
-}
-
-function ComingSoonSportButton({ sport, isOpen, onToggle, rail }: ComingSoonSportButtonProps) {
-  const label = COMING_SOON_LABEL[sport];
-  const accent = COMING_SOON_ACCENT[sport];
-
-  if (rail) {
-    return (
-      <div
-        role="tab"
-        aria-selected={false}
-        aria-label={`${label} — Coming soon`}
-        title="Coming soon"
-        className="flex items-center gap-2.5 sm:gap-3 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-2xl border-[3px] border-[#2b2d31] opacity-40"
-      >
-        <span className="grayscale shrink-0">
-          <HockeyPuck size={28} />
-        </span>
-        <div className="min-w-0 flex flex-col gap-0.5">
-          <span className="text-[11px] sm:text-sm font-black uppercase tracking-wide text-[#5c5e66] leading-none">
-            {label}
-          </span>
-          <span
-            className="text-[9px] font-black uppercase tracking-wider leading-none"
-            style={{ color: accent }}
-          >
-            Coming soon
-          </span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={false}
-      aria-expanded={isOpen}
-      aria-label={`${label} — Coming soon`}
-      title="Coming soon"
-      onClick={() => onToggle(sport)}
-      className={`relative shrink-0 flex items-center gap-1.5 sm:gap-2 rounded-xl px-2.5 sm:px-3 py-2 cursor-not-allowed transition-all ${
-        isOpen ? 'opacity-60' : 'opacity-35 hover:opacity-50'
-      }`}
-      style={
-        isOpen
-          ? {
-              boxShadow: `inset 0 0 0 2px ${accent}66, 0 3px 0 rgba(0,0,0,0.25)`,
-              background: `${accent}18`,
-            }
-          : undefined
-      }
-    >
-      <span className="text-xs sm:text-sm font-black tracking-wide text-[#b5bac1] uppercase leading-none">
-        {label}
-      </span>
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.span
-            key="coming-soon"
-            initial={{ opacity: 0, width: 0 }}
-            animate={{ opacity: 1, width: 'auto' }}
-            exit={{ opacity: 0, width: 0 }}
-            transition={{ duration: 0.15 }}
-            className="overflow-hidden text-[10px] sm:text-xs font-black tracking-wide uppercase whitespace-nowrap leading-none"
-            style={{ color: accent }}
-          >
-            Coming soon
-          </motion.span>
-        )}
-      </AnimatePresence>
-      <span className="flex items-center justify-center shrink-0 grayscale">
-        <HockeyPuck size={22} />
-      </span>
-    </button>
-  );
-}
-
 export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPickerProps) {
-  const [openComingSoon, setOpenComingSoon] = useState<ComingSoonSport | null>(null);
   const rail = layout === 'rail';
-
-  const handleComingSoonToggle = (next: ComingSoonSport) => {
-    playMenuClick();
-    setOpenComingSoon(current => (current === next ? null : next));
-  };
 
   if (rail) {
     return (
@@ -133,7 +38,6 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
                 aria-label={label}
                 onClick={() => {
                   playMenuClick();
-                  setOpenComingSoon(null);
                   onSportChange(sp);
                 }}
                 className={`relative flex items-center gap-2.5 sm:gap-3 px-2.5 py-2 sm:px-3 sm:py-2.5 min-h-[48px] sm:min-h-[52px] rounded-2xl border-[3px] transition-colors ${
@@ -168,23 +72,6 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
             );
           })}
         </div>
-
-        <div className="w-full h-[3px] rounded-full bg-[#2b2d31] my-0.5" />
-
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#5c5e66] px-1">
-          Coming soon
-        </p>
-        <div className="flex flex-col items-stretch gap-2">
-          {COMING_SOON_SPORTS.map(sp => (
-            <ComingSoonSportButton
-              key={sp}
-              sport={sp}
-              isOpen={false}
-              onToggle={() => {}}
-              rail
-            />
-          ))}
-        </div>
       </div>
     );
   }
@@ -209,7 +96,6 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
             aria-label={label}
             onClick={() => {
               playMenuClick();
-              setOpenComingSoon(null);
               onSportChange(sp);
             }}
             className={`relative shrink-0 flex items-center gap-2 rounded-xl px-2.5 sm:px-3.5 py-2 transition-opacity ${
@@ -243,14 +129,6 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
         );
       })}
 
-      {COMING_SOON_SPORTS.map(sp => (
-        <ComingSoonSportButton
-          key={sp}
-          sport={sp}
-          isOpen={openComingSoon === sp}
-          onToggle={handleComingSoonToggle}
-        />
-      ))}
     </div>
   );
 }

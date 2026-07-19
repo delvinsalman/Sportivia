@@ -41,6 +41,14 @@ function mergeSportStats(s?: Partial<GameStats>): GameStats {
   if (next.lastDailyDate === utcToday && utcToday !== getLocalToday()) {
     next.lastDailyDate = getLocalToday();
   }
+  if (next.lastDailyDate) {
+    const last = new Date(`${next.lastDailyDate}T00:00:00`);
+    const today = new Date(`${getLocalToday()}T00:00:00`);
+    const daysSinceLastDaily = Math.round((today.getTime() - last.getTime()) / 86400000);
+    if (Number.isFinite(daysSinceLastDaily) && daysSinceLastDaily > 1) {
+      next.dailyStreak = 0;
+    }
+  }
   return next;
 }
 
@@ -53,6 +61,7 @@ export function loadStats(): PlayerStats {
         basketball: defaultStats(),
         baseball: defaultStats(),
         football: defaultStats(),
+        hockey: defaultStats(),
       };
     }
     const parsed = JSON.parse(raw) as PlayerStats;
@@ -61,12 +70,13 @@ export function loadStats(): PlayerStats {
       basketball: mergeSportStats(parsed.basketball),
       baseball: mergeSportStats(parsed.baseball),
       football: mergeSportStats(parsed.football),
+      hockey: mergeSportStats(parsed.hockey),
     };
     // Persist UTC→local date repairs so Record stays correct after reload
-    const changed = (['soccer', 'basketball', 'baseball', 'football'] as Sport[]).some(sp => {
+    const changed = (['soccer', 'basketball', 'baseball', 'football', 'hockey'] as Sport[]).some(sp => {
       const before = JSON.stringify(parsed[sp]?.dailyCompleted ?? []);
       const after = JSON.stringify(next[sp].dailyCompleted);
-      return before !== after;
+      return before !== after || parsed[sp]?.dailyStreak !== next[sp].dailyStreak;
     });
     if (changed) saveStats(next);
     return next;
@@ -76,6 +86,7 @@ export function loadStats(): PlayerStats {
       basketball: defaultStats(),
       baseball: defaultStats(),
       football: defaultStats(),
+      hockey: defaultStats(),
     };
   }
 }
@@ -114,5 +125,6 @@ export function recordGameResult(sport: Sport, result: GameResult): PlayerStats 
     basketball: { ...all.basketball, dailyCompleted: [...all.basketball.dailyCompleted] },
     baseball: { ...all.baseball, dailyCompleted: [...all.baseball.dailyCompleted] },
     football: { ...all.football, dailyCompleted: [...all.football.dailyCompleted] },
+    hockey: { ...all.hockey, dailyCompleted: [...all.hockey.dailyCompleted] },
   };
 }

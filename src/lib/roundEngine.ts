@@ -102,6 +102,24 @@ export function generateShareText(
   date: string,
 ): string {
   const emoji =
-    sport === 'soccer' ? '⚽' : sport === 'basketball' ? '🏀' : sport === 'football' ? '🏈' : '⚾';
-  return `${emoji} Sportivia ${score} pts · ${correct} correct · ${boardFilled}/9 filled\n${mode === 'daily' ? `Daily ${date}` : 'Training'} — beat my score!`;
+    sport === 'soccer'
+      ? '⚽'
+      : sport === 'basketball'
+        ? '🏀'
+        : sport === 'football'
+          ? '🏈'
+          : sport === 'hockey'
+            ? '🏒'
+            : '⚾';
+  const modeLabel =
+    mode === 'daily'
+      ? `Daily ${date}`
+      : mode === 'timed'
+        ? 'Ranked'
+        : mode === 'bot'
+          ? 'Vs AI'
+          : mode === 'duel'
+            ? '1v1 Duel'
+            : 'Training';
+  return `${emoji} Sportivia ${score} pts · ${correct} correct · ${boardFilled}/9 filled\n${modeLabel} — beat my score!`;
 }

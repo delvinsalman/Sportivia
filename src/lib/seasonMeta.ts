@@ -230,7 +230,7 @@ export function applySeasonFromResult(
   if (opts.profileCoins + bonusCoins >= 5000) unlock('vault');
   if (opts.profileLevel >= 5) unlock('veteran');
   if (opts.duelWon) unlock('duelist');
-  if (meta.sportsPlayed.length >= 4) unlock('globetrotter');
+  if (meta.sportsPlayed.length >= 5) unlock('globetrotter');
 
   if (result.mode === 'daily' && !dailyAlreadyClaimed) {
     meta = { ...meta, dailyRewardDate: getTodayKey() };

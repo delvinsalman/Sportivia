@@ -121,5 +121,6 @@ export function SportBall({ sport, size = 40, className = '' }: { sport: Sport; 
   if (sport === 'soccer') return <SoccerBall size={size} className={className} />;
   if (sport === 'basketball') return <BasketballBall size={size} className={className} />;
   if (sport === 'football') return <FootballBall size={size} className={className} />;
+  if (sport === 'hockey') return <HockeyPuck size={size} className={className} />;
   return <BaseballBall size={size} className={className} />;
 }

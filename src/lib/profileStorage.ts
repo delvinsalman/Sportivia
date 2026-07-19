@@ -1,12 +1,13 @@
 import type { GameResult, Sport } from '../types';
-import type { CharacterId, PetId, PlayerProfile } from '../types/profile';
+import type { CharacterId, PetId, PlayerProfile, RabbitVariantId } from '../types/profile';
 import {
   CHARACTERS,
   DEFAULT_CHARACTER,
   DEFAULT_CREATIVE_LOADOUT,
-  DEFAULT_PET,
   DEFAULT_PLAYER_NAME,
+  DEFAULT_RABBIT_VARIANT,
   PETS,
+  RABBIT_VARIANTS,
   STARTER_CHARACTERS,
   STARTER_PETS,
 } from '../types/profile';
@@ -14,6 +15,8 @@ import { normalizeCreativeLoadout, type CreativeLoadout } from '../types/creativ
 import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult } from './seasonMeta';
+import type { CardPackTier, CardRarity, CollectibleCard, OpenedCard } from '../types/cards';
+import { CARDS_BY_SPORT, getPackDefinition } from './cardCatalog';
 
 const PROFILE_KEY = 'gridiq-profile-v4';
 const PAID_SKINS_MIGRATION_KEY = 'gridiq-paid-skins-v1';
@@ -57,9 +60,15 @@ function defaultProfile(): PlayerProfile {
     level: 1,
     equippedCharacter: DEFAULT_CHARACTER,
     unlockedCharacters: [...STARTER_CHARACTERS],
-    equippedPet: DEFAULT_PET,
-    unlockedPets: [...STARTER_PETS],
+    equippedPet: null,
+    unlockedPets: [],
     creativeLoadout: { ...DEFAULT_CREATIVE_LOADOUT },
+    rabbitVariant: DEFAULT_RABBIT_VARIANT,
+    cardCollection: {
+      owned: {},
+      packsOpened: 0,
+      legendaryPity: 0,
+    },
     stats: loadStats(),
   };
 }
@@ -78,16 +87,47 @@ export function loadProfile(): PlayerProfile {
     const unlocked = normalizeUnlocked(parsed.unlockedCharacters);
     const safeEquipped = unlocked.includes(equipped) ? equipped : DEFAULT_CHARACTER;
 
-    const unlockedPets = normalizeUnlockedPets(parsed.unlockedPets);
-    let safePet: PetId | null;
-    if (parsed.equippedPet === null) {
-      safePet = null;
-    } else {
-      const equippedPet = migratePetId(parsed.equippedPet) ?? DEFAULT_PET;
-      safePet = unlockedPets.includes(equippedPet) ? equippedPet : DEFAULT_PET;
+    let unlockedPets = normalizeUnlockedPets(parsed.unlockedPets);
+    // Keep pets already equipped on older profiles (they used to get a free starter).
+    if (parsed.equippedPet != null) {
+      const prior = migratePetId(parsed.equippedPet);
+      if (prior && !unlockedPets.includes(prior)) {
+        unlockedPets = [...unlockedPets, prior];
+      }
+    }
+    let safePet: PetId | null = null;
+    if (parsed.equippedPet != null) {
+      const equippedPet = migratePetId(parsed.equippedPet);
+      safePet = equippedPet && unlockedPets.includes(equippedPet) ? equippedPet : null;
     }
 
     const creativeLoadout = normalizeCreativeLoadout(parsed.creativeLoadout);
+    const rabbitVariant = RABBIT_VARIANTS.some(variant => variant.id === parsed.rabbitVariant)
+      ? (parsed.rabbitVariant as RabbitVariantId)
+      : DEFAULT_RABBIT_VARIANT;
+    const rawCollection = parsed.cardCollection;
+    const cardCollection = {
+      owned:
+        rawCollection?.owned && typeof rawCollection.owned === 'object'
+          ? Object.fromEntries(
+              Object.entries(rawCollection.owned).filter(
+                ([key, count]) =>
+                  /^(soccer|basketball|baseball|football|hockey):/.test(key) &&
+                  typeof count === 'number' &&
+                  Number.isFinite(count) &&
+                  count > 0,
+              ),
+            )
+          : {},
+      packsOpened:
+        typeof rawCollection?.packsOpened === 'number'
+          ? Math.max(0, Math.floor(rawCollection.packsOpened))
+          : 0,
+      legendaryPity:
+        typeof rawCollection?.legendaryPity === 'number'
+          ? Math.max(0, Math.floor(rawCollection.legendaryPity))
+          : 0,
+    };
 
     const profile: PlayerProfile = {
       ...base,
@@ -100,6 +140,8 @@ export function loadProfile(): PlayerProfile {
       equippedPet: safePet,
       unlockedPets,
       creativeLoadout,
+      rabbitVariant,
+      cardCollection,
       stats: loadStats(),
     };
 
@@ -116,8 +158,10 @@ export function loadProfile(): PlayerProfile {
       parsed.equippedPet === undefined ||
       safePet !== parsed.equippedPet ||
       unlockedPets.length !== (parsed.unlockedPets?.length ?? 0);
+    const cardsChanged = !parsed.cardCollection;
+    const rabbitChanged = parsed.rabbitVariant !== rabbitVariant;
 
-    if (equippedMigrated || unlockedChanged || petsChanged) {
+    if (equippedMigrated || unlockedChanged || petsChanged || cardsChanged || rabbitChanged) {
       saveProfile(profile);
     }
 
@@ -268,6 +312,117 @@ export function saveCreativeLoadout(loadout: CreativeLoadout): PlayerProfile {
   profile.creativeLoadout = normalizeCreativeLoadout(loadout);
   saveProfile(profile);
   return profile;
+}
+
+export function saveRabbitVariant(variant: RabbitVariantId): PlayerProfile {
+  const profile = loadProfile();
+  if (!profile.unlockedCharacters.includes('bunny')) return profile;
+  if (!RABBIT_VARIANTS.some(item => item.id === variant)) return profile;
+  profile.rabbitVariant = variant;
+  saveProfile(profile);
+  return profile;
+}
+
+const RARITY_ORDER: Record<CardRarity, number> = {
+  common: 0,
+  rare: 1,
+  epic: 2,
+  legendary: 3,
+};
+
+function rollRarity(
+  odds: Record<CardRarity, number>,
+  minimum: CardRarity = 'common',
+  random: () => number,
+): CardRarity {
+  const allowed = (Object.keys(odds) as CardRarity[]).filter(
+    rarity => RARITY_ORDER[rarity] >= RARITY_ORDER[minimum],
+  );
+  const total = allowed.reduce((sum, rarity) => sum + odds[rarity], 0);
+  let roll = random() * total;
+  for (const rarity of allowed) {
+    roll -= odds[rarity];
+    if (roll <= 0) return rarity;
+  }
+  return allowed.at(-1) ?? minimum;
+}
+
+function pickCard(
+  pool: CollectibleCard[],
+  rarity: CardRarity,
+  random: () => number,
+): CollectibleCard {
+  const rarityPool = pool.filter(card => card.rarity === rarity);
+  const choices = rarityPool.length ? rarityPool : pool;
+  return choices[Math.floor(random() * choices.length)]!;
+}
+
+export function openCardPack(
+  sport: Sport,
+  tier: CardPackTier,
+  random: () => number = Math.random,
+): {
+  ok: boolean;
+  profile: PlayerProfile;
+  cards: OpenedCard[];
+  duplicateCoins: number;
+  error?: string;
+} {
+  const profile = loadProfile();
+  const pack = getPackDefinition(tier);
+  if (profile.coins < pack.cost) {
+    return {
+      ok: false,
+      profile,
+      cards: [],
+      duplicateCoins: 0,
+      error: `Need ${pack.cost - profile.coins} more coins`,
+    };
+  }
+
+  const pool = CARDS_BY_SPORT[sport];
+  if (!pool.length) {
+    return { ok: false, profile, cards: [], duplicateCoins: 0, error: 'No cards available' };
+  }
+
+  const rolled: CollectibleCard[] = [];
+  for (let index = 0; index < pack.cardCount; index++) {
+    const isGuaranteedSlot = index === pack.cardCount - 1 && pack.guaranteedRarity;
+    const rarity = rollRarity(
+      pack.odds,
+      isGuaranteedSlot ? pack.guaranteedRarity : 'common',
+      random,
+    );
+    rolled.push(pickCard(pool, rarity, random));
+  }
+
+  const pityTriggered =
+    profile.cardCollection.legendaryPity >= 34 &&
+    !rolled.some(card => card.rarity === 'legendary');
+  if (pityTriggered) {
+    rolled[0] = pickCard(pool, 'legendary', random);
+  }
+
+  profile.coins -= pack.cost;
+  let duplicateCoins = 0;
+  const cards = rolled.map(card => {
+    const previousCount = profile.cardCollection.owned[card.key] ?? 0;
+    const duplicate = previousCount > 0;
+    const refund = duplicate ? pack.duplicateRefund[card.rarity] : 0;
+    profile.cardCollection.owned[card.key] = previousCount + 1;
+    profile.coins += refund;
+    duplicateCoins += refund;
+    return { card, duplicate, duplicateCoins: refund };
+  });
+
+  const pulledLegendary = rolled.some(card => card.rarity === 'legendary');
+  profile.cardCollection.packsOpened += 1;
+  profile.cardCollection.legendaryPity = pulledLegendary
+    ? 0
+    : profile.cardCollection.legendaryPity + 1;
+  saveProfile(profile);
+
+  return { ok: true, profile, cards, duplicateCoins };
 }
 
 export async function redeemPromoCode(raw: string): Promise<{

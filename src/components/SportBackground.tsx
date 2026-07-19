@@ -1,7 +1,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, animate } from 'framer-motion';
 import type { Sport } from '../types';
-import { SoccerBall, BasketballBall, BaseballBall, FootballBall } from './SportBall';
+import { SoccerBall, BasketballBall, BaseballBall, FootballBall, HockeyPuck } from './SportBall';
 
 interface BallConfig {
   id: number;
@@ -47,6 +47,15 @@ const FOOTBALLS: BallConfig[] = Array.from({ length: 8 }, (_, i) => ({
   size: 30 + (i % 3) * 15,
   driftDelay: i * 0.36,
   driftDuration: 5.2 + (i % 4) * 2,
+}));
+
+const HOCKEY_PUCKS: BallConfig[] = Array.from({ length: 8 }, (_, i) => ({
+  id: i,
+  xPct: 8 + (i * 15) % 84,
+  yPct: 12 + (i * 19) % 68,
+  size: 26 + (i % 3) * 14,
+  driftDelay: i * 0.34,
+  driftDuration: 5.4 + (i % 4) * 2,
 }));
 
 const REPEL_RADIUS = 130;
@@ -102,7 +111,9 @@ function ReactiveBall({
         ? BasketballBall
         : sport === 'football'
           ? FootballBall
-          : BaseballBall;
+          : sport === 'hockey'
+            ? HockeyPuck
+            : BaseballBall;
 
   return (
     <motion.div
@@ -311,6 +322,54 @@ function FootballField({
   );
 }
 
+function HockeyRink({
+  mouse,
+  containerSize,
+}: {
+  mouse: { x: number; y: number } | null;
+  containerSize: { w: number; h: number };
+}) {
+  const ice = '#38bdf8';
+  return (
+    <>
+      <div
+        className="absolute inset-0 transition-opacity duration-700"
+        style={{
+          background: `
+            radial-gradient(ellipse 105% 65% at 50% 48%, rgba(56,189,248,0.2) 0%, transparent 60%),
+            radial-gradient(ellipse 75% 45% at 50% 85%, rgba(226,232,240,0.13) 0%, transparent 62%),
+            linear-gradient(180deg, #080b10 0%, #0b1620 45%, #081018 72%, #080a0e 100%)
+          `,
+        }}
+      />
+      <svg className="absolute inset-0 h-full w-full opacity-[0.1]" preserveAspectRatio="xMidYMid slice" viewBox="0 0 400 800">
+        <rect x="35" y="45" width="330" height="710" rx="82" fill="none" stroke={ice} strokeWidth="2.5" />
+        <line x1="35" y1="400" x2="365" y2="400" stroke="#ef4444" strokeWidth="2" />
+        <line x1="35" y1="270" x2="365" y2="270" stroke="#3b82f6" strokeWidth="2" />
+        <line x1="35" y1="530" x2="365" y2="530" stroke="#3b82f6" strokeWidth="2" />
+        <circle cx="200" cy="400" r="45" fill="none" stroke={ice} strokeWidth="1.5" />
+        <circle cx="105" cy="245" r="28" fill="none" stroke={ice} strokeWidth="1" />
+        <circle cx="295" cy="245" r="28" fill="none" stroke={ice} strokeWidth="1" />
+        <circle cx="105" cy="555" r="28" fill="none" stroke={ice} strokeWidth="1" />
+        <circle cx="295" cy="555" r="28" fill="none" stroke={ice} strokeWidth="1" />
+        <path d="M160 45 h80 v28 q-40 30-80 0z" fill="none" stroke="#ef4444" strokeWidth="1.5" />
+        <path d="M160 755 h80 v-28 q-40-30-80 0z" fill="none" stroke="#ef4444" strokeWidth="1.5" />
+      </svg>
+      {HOCKEY_PUCKS.map(puck => (
+        <ReactiveBall
+          key={puck.id}
+          config={puck}
+          sport="hockey"
+          mouse={mouse}
+          containerSize={containerSize}
+          opacity={0.2}
+        />
+      ))}
+      <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-[#38bdf8]/12 to-transparent" />
+    </>
+  );
+}
+
 interface SportBackgroundProps {
   sport: Sport;
 }
@@ -367,6 +426,8 @@ export function SportBackground({ sport }: SportBackgroundProps) {
           <BasketballCourt mouse={mouse} containerSize={containerSize} />
         ) : sport === 'football' ? (
           <FootballField mouse={mouse} containerSize={containerSize} />
+        ) : sport === 'hockey' ? (
+          <HockeyRink mouse={mouse} containerSize={containerSize} />
         ) : (
           <BaseballField mouse={mouse} containerSize={containerSize} />
         )}

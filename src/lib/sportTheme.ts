@@ -6,6 +6,7 @@ export const SPORT_ACCENT: Record<Sport, string> = {
   basketball: '#f97316',
   baseball: '#f4f4f5',
   football: '#8b5a2b',
+  hockey: '#38bdf8',
 };
 
 /** Secondary stitch / outline accent */
@@ -14,6 +15,7 @@ export const SPORT_STITCH: Record<Sport, string> = {
   basketball: '#f97316',
   baseball: '#c41e3a',
   football: '#5c3d2e',
+  hockey: '#e2e8f0',
 };
 
 export const SPORT_LABEL: Record<Sport, string> = {
@@ -21,6 +23,7 @@ export const SPORT_LABEL: Record<Sport, string> = {
   basketball: 'NBA',
   baseball: 'MLB',
   football: 'NFL',
+  hockey: 'NHL',
 };
 
 export const SPORT_PICKER_BG: Record<Sport, string> = {
@@ -28,6 +31,7 @@ export const SPORT_PICKER_BG: Record<Sport, string> = {
   basketball: 'rgba(249,115,22,0.25)',
   baseball: 'rgba(255,255,255,0.14)',
   football: 'rgba(139,90,43,0.28)',
+  hockey: 'rgba(56,189,248,0.22)',
 };
 
 /** Podium rim + glow */
@@ -36,18 +40,7 @@ export const SPORT_PODIUM_ACCENT: Record<Sport, string> = {
   basketball: SPORT_ACCENT.basketball,
   baseball: SPORT_ACCENT.baseball,
   football: SPORT_ACCENT.football,
+  hockey: SPORT_ACCENT.hockey,
 };
 
-export const SPORTS: Sport[] = ['soccer', 'basketball', 'baseball', 'football'];
-
-export type ComingSoonSport = 'hockey';
-
-export const COMING_SOON_SPORTS: ComingSoonSport[] = ['hockey'];
-
-export const COMING_SOON_LABEL: Record<ComingSoonSport, string> = {
-  hockey: 'NHL',
-};
-
-export const COMING_SOON_ACCENT: Record<ComingSoonSport, string> = {
-  hockey: '#64748b',
-};
+export const SPORTS: Sport[] = ['soccer', 'basketball', 'baseball', 'football', 'hockey'];

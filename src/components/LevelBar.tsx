@@ -65,20 +65,15 @@ export function CoinBadge({ coins, onClick }: CoinBadgeProps) {
   const inner = (
     <>
       <span className="text-sm leading-none">🪙</span>
-      <span className="text-xs font-black text-[#f0b232] font-mono">{coins}</span>
+      <span className="font-mono text-xs font-bold text-[#f0b232]">{coins.toLocaleString()}</span>
     </>
   );
 
-  const chipClass =
-    'flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#f0b232]/70 shadow-[0_3px_0_#8a6814] backdrop-blur-md transition-all';
+  const chipClass = 'game-chip game-chip-active';
 
   if (onClick) {
     return (
-      <button
-        type="button"
-        onClick={onClick}
-        className={`${chipClass} hover:translate-y-[1px] hover:shadow-[0_2px_0_#8a6814]`}
-      >
+      <button type="button" onClick={onClick} className={chipClass}>
         {inner}
       </button>
     );
@@ -100,10 +95,7 @@ export function HeaderStats({
   return (
     <div className="flex items-center gap-1.5">
       {showOnline && (
-        <div
-          className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#1e1f22]/95 border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#0c0d0f]"
-          title="Players online right now"
-        >
+        <div className="game-chip" title="Players online right now">
           <span className="relative flex h-2 w-2">
             <span
               className={`absolute inline-flex h-full w-full rounded-full bg-[#23a559] opacity-60 ${
@@ -116,8 +108,8 @@ export function HeaderStats({
               }`}
             />
           </span>
-          <Users className="w-3.5 h-3.5 text-[#949ba4]" />
-          <span className="text-[11px] font-black text-[#f2f3f5] font-mono tabular-nums min-w-[1ch]">
+          <Users className="h-3.5 w-3.5" />
+          <span className="min-w-[1ch] font-mono text-[11px] font-bold tabular-nums">
             {typeof online === 'number' ? online : '…'}
           </span>
         </div>
@@ -137,32 +129,28 @@ export function LevelCorner({ profile, accent = '#5865f2' }: LevelCornerProps) {
   const remaining = Math.max(0, needed - current);
 
   return (
-    <div className="w-[168px] sm:w-[196px] flex flex-col gap-1.5 px-3 py-2.5 rounded-2xl bg-[#1e1f22]/95 border-[3px] border-[#3f4147] shadow-[0_5px_0_#0c0d0f] backdrop-blur-md">
+    <div className="game-panel flex w-[168px] flex-col gap-1.5 px-3 py-2.5 sm:w-[196px]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
-          <span className="text-[9px] font-black uppercase tracking-[0.14em] text-[#949ba4]">Level</span>
-          <span className="text-sm font-black text-[#f2f3f5] font-mono" style={{ color: accent }}>
+          <span className="text-[9px] font-bold uppercase tracking-wide text-[#949ba4]">Level</span>
+          <span className="font-mono text-sm font-extrabold" style={{ color: accent }}>
             {level}
           </span>
-          <span className="text-[10px] font-black text-[#5c5e66]">→ {level + 1}</span>
+          <span className="text-[10px] font-bold text-[#5c5e66]">→ {level + 1}</span>
         </div>
-        <span className="text-[10px] font-black text-[#949ba4] font-mono tabular-nums">
+        <span className="font-mono text-[10px] font-bold tabular-nums text-[#949ba4]">
           {current}/{needed}
         </span>
       </div>
-      <div className="w-full h-2 rounded-full bg-[#2b2d31] overflow-hidden border-2 border-[#3f4147]">
+      <div className="h-2 w-full overflow-hidden rounded-full bg-black/40">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${accent}, ${accent}cc)` }}
         />
       </div>
       <div className="flex items-center justify-between">
-        <span className="text-[9px] font-black uppercase tracking-wider text-[#5c5e66]">
-          {Math.round(pct)}%
-        </span>
-        <span className="text-[9px] font-black uppercase tracking-wider text-[#949ba4]">
-          {remaining} XP to go
-        </span>
+        <span className="text-[9px] font-bold text-[#5c5e66]">{Math.round(pct)}%</span>
+        <span className="text-[9px] font-bold text-[#949ba4]">{remaining} XP to go</span>
       </div>
     </div>
   );

@@ -82,7 +82,7 @@ export function CareerScreen({
               </div>
 
               {/* Sport category switcher */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1 rounded-2xl border-[2.5px] border-[#3f4147] bg-[#0c0d0f]/85 p-1 shadow-[0_3px_0_#0a0a0b]">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 rounded-2xl border-[2.5px] border-[#3f4147] bg-[#0c0d0f]/85 p-1 shadow-[0_3px_0_#0a0a0b]">
                 {SPORTS.map(s => {
                   const active = sport === s;
                   return (

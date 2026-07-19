@@ -3,12 +3,14 @@ import type { SoccerPlayer } from './soccerPlayers';
 import type { BasketballPlayer } from './basketballPlayers';
 import type { BaseballPlayer } from './baseballPlayers';
 import type { FootballPlayer } from './footballPlayers';
+import type { HockeyPlayer } from './hockeyPlayers';
 import { SOCCER_PLAYERS } from './soccerPlayers';
 import { BASKETBALL_PLAYERS } from './basketballPlayers';
 import { BASEBALL_PLAYERS } from './baseballPlayers';
 import { FOOTBALL_PLAYERS } from './footballPlayers';
+import { HOCKEY_PLAYERS } from './hockeyPlayers';
 
-export type PlayerUnion = SoccerPlayer | BasketballPlayer | BaseballPlayer | FootballPlayer;
+export type PlayerUnion = SoccerPlayer | BasketballPlayer | BaseballPlayer | FootballPlayer | HockeyPlayer;
 
 export interface CategoryDef extends Category {
   sport: Sport;
@@ -67,12 +69,20 @@ function countFootball(predicate: (p: FootballPlayer) => boolean) {
   return FOOTBALL_PLAYERS.filter(predicate).length;
 }
 
+function countHockey(predicate: (p: HockeyPlayer) => boolean) {
+  return HOCKEY_PLAYERS.filter(predicate).length;
+}
+
 function isBaseball(p: PlayerUnion): p is BaseballPlayer {
   return 'mlbTeams' in p;
 }
 
 function isFootball(p: PlayerUnion): p is FootballPlayer {
   return 'nflTeams' in p;
+}
+
+function isHockey(p: PlayerUnion): p is HockeyPlayer {
+  return 'nhlTeams' in p;
 }
 
 const rawSoccer: Omit<CategoryDef, 'tag' | 'icon'>[] = [
@@ -323,15 +333,100 @@ const rawFootball: Omit<CategoryDef, 'tag' | 'icon'>[] = [
   { id: 'college-oklahoma', sport: 'football', label: 'OKLAHOMA', difficulty: 2, validate: (p) => isFootball(p) && p.college === 'Oklahoma', poolSize: countFootball(p => p.college === 'Oklahoma') },
 ];
 
+const HOCKEY_TEAMS: ReadonlyArray<readonly [string, string, string, 1 | 2 | 3]> = [
+  ['team-nhl-ducks', 'DUCKS', 'Anaheim Ducks', 2],
+  ['team-nhl-bruins', 'BRUINS', 'Boston Bruins', 1],
+  ['team-nhl-sabres', 'SABRES', 'Buffalo Sabres', 2],
+  ['team-nhl-flames', 'FLAMES', 'Calgary Flames', 2],
+  ['team-nhl-hurricanes', 'HURRICANES', 'Carolina Hurricanes', 2],
+  ['team-nhl-blackhawks', 'BLACKHAWKS', 'Chicago Blackhawks', 1],
+  ['team-nhl-avalanche', 'AVALANCHE', 'Colorado Avalanche', 1],
+  ['team-nhl-blue-jackets', 'BLUE JACKETS', 'Columbus Blue Jackets', 3],
+  ['team-nhl-stars', 'STARS', 'Dallas Stars', 2],
+  ['team-nhl-red-wings', 'RED WINGS', 'Detroit Red Wings', 1],
+  ['team-nhl-oilers', 'OILERS', 'Edmonton Oilers', 1],
+  ['team-nhl-panthers', 'PANTHERS', 'Florida Panthers', 1],
+  ['team-nhl-kings', 'KINGS', 'Los Angeles Kings', 2],
+  ['team-nhl-wild', 'WILD', 'Minnesota Wild', 2],
+  ['team-nhl-canadiens', 'CANADIENS', 'Montreal Canadiens', 1],
+  ['team-nhl-predators', 'PREDATORS', 'Nashville Predators', 2],
+  ['team-nhl-devils', 'DEVILS', 'New Jersey Devils', 2],
+  ['team-nhl-islanders', 'ISLANDERS', 'New York Islanders', 2],
+  ['team-nhl-rangers', 'RANGERS', 'New York Rangers', 1],
+  ['team-nhl-senators', 'SENATORS', 'Ottawa Senators', 2],
+  ['team-nhl-flyers', 'FLYERS', 'Philadelphia Flyers', 2],
+  ['team-nhl-penguins', 'PENGUINS', 'Pittsburgh Penguins', 1],
+  ['team-nhl-sharks', 'SHARKS', 'San Jose Sharks', 2],
+  ['team-nhl-kraken', 'KRAKEN', 'Seattle Kraken', 3],
+  ['team-nhl-blues', 'BLUES', 'St. Louis Blues', 2],
+  ['team-nhl-lightning', 'LIGHTNING', 'Tampa Bay Lightning', 1],
+  ['team-nhl-maple-leafs', 'MAPLE LEAFS', 'Toronto Maple Leafs', 1],
+  ['team-nhl-mammoth', 'MAMMOTH', 'Utah Mammoth', 3],
+  ['team-nhl-canucks', 'CANUCKS', 'Vancouver Canucks', 2],
+  ['team-nhl-golden-knights', 'GOLDEN KNIGHTS', 'Vegas Golden Knights', 2],
+  ['team-nhl-capitals', 'CAPITALS', 'Washington Capitals', 1],
+  ['team-nhl-jets', 'JETS', 'Winnipeg Jets', 2],
+];
+
+const HOCKEY_NATIONS: ReadonlyArray<readonly [string, string, string, 1 | 2 | 3]> = [
+  ['nat-canada', 'CANADA', 'Canada', 1],
+  ['nat-usa', 'USA', 'USA', 1],
+  ['nat-sweden', 'SWEDEN', 'Sweden', 2],
+  ['nat-finland', 'FINLAND', 'Finland', 2],
+  ['nat-russia', 'RUSSIA', 'Russia', 2],
+  ['nat-czech', 'CZECHIA', 'Czechia', 2],
+  ['nat-slovakia', 'SLOVAKIA', 'Slovakia', 3],
+];
+
+const rawHockey: Omit<CategoryDef, 'tag' | 'icon'>[] = [
+  ...HOCKEY_NATIONS.map(([id, label, nationality, difficulty]) => ({
+    id,
+    sport: 'hockey' as const,
+    label,
+    difficulty,
+    validate: (p: PlayerUnion) => isHockey(p) && p.nationality === nationality,
+    poolSize: countHockey(p => p.nationality === nationality),
+  })),
+  ...HOCKEY_TEAMS.map(([id, label, team, difficulty]) => ({
+    id,
+    sport: 'hockey' as const,
+    label,
+    difficulty,
+    validate: (p: PlayerUnion) => isHockey(p) && p.nhlTeams.includes(team),
+    poolSize: countHockey(p => p.nhlTeams.includes(team)),
+  })),
+  { id: 'pos-c', sport: 'hockey', label: 'CENTER', difficulty: 1, validate: (p) => isHockey(p) && p.positions.includes('C'), poolSize: countHockey(p => p.positions.includes('C')) },
+  { id: 'pos-lw', sport: 'hockey', label: 'LEFT WING', difficulty: 2, validate: (p) => isHockey(p) && p.positions.includes('LW'), poolSize: countHockey(p => p.positions.includes('LW')) },
+  { id: 'pos-rw', sport: 'hockey', label: 'RIGHT WING', difficulty: 2, validate: (p) => isHockey(p) && p.positions.includes('RW'), poolSize: countHockey(p => p.positions.includes('RW')) },
+  { id: 'pos-d', sport: 'hockey', label: 'DEFENSEMAN', difficulty: 1, validate: (p) => isHockey(p) && p.positions.includes('D'), poolSize: countHockey(p => p.positions.includes('D')) },
+  { id: 'pos-g', sport: 'hockey', label: 'GOALTENDER', difficulty: 2, validate: (p) => isHockey(p) && p.positions.includes('G'), poolSize: countHockey(p => p.positions.includes('G')) },
+  { id: 'champ-stanley', sport: 'hockey', label: 'STANLEY CUP', difficulty: 2, validate: (p) => isHockey(p) && p.stanleyCups >= 1, poolSize: countHockey(p => p.stanleyCups >= 1) },
+  { id: 'champ-stanley-3', sport: 'hockey', label: '3+ CUPS', difficulty: 3, validate: (p) => isHockey(p) && p.stanleyCups >= 3, poolSize: countHockey(p => p.stanleyCups >= 3) },
+  { id: 'award-hart', sport: 'hockey', label: 'HART MVP', difficulty: 2, validate: (p) => isHockey(p) && p.hart, poolSize: countHockey(p => p.hart) },
+  { id: 'award-nhl-allstar', sport: 'hockey', label: 'NHL ALL-STAR', difficulty: 1, validate: (p) => isHockey(p) && p.allStar, poolSize: countHockey(p => p.allStar) },
+  { id: 'award-hockey-hof', sport: 'hockey', label: 'HOCKEY HALL OF FAME', difficulty: 3, validate: (p) => isHockey(p) && p.hallOfFame, poolSize: countHockey(p => p.hallOfFame) },
+  { id: 'draft-2020s', sport: 'hockey', label: '2020s DRAFT', difficulty: 1, validate: (p) => isHockey(p) && p.draftDecade === '2020s', poolSize: countHockey(p => p.draftDecade === '2020s') },
+  { id: 'draft-10s', sport: 'hockey', label: '2010s DRAFT', difficulty: 1, validate: (p) => isHockey(p) && p.draftDecade === '2010s', poolSize: countHockey(p => p.draftDecade === '2010s') },
+  { id: 'draft-00s', sport: 'hockey', label: '2000s DRAFT', difficulty: 2, validate: (p) => isHockey(p) && p.draftDecade === '2000s', poolSize: countHockey(p => p.draftDecade === '2000s') },
+  { id: 'draft-90s', sport: 'hockey', label: '1990s DRAFT', difficulty: 2, validate: (p) => isHockey(p) && p.draftDecade === '1990s', poolSize: countHockey(p => p.draftDecade === '1990s') },
+  { id: 'decade-2020s', sport: 'hockey', label: '2020s ERA', difficulty: 1, validate: (p) => isHockey(p) && p.decades.includes('2020s'), poolSize: countHockey(p => p.decades.includes('2020s')) },
+  { id: 'decade-10s', sport: 'hockey', label: '2010s ERA', difficulty: 1, validate: (p) => isHockey(p) && p.decades.includes('2010s'), poolSize: countHockey(p => p.decades.includes('2010s')) },
+  { id: 'decade-00s', sport: 'hockey', label: '2000s ERA', difficulty: 2, validate: (p) => isHockey(p) && p.decades.includes('2000s'), poolSize: countHockey(p => p.decades.includes('2000s')) },
+  { id: 'decade-90s', sport: 'hockey', label: '1990s ERA', difficulty: 2, validate: (p) => isHockey(p) && p.decades.includes('1990s'), poolSize: countHockey(p => p.decades.includes('1990s')) },
+  { id: 'decade-80s', sport: 'hockey', label: '1980s ERA', difficulty: 3, validate: (p) => isHockey(p) && p.decades.includes('1980s'), poolSize: countHockey(p => p.decades.includes('1980s')) },
+];
+
 export const SOCCER_CATEGORIES: CategoryDef[] = rawSoccer.map(c => enrich(c));
 export const BASKETBALL_CATEGORIES: CategoryDef[] = rawBasketball.map(c => enrich(c));
 export const BASEBALL_CATEGORIES: CategoryDef[] = rawBaseball.map(c => enrich(c));
 export const FOOTBALL_CATEGORIES: CategoryDef[] = rawFootball.map(c => enrich(c));
+export const HOCKEY_CATEGORIES: CategoryDef[] = rawHockey.map(c => enrich(c));
 
 export function getCategories(sport: Sport): CategoryDef[] {
   if (sport === 'soccer') return SOCCER_CATEGORIES;
   if (sport === 'basketball') return BASKETBALL_CATEGORIES;
   if (sport === 'football') return FOOTBALL_CATEGORIES;
+  if (sport === 'hockey') return HOCKEY_CATEGORIES;
   return BASEBALL_CATEGORIES;
 }
 
@@ -339,6 +434,7 @@ export function getPlayers(sport: Sport): PlayerUnion[] {
   if (sport === 'soccer') return SOCCER_PLAYERS;
   if (sport === 'basketball') return BASKETBALL_PLAYERS;
   if (sport === 'football') return FOOTBALL_PLAYERS;
+  if (sport === 'hockey') return HOCKEY_PLAYERS;
   return BASEBALL_PLAYERS;
 }
 

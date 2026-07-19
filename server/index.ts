@@ -11,7 +11,7 @@ const DIST = resolve(ROOT, 'dist');
 const WS_PATH = '/duel';
 const LIVE_PATH = '/live';
 
-type Sport = 'soccer' | 'basketball' | 'baseball';
+type Sport = 'soccer' | 'basketball' | 'baseball' | 'football' | 'hockey';
 type RoomStatus = 'lobby' | 'playing' | 'finished';
 
 interface ClientMsg {
@@ -633,16 +633,26 @@ wss.on('connection', ws => {
         send(ws, { type: 'error', message: 'Need 2 players for rematch' });
         return;
       }
-      room.status = 'lobby';
-      room.seed = null;
-      for (const p of room.players.values()) {
-        p.ready = false;
-        p.score = 0;
-        p.finished = false;
-        p.correct = 0;
-        p.wrong = 0;
-        p.maxStreak = 0;
+
+      // Only the first rematch request resets the finished match. The second
+      // player may arrive after their opponent has already readied up; resetting
+      // again here would silently erase that ready state.
+      if (room.status === 'finished') {
+        room.status = 'lobby';
+        room.seed = null;
+        for (const p of room.players.values()) {
+          p.ready = false;
+          p.score = 0;
+          p.finished = false;
+          p.correct = 0;
+          p.wrong = 0;
+          p.maxStreak = 0;
+        }
+      } else if (room.status !== 'lobby') {
+        send(ws, { type: 'error', message: 'Match is still in progress' });
+        return;
       }
+
       broadcast(room, lobbyPayload(room));
       return;
     }
