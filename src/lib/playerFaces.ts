@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v28';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v29';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -23,6 +23,20 @@ const ESPN_SEARCH = 'https://site.web.api.espn.com/apis/common/v3/search';
 const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
   baseball: {
     smithwill: 'https://a.espncdn.com/i/headshots/mlb/players/full/38309.png',
+    // Owner-review localized portraits (Jul 2026)
+    schilling: '/faces/baseball/schilling.png',
+    biggio: '/faces/baseball/biggio.png',
+    thome: '/faces/baseball/thome.png',
+    cruz: '/faces/baseball/cruz.png',
+    bonds: '/faces/baseball/bonds.png',
+    rivera: '/faces/baseball/rivera.png',
+    pujols: '/faces/baseball/pujols.png',
+    maddux: '/faces/baseball/maddux.png',
+    ichiro: '/faces/baseball/ichiro.png',
+    ryan: '/faces/baseball/ryan.png',
+    randy: '/faces/baseball/randy.png',
+    ripken: '/faces/baseball/ripken.png',
+    gwynn: '/faces/baseball/gwynn.png',
   },
   basketball: {
     rodman: 'https://cdn.nba.com/headshots/nba/latest/1040x760/23.png',

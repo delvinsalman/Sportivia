@@ -1119,6 +1119,7 @@ export function CardPacksScreen({
             <div className="group relative hidden sm:block">
               <div
                 className="game-nav-tab !min-h-[2.35rem] cursor-help"
+                tabIndex={0}
                 aria-describedby="pity-tooltip"
               >
                 <Sparkles className="h-4 w-4 text-[#f0b232]" />
