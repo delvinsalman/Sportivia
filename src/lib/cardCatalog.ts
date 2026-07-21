@@ -161,7 +161,7 @@ const STAR_RATINGS: Record<Sport, Record<string, number>> = {
     dybala: 88, higuain: 89, tevez: 89, chiesa: 85, vlahovic: 84,
     firmino: 87, gabriel: 84, joaofelix: 82, cancelo: 87, grealish: 83,
     jorginho: 86, james: 87, vidal: 88, park: 86, carvajal: 88,
-    theo: 87, hakimi: 87, dimarco: 87, reina: 78,
+    theo: 87, hakimi: 87, dimarco: 87, reina: 72,
     // Owner review bumps (Jul 2026)
     bastoni: 86, gakpo: 86, szobo: 87, frimpong: 86,
     jboateng: 82, calhanoglu: 87, bono: 86, koulibaly: 84,

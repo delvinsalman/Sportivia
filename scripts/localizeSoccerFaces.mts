@@ -50,6 +50,33 @@ const STABLE_OVERRIDES: Record<string, string> = {
   "shearer": "https://officialpsds.com/imageview/7z/08/7z0831_large.png?1521316464",
   "dimaria": "https://b.fssta.com/uploads/application/soccer/headshots/871.png",
   "lautaro": "https://cdn.futwiz.com/assets/img/fc25/faces/231478.png?25",
+  "cech":
+    "https://static.wikia.nocookie.net/fifa/images/5/54/Petr_Cech.png/revision/latest?cb=20161215183124",
+  "vinicius":
+    "https://publish.realmadrid.com/content/dam/portals/realmadrid-com/es-es/sports/football/3kq9cckrnlogidldtdie2fkbl/players/vinicius-paixao-de-oliveira-junior-/assets/VINI_EQUIPO_CARITA_550X650_26-27.png",
+  "forlan": "https://static.wefut.com/assets/images/fut25/playeravatars/266691.png?252",
+  "macca": "https://b.fssta.com/uploads/application/soccer/headshots/63273.png",
+  "essien":
+    "https://static.wikia.nocookie.net/the-football-database/images/9/93/Chelsea_Essien_001.png/revision/latest?cb=20131125215804",
+  "sanchez":
+    "https://static.wikia.nocookie.net/fightclubchampfanom/images/c/c4/Alexis_S%C3%A1nchez.png/revision/latest?cb=20200127203451",
+  "cavani":
+    "https://b.fssta.com/uploads/application/soccer/headshots/4041.vresize.350.350.medium.1.png",
+  "valverde":
+    "https://b.fssta.com/uploads/application/soccer/headshots/42653.vresize.350.350.medium.2.png",
+  "kvara": "https://b.fssta.com/uploads/application/soccer/headshots/70204.png",
+  "vidal": "https://b.fssta.com/uploads/application/soccer/headshots/1396.png",
+  "carvajal":
+    "https://b.fssta.com/uploads/application/soccer/headshots/865.vresize.350.350.medium.1.png",
+  "stones":
+    "https://www.thefa.com/-/media/www-thefa-com/images/england/men-senior/mens-snr-updated-headshots/723-x-755/john-stones723x755.ashx",
+  "merino":
+    "https://cdn-img.staticzz.com/img/planteis/new/86/06/11688606_mikel_merino_20240916093836.png",
+  "nicowilliams":
+    "https://cdn-headshots.theathletic.com/soccer/3ww4cGhbJ5lTcHqH_400x400.png",
+  "pedri": "https://b.fssta.com/uploads/application/soccer/headshots/72375.png",
+  "osimhen":
+    "https://i.namu.wiki/i/lQTUfyqkT53_YJBUZS3-bCqBABmLlkDeXmm_Lm92pvxNTgFxeNMhIBdyHuR6MWlGJ03t1PMiPpZNp4FHOtkOFg.webp",
   "kenanyildiz":
     "https://cdn-img.staticzz.com/img/planteis/new/51/98/11535198_kenan_yildiz_20240918191043.png",
   "gavi":
