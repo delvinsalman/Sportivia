@@ -1116,12 +1116,29 @@ export function CardPacksScreen({
               );
             })}
 
-            <div
-              className="game-nav-tab hidden !min-h-[2.35rem] pointer-events-none sm:inline-flex"
-              title="Packs until pity"
-            >
-              <Sparkles className="h-4 w-4 text-[#f0b232]" />
-              <span>Pity {pityLeft}</span>
+            <div className="group relative hidden sm:block">
+              <div
+                className="game-nav-tab !min-h-[2.35rem] cursor-help"
+                aria-describedby="pity-tooltip"
+              >
+                <Sparkles className="h-4 w-4 text-[#f0b232]" />
+                <span>Pity {pityLeft}</span>
+              </div>
+              <div
+                id="pity-tooltip"
+                role="tooltip"
+                className="pointer-events-none absolute right-0 top-[calc(100%+0.45rem)] z-50 w-56 rounded-xl border border-[#f0b232]/35 bg-[#1a1b20] px-3 py-2.5 opacity-0 shadow-[0_12px_28px_rgba(0,0,0,.55)] transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+              >
+                <p className="text-[11px] font-extrabold uppercase tracking-wide text-[#f0b232]">
+                  Legendary pity
+                </p>
+                <p className="mt-1 text-xs font-semibold leading-snug text-[#dbdee1]">
+                  A legendary is guaranteed within 35 packs.
+                  {pityLeft === 1
+                    ? ' Next pack is guaranteed.'
+                    : ` ${pityLeft} packs left.`}
+                </p>
+              </div>
             </div>
 
             <CoinBadge coins={profile.coins} />
