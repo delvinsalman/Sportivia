@@ -1,7 +1,9 @@
 import type { PlayerStats } from '../types';
 import type { CreativeLoadout } from './creativeCharacter';
+import type { AthleteLoadout } from './athleteCharacter';
 import type { CardCollectionState } from './cards';
 import { DEFAULT_CREATIVE_LOADOUT } from './creativeCharacter';
+import { DEFAULT_ATHLETE_LOADOUT } from './athleteCharacter';
 
 export type CharacterId =
   | 'cube-man'
@@ -22,7 +24,8 @@ export type CharacterId =
   | 'bunny'
   | 'ninja'
   | 'mako'
-  | 'creative';
+  | 'creative'
+  | 'athlete';
 export type RabbitVariantId = 'base' | 'grey' | 'blond' | 'pigtails' | 'cyan-hair';
 export type DogVariantId = 'husky' | 'shiba' | 'black-shiba' | 'german-shepherd';
 export type PetId =
@@ -104,6 +107,8 @@ export interface PlayerProfile {
   unlockedPets: PetId[];
   /** Outfit for the creative / customizable skin */
   creativeLoadout: CreativeLoadout;
+  /** Kit colors for the Athlete skin */
+  athleteLoadout: AthleteLoadout;
   /** Selected look included with the Rabbit skin bundle */
   rabbitVariant: RabbitVariantId;
   /** Selected breed included with the Dog pet */
@@ -268,6 +273,19 @@ export const CHARACTERS: CharacterDef[] = [
     poseMode: 'animated',
     customizable: true,
     showcaseRestMs: [14_000, 26_000],
+  },
+  {
+    id: 'athlete',
+    name: 'Pro Athlete',
+    tagline: 'Jersey kits · build your look',
+    price: 20_000,
+    modelPath: '/models/athlete.glb',
+    accent: '#22c55e',
+    footOffsetY: 0,
+    targetHeight: 1.7,
+    poseMode: 'animated',
+    customizable: true,
+    showcaseRestMs: [5_000, 9_000],
   },
   {
     id: 'bob',
@@ -461,6 +479,7 @@ export const DEFAULT_PET: PetId = 'pug';
 export const DEFAULT_RABBIT_VARIANT: RabbitVariantId = 'base';
 export const DEFAULT_DOG_VARIANT: DogVariantId = 'husky';
 export { DEFAULT_CREATIVE_LOADOUT };
+export { DEFAULT_ATHLETE_LOADOUT };
 
 export const RABBIT_VARIANTS: RabbitVariantDef[] = [
   { id: 'base', name: 'Classic', modelPath: '/models/rabbit/base.glb' },

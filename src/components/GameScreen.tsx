@@ -9,6 +9,7 @@ import { ResultModal } from './ResultModal';
 import type { Sport, GameMode, GameResult, BotDifficulty } from '../types';
 import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
+import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { DuelMatchResult } from '../lib/duelTypes';
 import { Bot, Swords } from 'lucide-react';
 import { getSettings } from '../lib/settings';
@@ -28,6 +29,7 @@ interface GameScreenProps {
   equippedCharacter: CharacterId;
   equippedPet?: PetId | null;
   creativeLoadout?: CreativeLoadout;
+  athleteLoadout?: AthleteLoadout;
   rabbitVariant?: RabbitVariantId;
   dogVariant?: DogVariantId;
   seedKey?: string;
@@ -63,6 +65,7 @@ export function GameScreen({
   equippedCharacter,
   equippedPet,
   creativeLoadout,
+  athleteLoadout,
   rabbitVariant,
   dogVariant,
   seedKey,
@@ -350,6 +353,7 @@ export function GameScreen({
           characterId={equippedCharacter}
           petId={equippedPet}
           creativeLoadout={creativeLoadout}
+          athleteLoadout={athleteLoadout}
           rabbitVariant={rabbitVariant}
           dogVariant={dogVariant}
           onPlayAgain={onReplay}

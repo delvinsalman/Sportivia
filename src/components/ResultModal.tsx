@@ -9,12 +9,14 @@ import { SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { getCharacterDef, getPetDef } from '../types/profile';
 import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
+import type { AthleteLoadout } from '../types/athleteCharacter';
 
 interface ResultModalProps {
   result: GameResult;
   characterId: CharacterId;
   petId?: PetId | null;
   creativeLoadout?: CreativeLoadout;
+  athleteLoadout?: AthleteLoadout;
   rabbitVariant?: RabbitVariantId;
   dogVariant?: DogVariantId;
   onPlayAgain: () => void;
@@ -35,6 +37,7 @@ export function ResultModal({
   characterId,
   petId,
   creativeLoadout,
+  athleteLoadout,
   rabbitVariant,
   dogVariant,
   onPlayAgain,
@@ -119,6 +122,9 @@ export function ResultModal({
                 sport={result.sport}
                 {...(characterId === 'creative' && creativeLoadout
                   ? { creativeLoadout }
+                  : {})}
+                {...(characterId === 'athlete' && athleteLoadout
+                  ? { athleteLoadout }
                   : {})}
                 {...(characterId === 'bunny' && rabbitVariant
                   ? { rabbitVariant }

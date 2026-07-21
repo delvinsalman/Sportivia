@@ -22,6 +22,14 @@ import {
   DEFAULT_CREATIVE_LOADOUT,
   normalizeCreativeLoadout,
 } from '../types/creativeCharacter';
+import type { AthleteLoadout, AthleteSlotId } from '../types/athleteCharacter';
+import {
+  ATHLETE_PRESETS,
+  ATHLETE_SLOTS,
+  colorsForSlot,
+  DEFAULT_ATHLETE_LOADOUT,
+  normalizeAthleteLoadout,
+} from '../types/athleteCharacter';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SportBackground } from './SportBackground';
 import type { Sport } from '../types';
@@ -39,6 +47,7 @@ interface StoreScreenProps {
   onEquipPet: (id: PetId) => void;
   onUnequipPet: () => void;
   onSaveCreativeLoadout: (loadout: CreativeLoadout) => void;
+  onSaveAthleteLoadout: (loadout: AthleteLoadout) => void;
   onSaveRabbitVariant: (variant: RabbitVariantId) => void;
   onSaveDogVariant: (variant: DogVariantId) => void;
 }
@@ -55,6 +64,7 @@ export function StoreScreen({
   onEquipPet,
   onUnequipPet,
   onSaveCreativeLoadout,
+  onSaveAthleteLoadout,
   onSaveRabbitVariant,
   onSaveDogVariant,
 }: StoreScreenProps) {
@@ -73,11 +83,15 @@ export function StoreScreen({
   const [draftLoadout, setDraftLoadout] = useState<CreativeLoadout>(() =>
     normalizeCreativeLoadout(profile.creativeLoadout),
   );
+  const [draftAthleteLoadout, setDraftAthleteLoadout] = useState<AthleteLoadout>(() =>
+    normalizeAthleteLoadout(profile.athleteLoadout),
+  );
   const [draftRabbitVariant, setDraftRabbitVariant] = useState<RabbitVariantId>(
     profile.rabbitVariant,
   );
   const [draftDogVariant, setDraftDogVariant] = useState<DogVariantId>(profile.dogVariant);
   const [slotId, setSlotId] = useState<CreativeSlotId>('face');
+  const [athleteSlotId, setAthleteSlotId] = useState<AthleteSlotId>('jersey');
   const slotBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   useEffect(() => {
@@ -96,6 +110,10 @@ export function StoreScreen({
   useEffect(() => {
     setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
   }, [profile.creativeLoadout]);
+
+  useEffect(() => {
+    setDraftAthleteLoadout(normalizeAthleteLoadout(profile.athleteLoadout));
+  }, [profile.athleteLoadout]);
 
   useEffect(() => {
     setDraftRabbitVariant(profile.rabbitVariant);
@@ -123,15 +141,24 @@ export function StoreScreen({
   const prevItem = previewIndex > 0 ? catalog[previewIndex - 1] : null;
   const nextItem = previewIndex < catalog.length - 1 ? catalog[previewIndex + 1] : null;
   const isCreativePreview = !isPets && safePreviewId === 'creative';
+  const isAthletePreview = !isPets && safePreviewId === 'athlete';
   const isRabbitPreview = !isPets && safePreviewId === 'bunny';
   const isDogPreview = isPets && safePreviewId === 'dog';
-  const canCustomize = (isCreativePreview || isRabbitPreview || isDogPreview) && owned;
+  const canCustomize =
+    (isCreativePreview || isAthletePreview || isRabbitPreview || isDogPreview) && owned;
   const previewLoadout =
     isCreativePreview ? (customizing ? draftLoadout : profile.creativeLoadout) : undefined;
+  const previewAthleteLoadout = isAthletePreview
+    ? customizing
+      ? draftAthleteLoadout
+      : profile.athleteLoadout
+    : undefined;
   const activeSlot = CREATIVE_SLOTS.find(s => s.id === slotId) ?? CREATIVE_SLOTS[0];
   const slotIndex = Math.max(0, CREATIVE_SLOTS.findIndex(s => s.id === activeSlot.id));
   const canSlotPrev = slotIndex > 0;
   const canSlotNext = slotIndex < CREATIVE_SLOTS.length - 1;
+  const activeAthleteSlot = ATHLETE_SLOTS.find(s => s.id === athleteSlotId) ?? ATHLETE_SLOTS[0];
+  const athleteSlotColors = colorsForSlot(activeAthleteSlot.id);
 
   const selectItem = (id: string) => {
     if (id === safePreviewId) return;
@@ -185,9 +212,11 @@ export function StoreScreen({
   const openCustomize = () => {
     playMenuClick();
     setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
+    setDraftAthleteLoadout(normalizeAthleteLoadout(profile.athleteLoadout));
     setDraftRabbitVariant(profile.rabbitVariant);
     setDraftDogVariant(profile.dogVariant);
     setSlotId('face');
+    setAthleteSlotId('jersey');
     setCustomizing(true);
   };
 
@@ -195,6 +224,7 @@ export function StoreScreen({
     playMenuConfirm();
     if (isRabbitPreview) onSaveRabbitVariant(draftRabbitVariant);
     else if (isDogPreview) onSaveDogVariant(draftDogVariant);
+    else if (isAthletePreview) onSaveAthleteLoadout(draftAthleteLoadout);
     else onSaveCreativeLoadout(draftLoadout);
     setCustomizing(false);
   };
@@ -203,6 +233,7 @@ export function StoreScreen({
     playMenuClick();
     if (isRabbitPreview) setDraftRabbitVariant('base');
     else if (isDogPreview) setDraftDogVariant('husky');
+    else if (isAthletePreview) setDraftAthleteLoadout({ ...DEFAULT_ATHLETE_LOADOUT });
     else setDraftLoadout({ ...DEFAULT_CREATIVE_LOADOUT });
   };
 
@@ -219,6 +250,7 @@ export function StoreScreen({
                 playMenuBack();
                 setCustomizing(false);
                 setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
+                setDraftAthleteLoadout(normalizeAthleteLoadout(profile.athleteLoadout));
                 setDraftRabbitVariant(profile.rabbitVariant);
                 setDraftDogVariant(profile.dogVariant);
                 return;
@@ -288,6 +320,9 @@ export function StoreScreen({
                               ...(prevItem.id === 'creative'
                                 ? { creativeLoadout: profile.creativeLoadout }
                                 : {}),
+                              ...(prevItem.id === 'athlete'
+                                ? { athleteLoadout: profile.athleteLoadout }
+                                : {}),
                               ...(prevItem.id === 'bunny'
                                 ? { rabbitVariant: profile.rabbitVariant }
                                 : {}),
@@ -337,6 +372,9 @@ export function StoreScreen({
                         : {
                             characterId: safePreviewId as CharacterId,
                             ...(previewLoadout ? { creativeLoadout: previewLoadout } : {}),
+                            ...(previewAthleteLoadout
+                              ? { athleteLoadout: previewAthleteLoadout }
+                              : {}),
                             ...(isRabbitPreview
                               ? {
                                   rabbitVariant: customizing
@@ -392,6 +430,9 @@ export function StoreScreen({
                               characterId: nextItem.id as CharacterId,
                               ...(nextItem.id === 'creative'
                                 ? { creativeLoadout: profile.creativeLoadout }
+                                : {}),
+                              ...(nextItem.id === 'athlete'
+                                ? { athleteLoadout: profile.athleteLoadout }
                                 : {}),
                               ...(nextItem.id === 'bunny'
                                 ? { rabbitVariant: profile.rabbitVariant }
@@ -462,6 +503,99 @@ export function StoreScreen({
                       );
                     })}
                   </div>
+                ) : isAthletePreview ? (
+                  <>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {ATHLETE_PRESETS.map(preset => {
+                        const active =
+                          draftAthleteLoadout.jersey === preset.loadout.jersey &&
+                          draftAthleteLoadout.shorts === preset.loadout.shorts &&
+                          draftAthleteLoadout.skin === preset.loadout.skin &&
+                          draftAthleteLoadout.shoes === preset.loadout.shoes;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => {
+                              playMenuSelect();
+                              setDraftAthleteLoadout({ ...preset.loadout });
+                            }}
+                            className={`px-2 py-2.5 rounded-xl text-[11px] font-black border-[2.5px] transition-all flex flex-col items-center gap-1.5 ${
+                              active
+                                ? 'border-[#22c55e] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#166534]'
+                                : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
+                            }`}
+                          >
+                            <span className="flex gap-0.5">
+                              {[
+                                preset.loadout.jersey,
+                                preset.loadout.shorts,
+                                preset.loadout.shoes,
+                              ].map((hex, i) => (
+                                <span
+                                  key={i}
+                                  className="w-3.5 h-3.5 rounded-full border border-white/20"
+                                  style={{ background: hex }}
+                                />
+                              ))}
+                            </span>
+                            {preset.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                      {ATHLETE_SLOTS.map(slot => {
+                        const active = slot.id === activeAthleteSlot.id;
+                        return (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            onClick={() => {
+                              playMenuClick();
+                              setAthleteSlotId(slot.id);
+                            }}
+                            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-black border-[2.5px] transition-all ${
+                              active
+                                ? 'text-[#f2f3f5] border-[#22c55e] bg-[#1e1f22]'
+                                : 'text-[#949ba4] border-[#3f4147] bg-[#151618] hover:text-[#dbdee1]'
+                            }`}
+                          >
+                            {slot.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+                      {athleteSlotColors.map(opt => {
+                        const active =
+                          draftAthleteLoadout[activeAthleteSlot.id].toLowerCase() ===
+                          opt.hex.toLowerCase();
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            title={opt.label}
+                            onClick={() => {
+                              playMenuSelect();
+                              setDraftAthleteLoadout(prev => ({
+                                ...prev,
+                                [activeAthleteSlot.id]: opt.hex,
+                              }));
+                            }}
+                            className={`aspect-square rounded-xl border-[2.5px] transition-all ${
+                              active
+                                ? 'border-white scale-105 shadow-[0_0_0_2px_#22c55e]'
+                                : 'border-[#3f4147] hover:border-[#6d6f78]'
+                            }`}
+                            style={{ background: opt.hex }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </>
                 ) : (
                   <>
                 <div className="flex items-center gap-1.5">
@@ -566,7 +700,13 @@ export function StoreScreen({
                     className="flex-[1.4] py-3 rounded-2xl text-sm font-black border-[3px] border-white/25 bg-[#5865f2] hover:bg-[#4752c4] text-white shadow-[0_5px_0_#2f3aa8] flex items-center justify-center gap-2"
                   >
                     <Check className="w-4 h-4" />
-                    {isRabbitPreview ? 'Save Rabbit' : isDogPreview ? 'Save Breed' : 'Save Look'}
+                    {isRabbitPreview
+                      ? 'Save Rabbit'
+                      : isDogPreview
+                        ? 'Save Breed'
+                        : isAthletePreview
+                          ? 'Save Kit'
+                          : 'Save Look'}
                   </button>
                 </div>
               </div>
@@ -585,7 +725,9 @@ export function StoreScreen({
                           ? 'Choose Rabbit Look'
                           : isDogPreview
                             ? 'Choose Dog Breed'
-                            : 'Customize Kit'}
+                            : isAthletePreview
+                              ? 'Customize Jersey'
+                              : 'Customize Kit'}
                       </button>
                     )}
                     <button
