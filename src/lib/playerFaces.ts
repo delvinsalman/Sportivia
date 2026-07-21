@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v27';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v28';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -102,6 +102,16 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     kukoc: '/faces/basketball/kukoc.png',
     penny: '/faces/basketball/penny.png',
     rip: '/faces/basketball/rip.png',
+    russell: '/faces/basketball/russell.png',
+    kareem: '/faces/basketball/kareem.png',
+    kobe: '/faces/basketball/kobe.png',
+    magic: '/faces/basketball/magic.png',
+    wilt: '/faces/basketball/wilt.png',
+    hakeem: '/faces/basketball/hakeem.png',
+    bird: '/faces/basketball/bird.png',
+    shaq: '/faces/basketball/shaq.png',
+    duncan: '/faces/basketball/duncan.png',
+    oscar: '/faces/basketball/oscar.png',
   },
   soccer: {
     // Permanent local portraits (see public/faces/soccer + localizeSoccerFaces.mts)
