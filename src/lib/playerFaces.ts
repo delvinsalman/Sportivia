@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v39';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v40';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -298,6 +298,12 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     'mark-messier': '/faces/hockey/mark-messier.png',
     'mike-bossy': '/faces/hockey/mike-bossy.png',
     'ray-bourque': '/faces/hockey/ray-bourque.png',
+    'brett-hull': '/faces/hockey/brett-hull.png',
+    'bryan-trottier': '/faces/hockey/bryan-trottier.png',
+    'phil-esposito': '/faces/hockey/phil-esposito.png',
+    'carey-price': '/faces/hockey/carey-price.png',
+    'chris-pronger': '/faces/hockey/chris-pronger.png',
+    'denis-potvin': '/faces/hockey/denis-potvin.png',
 
   },
 };
