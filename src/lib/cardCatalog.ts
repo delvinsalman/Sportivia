@@ -197,7 +197,7 @@ const STAR_RATINGS: Record<Sport, Record<string, number>> = {
     ohtani: 98, judge: 96, trout: 96, griffey: 97, jeter: 96,
     pedro: 97, betts: 95, soto: 94, acuna: 94, harper: 93,
     freeman: 93, kershaw: 95, verlander: 94,
-    scherzer: 94, cole: 92, degrom: 94, degrom2: 94, altuve: 92,
+    scherzer: 94, cole: 92, degrom: 94, altuve: 92,
     bonds: 98, randy: 97, maddux: 97, ichiro: 97, pujols: 97,
     miggy: 96, rivera: 98, ryan: 97, papi: 95, posey: 93,
     ripken: 96, gwynn: 96, molina: 92, beltre: 94, bagwell: 93,
