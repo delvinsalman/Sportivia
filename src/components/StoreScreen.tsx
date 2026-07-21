@@ -295,27 +295,9 @@ export function StoreScreen({
           </div>
         </header>
 
-        <div
-          className={`flex-1 flex flex-col items-center min-h-0 px-2 sm:px-5 pb-[max(1rem,env(safe-area-inset-bottom))] ${
-            customizing && isAthletePreview
-              ? 'overflow-hidden'
-              : 'overflow-y-auto overscroll-contain'
-          }`}
-        >
-          <div
-            className={`w-full max-w-2xl flex flex-col items-center py-1 sm:py-0 ${
-              customizing && isAthletePreview
-                ? 'gap-2 flex-1 min-h-0'
-                : 'gap-3 sm:gap-5 sm:justify-center sm:flex-1'
-            }`}
-          >
-            <div
-              className={`relative w-full flex items-center justify-center ${
-                customizing && isAthletePreview
-                  ? 'flex-1 min-h-0'
-                  : 'min-h-[220px] sm:min-h-[340px]'
-              }`}
-            >
+        <div className="flex-1 flex flex-col items-center min-h-0 overflow-y-auto overscroll-contain px-2 sm:px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+          <div className="w-full max-w-2xl flex flex-col items-center gap-3 sm:gap-5 py-2 sm:py-0 sm:justify-center sm:flex-1">
+            <div className="relative w-full flex items-center justify-center min-h-[220px] sm:min-h-[340px]">
               {!customizing && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-[28%] max-w-[140px]">
                   {prevItem ? (
