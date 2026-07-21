@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v24';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v25';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -36,6 +36,31 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     // Was wrongly resolving to a women's college player named Nene
     nene: 'https://cdn.nba.com/headshots/nba/latest/1040x760/2403.png',
     lou: 'https://cdn.nba.com/headshots/nba/latest/1040x760/101150.png',
+    // Owner-review localized portraits (Jul 2026)
+    redick: '/faces/basketball/redick.png',
+    rubio: '/faces/basketball/rubio.png',
+    brogdon: '/faces/basketball/brogdon.png',
+    lowry: '/faces/basketball/lowry.png',
+    boozer: '/faces/basketball/boozer.png',
+    marion: '/faces/basketball/marion.png',
+    amare: '/faces/basketball/amare.png',
+    jamison: '/faces/basketball/jamison.jpg',
+    baron: '/faces/basketball/baron.jpg',
+    bmiller: '/faces/basketball/bmiller.png',
+    brand: '/faces/basketball/brand.png',
+    noah: '/faces/basketball/noah.png',
+    kemba: '/faces/basketball/kemba.png',
+    korver: '/faces/basketball/korver.png',
+    aldridge: '/faces/basketball/aldridge.png',
+    artest: '/faces/basketball/artest.png',
+    francis: '/faces/basketball/francis.png',
+    divac: '/faces/basketball/divac.png',
+    zbo: '/faces/basketball/zbo.png',
+    diaw: '/faces/basketball/diaw.png',
+    lin: '/faces/basketball/lin.png',
+    barea: '/faces/basketball/barea.png',
+    ibaka: '/faces/basketball/ibaka.png',
+    allen: '/faces/basketball/allen.png',
   },
   soccer: {
     // Permanent local portraits (see public/faces/soccer + localizeSoccerFaces.mts)
