@@ -502,7 +502,7 @@ const SHOWCASE_FACE_IDS: Record<Sport, Record<CardPackTier, string[]>> = {
       'ohtani', 'judge', 'betts', 'soto', 'acuna', 'witt', 'trout', 'harper',
       'freeman', 'skubal', 'skenes', 'henderson', 'tucker', 'lindor',
     ],
-    icon: ['ruth', 'aaron', 'mays', 'mantle', 'jeter', 'griffey', 'bonds', 'pedro', 'jackie', 'cobb'],
+    icon: ['mays', 'aaron', 'ruth', 'mantle', 'jeter', 'griffey', 'bonds', 'pedro', 'jackie', 'cobb'],
   },
   football: {
     prospect: [
