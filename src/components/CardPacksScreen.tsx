@@ -1013,8 +1013,8 @@ export function CardPacksScreen({
   }
 
   const pityLeft = Math.max(1, 35 - profile.cardCollection.legendaryPity);
-  const sportOwned = Object.keys(profile.cardCollection.owned).filter(
-    key => key.startsWith(`${sport}:`) && (profile.cardCollection.owned[key] ?? 0) > 0,
+  const sportOwned = CARDS_BY_SPORT[sport].filter(
+    card => (profile.cardCollection.owned[card.key] ?? 0) > 0,
   ).length;
 
   return (
@@ -1226,12 +1226,12 @@ export function CardPacksScreen({
                         setRarityFilter(event.target.value as CardRarity | 'all');
                         setVisibleCount(48);
                       }}
-                      className="game-chip h-full appearance-none !rounded-2xl pr-8 capitalize outline-none"
+                      className="game-chip h-full appearance-none !rounded-2xl !pr-10 capitalize outline-none"
                     >
                       <option value="all">All rarities</option>
                       {Object.keys(RARITY_META).map(rarity => <option key={rarity}>{rarity}</option>)}
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6d6f78]" />
+                    <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#6d6f78]" />
                   </label>
                   <button
                     type="button"
