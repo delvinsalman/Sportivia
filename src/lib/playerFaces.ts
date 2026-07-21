@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v42';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v43';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -321,6 +321,18 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     'jari-kurri': '/faces/hockey/jari-kurri.png',
     'johnny-bower': '/faces/hockey/johnny-bower.png',
     'ken-dryden': '/faces/hockey/ken-dryden.png',
+    'marc-andre-fleury': '/faces/hockey/marc-andre-fleury.png',
+    'marian-hossa': '/faces/hockey/marian-hossa.png',
+    'mark-recchi': '/faces/hockey/mark-recchi.png',
+    'paul-coffey': '/faces/hockey/paul-coffey.png',
+    'pavel-datsyuk': '/faces/hockey/pavel-datsyuk.png',
+    'scott-niedermayer': '/faces/hockey/scott-niedermayer.png',
+    'scott-stevens': '/faces/hockey/scott-stevens.png',
+    'ted-lindsay': '/faces/hockey/ted-lindsay.png',
+    'teemu-selanne': '/faces/hockey/teemu-selanne.png',
+    'terry-sawchuk': '/faces/hockey/terry-sawchuk.png',
+    'zdeno-chara': '/faces/hockey/zdeno-chara.png',
+    'adam-oates': '/faces/hockey/adam-oates.png',
 
   },
 };
