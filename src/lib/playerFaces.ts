@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v36';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v37';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -278,6 +278,19 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     sandy: '/faces/football/sandy.png',
     moss: '/faces/football/moss.png',
     lt: '/faces/football/lt.png',
+
+  },
+  hockey: {
+    'marian-gaborik': '/faces/hockey/marian-gaborik.png',
+    'mats-naslund': '/faces/hockey/mats-naslund.png',
+    'ryan-getzlaf': '/faces/hockey/ryan-getzlaf.png',
+    'tuukka-rask': '/faces/hockey/tuukka-rask.png',
+    'vincent-lecavalier': '/faces/hockey/vincent-lecavalier.png',
+    'curtis-joseph': '/faces/hockey/curtis-joseph.png',
+    'jaroslav-halak': '/faces/hockey/jaroslav-halak.png',
+    'miikka-kiprusoff': '/faces/hockey/miikka-kiprusoff.png',
+    'saku-koivu': '/faces/hockey/saku-koivu.png',
+    'zigmund-palffy': '/faces/hockey/zigmund-palffy.png',
 
   },
 };
