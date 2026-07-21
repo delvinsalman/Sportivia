@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v33';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v34';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -245,6 +245,30 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
   },
   football: {
     watt: 'https://static.www.nfl.com/image/private/t_headshot_desktop/league/pooulgm7mdcx5x9gza7l',
+    megatron: '/faces/football/megatron.png',
+    ray: '/faces/football/ray.png',
+    donald: '/faces/football/donald.png',
+    brees: '/faces/football/brees.png',
+    reed: '/faces/football/reed.png',
+    elway: '/faces/football/elway.png',
+    'cmc-lt': '/faces/football/cmc-lt.png',
+    gonzalez: '/faces/football/gonzalez.png',
+    urlacher: '/faces/football/urlacher.png',
+    revis: '/faces/football/revis.png',
+    'thomas-earl': '/faces/football/thomas-earl.png',
+    'kelce-jason': '/faces/football/kelce-jason.png',
+    bigben: '/faces/football/bigben.png',
+    favre: '/faces/football/favre.png',
+    newton: '/faces/football/newton.png',
+    emmitt: '/faces/football/emmitt.png',
+    warner: '/faces/football/warner.png',
+    eli: '/faces/football/eli.png',
+    chapman: '/faces/football/chapman.png',
+    'peterson-patrick': '/faces/football/peterson-patrick.png',
+    rivers: '/faces/football/rivers.png',
+    luck: '/faces/football/luck.png',
+    romo: '/faces/football/romo.png',
+
   },
 };
 
