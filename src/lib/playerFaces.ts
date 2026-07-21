@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v43';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v44';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -333,6 +333,9 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     'terry-sawchuk': '/faces/hockey/terry-sawchuk.png',
     'zdeno-chara': '/faces/hockey/zdeno-chara.png',
     'adam-oates': '/faces/hockey/adam-oates.png',
+    'borje-salming': '/faces/hockey/borje-salming.png',
+    'brian-leetch': '/faces/hockey/brian-leetch.png',
+    'cam-neely': '/faces/hockey/cam-neely.png',
 
   },
 };
