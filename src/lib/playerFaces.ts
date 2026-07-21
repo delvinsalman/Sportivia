@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v26';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v27';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -61,6 +61,47 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     barea: '/faces/basketball/barea.png',
     ibaka: '/faces/basketball/ibaka.png',
     allen: '/faces/basketball/allen.png',
+    drj: '/faces/basketball/drj.png',
+    jerrywest: '/faces/basketball/jerrywest.png',
+    stockton: '/faces/basketball/stockton.png',
+    nash: '/faces/basketball/nash.png',
+    ai: '/faces/basketball/ai.png',
+    barkley: '/faces/basketball/barkley.png',
+    robinson: '/faces/basketball/robinson.png',
+    dirk: '/faces/basketball/dirk.png',
+    malone: '/faces/basketball/malone.png',
+    garnett: '/faces/basketball/garnett.png',
+    ewing: '/faces/basketball/ewing.png',
+    mcgrady: '/faces/basketball/mcgrady.png',
+    kidd: '/faces/basketball/kidd.png',
+    manu: '/faces/basketball/manu.png',
+    pippen: '/faces/basketball/pippen.png',
+    kerr: '/faces/basketball/kerr.png',
+    tony: '/faces/basketball/tony.png',
+    melo: '/faces/basketball/melo.png',
+    olajuwon2: '/faces/basketball/olajuwon2.png',
+    dwade: '/faces/basketball/dwade.png',
+    pierce: '/faces/basketball/pierce.png',
+    reggie: '/faces/basketball/reggie.png',
+    vince: '/faces/basketball/vince.png',
+    mourning: '/faces/basketball/mourning.png',
+    webber: '/faces/basketball/webber.png',
+    mutombo: '/faces/basketball/mutombo.png',
+    petrovic: '/faces/basketball/petrovic.png',
+    howard: '/faces/basketball/howard.png',
+    hill: '/faces/basketball/hill.png',
+    gasol2: '/faces/basketball/gasol2.png',
+    pau: '/faces/basketball/pau.png',
+    billups: '/faces/basketball/billups.png',
+    yao: '/faces/basketball/yao.png',
+    bynum: '/faces/basketball/bynum.png',
+    blake: '/faces/basketball/blake.png',
+    bosh: '/faces/basketball/bosh.png',
+    peja: '/faces/basketball/peja.png',
+    rondo: '/faces/basketball/rondo.png',
+    kukoc: '/faces/basketball/kukoc.png',
+    penny: '/faces/basketball/penny.png',
+    rip: '/faces/basketball/rip.png',
   },
   soccer: {
     // Permanent local portraits (see public/faces/soccer + localizeSoccerFaces.mts)

@@ -54,7 +54,7 @@ const LEGENDARY_IDS: Record<Sport, Set<string>> = {
   ]),
   basketball: new Set([
     'mj', 'lebron', 'kobe', 'curry', 'magic', 'bird', 'shaq', 'duncan',
-    'kareem', 'wilt', 'russell', 'kd', 'hakeem', 'oscar',
+    'kareem', 'wilt', 'russell', 'kd', 'hakeem', 'oscar', 'yao',
   ]),
   baseball: new Set([
     'babe', 'ruth', 'aaron', 'mays', 'mantle', 'jackie', 'robinson', 'cobb', 'williams', 'musial',
@@ -79,7 +79,7 @@ const KNOWN_RETIRED: Record<Sport, Set<string>> = {
   ]),
   basketball: new Set([
     'mj', 'kobe', 'magic', 'bird', 'shaq', 'duncan', 'kareem', 'wilt', 'russell',
-    'hakeem', 'oscar', 'dirk', 'nash', 'garnett', 'pierce', 'ai',
+    'hakeem', 'oscar', 'dirk', 'nash', 'garnett', 'pierce', 'ai', 'yao',
   ]),
   baseball: new Set([
     'babe', 'ruth', 'aaron', 'mays', 'mantle', 'jackie', 'robinson', 'cobb', 'williams', 'musial',
@@ -175,7 +175,7 @@ const STAR_RATINGS: Record<Sport, Record<string, number>> = {
     luka: 95, sga: 95, tatum: 94, embiid: 94, wemby: 92,
     ant: 92, booker: 91, ja: 90, kawhi: 92, harden: 92,
     ad: 91, kyrie: 91, dame: 91, westbrook: 92, cp3: 91,
-    pierce: 92, nash: 95, melo: 92, bosh: 89, pau: 91, yao: 90,
+    pierce: 92, nash: 95, melo: 92, bosh: 89, pau: 91, yao: 95,
     butler: 91, bam: 88, zion: 84, trae: 88, haliburton: 89,
     brunson: 91, donovan: 89, fox: 88, stockton: 95, isiah: 95,
     ewing: 94, reggie: 92, ray: 92, vince: 92, mcgrady: 94,
