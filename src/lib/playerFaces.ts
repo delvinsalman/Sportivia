@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v25';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v26';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -44,8 +44,8 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     boozer: '/faces/basketball/boozer.png',
     marion: '/faces/basketball/marion.png',
     amare: '/faces/basketball/amare.png',
-    jamison: '/faces/basketball/jamison.jpg',
-    baron: '/faces/basketball/baron.jpg',
+    jamison: '/faces/basketball/jamison.png',
+    baron: '/faces/basketball/baron.png',
     bmiller: '/faces/basketball/bmiller.png',
     brand: '/faces/basketball/brand.png',
     noah: '/faces/basketball/noah.png',
