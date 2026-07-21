@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v34';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v35';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -268,6 +268,15 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     rivers: '/faces/football/rivers.png',
     luck: '/faces/football/luck.png',
     romo: '/faces/football/romo.png',
+    rice: '/faces/football/rice.png',
+    brady: '/faces/football/brady.png',
+    barry: '/faces/football/barry.png',
+    sweetness: '/faces/football/sweetness.png',
+    montana: '/faces/football/montana.png',
+    manning: '/faces/football/manning.png',
+    payton: '/faces/football/payton.png',
+    sandy: '/faces/football/sandy.png',
+    moss: '/faces/football/moss.png',
 
   },
 };
