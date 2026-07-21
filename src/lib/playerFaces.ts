@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v41';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v42';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -310,6 +310,17 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     'howie-morenz': '/faces/hockey/howie-morenz.png',
     'joe-thornton': '/faces/hockey/joe-thornton.png',
     'peter-forsberg': '/faces/hockey/peter-forsberg.png',
+    'sergei-fedorov': '/faces/hockey/sergei-fedorov.png',
+    'stan-mikita': '/faces/hockey/stan-mikita.png',
+    'alexander-mogilny': '/faces/hockey/alexander-mogilny.png',
+    'billy-smith': '/faces/hockey/billy-smith.png',
+    'brendan-shanahan': '/faces/hockey/brendan-shanahan.png',
+    'chris-chelios': '/faces/hockey/chris-chelios.png',
+    'doug-harvey': '/faces/hockey/doug-harvey.png',
+    'grant-fuhr': '/faces/hockey/grant-fuhr.webp',
+    'jari-kurri': '/faces/hockey/jari-kurri.png',
+    'johnny-bower': '/faces/hockey/johnny-bower.png',
+    'ken-dryden': '/faces/hockey/ken-dryden.png',
 
   },
 };
