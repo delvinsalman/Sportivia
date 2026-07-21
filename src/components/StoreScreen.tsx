@@ -305,14 +305,14 @@ export function StoreScreen({
           <div
             className={`w-full max-w-2xl flex flex-col items-center py-1 sm:py-0 ${
               customizing && isAthletePreview
-                ? 'gap-1.5 flex-1 min-h-0 justify-between'
+                ? 'gap-2 flex-1 min-h-0'
                 : 'gap-3 sm:gap-5 sm:justify-center sm:flex-1'
             }`}
           >
             <div
               className={`relative w-full flex items-center justify-center ${
                 customizing && isAthletePreview
-                  ? 'min-h-0 flex-[1.1] max-h-[38svh]'
+                  ? 'flex-1 min-h-0'
                   : 'min-h-[220px] sm:min-h-[340px]'
               }`}
             >
@@ -362,9 +362,9 @@ export function StoreScreen({
               )}
 
               <div
-                className={`relative z-20 flex flex-col items-center ${
+                className={`relative z-20 flex flex-col items-center justify-center ${
                   customizing && isAthletePreview
-                    ? 'w-[55%] max-w-[280px]'
+                    ? 'w-[86%] max-w-[460px] h-full'
                     : customizing
                       ? 'w-[70%] max-w-[420px]'
                       : 'w-[58%] max-w-[380px]'
@@ -377,7 +377,9 @@ export function StoreScreen({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ duration: 0.2 }}
-                    className="relative w-full flex flex-col items-center"
+                    className={`relative w-full flex flex-col items-center ${
+                      customizing && isAthletePreview ? 'h-full justify-center' : ''
+                    }`}
                   >
                     <CharacterPodium
                       {...(isPets
@@ -407,12 +409,16 @@ export function StoreScreen({
                           })}
                       accent={previewDef.accent}
                       height={
-                        customizing && isAthletePreview ? 168 : customizing ? 280 : 300
+                        customizing && isAthletePreview ? '100%' : customizing ? 280 : 300
                       }
                       bare
                       hero
                       sport={sport}
-                      className="w-full pointer-events-none max-sm:scale-95 max-sm:origin-top"
+                      className={`w-full pointer-events-none ${
+                        customizing && isAthletePreview
+                          ? 'min-h-[280px] max-h-full'
+                          : 'max-sm:scale-95 max-sm:origin-top'
+                      }`}
                     />
                     {!customizing && (
                       <motion.div
@@ -425,16 +431,10 @@ export function StoreScreen({
                     )}
                     <div
                       className={`text-center pointer-events-none ${
-                        customizing && isAthletePreview ? '-mt-2' : '-mt-1'
+                        customizing && isAthletePreview ? '-mt-4' : '-mt-1'
                       }`}
                     >
-                      <p
-                        className={`font-black text-[#f2f3f5] ${
-                          customizing && isAthletePreview ? 'text-sm' : 'text-lg'
-                        }`}
-                      >
-                        {previewDef.name}
-                      </p>
+                      <p className="text-lg font-black text-[#f2f3f5]">{previewDef.name}</p>
                       {!(customizing && isAthletePreview) && (
                         <p className="text-xs font-semibold text-[#6d6f78] mt-0.5">
                           {customizing ? 'Mix your look · save when ready' : previewDef.tagline}

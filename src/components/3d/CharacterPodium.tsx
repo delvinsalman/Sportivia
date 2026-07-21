@@ -1640,7 +1640,7 @@ interface CharacterPodiumProps {
   petId?: PetId;
   accent?: string;
   className?: string;
-  height?: number;
+  height?: number | string;
   bare?: boolean;
   hero?: boolean;
   /** Same camera/podium framing as hero, without showcase motion */
