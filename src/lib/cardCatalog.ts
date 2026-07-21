@@ -162,6 +162,11 @@ const STAR_RATINGS: Record<Sport, Record<string, number>> = {
     firmino: 87, gabriel: 84, joaofelix: 82, cancelo: 87, grealish: 83,
     jorginho: 86, james: 87, vidal: 88, park: 86, carvajal: 88,
     theo: 87, hakimi: 87, dimarco: 87, reina: 78,
+    // Owner review bumps (Jul 2026)
+    bastoni: 86, gakpo: 86, szobo: 87, frimpong: 86,
+    jboateng: 82, calhanoglu: 87, bono: 86, koulibaly: 84,
+    ekitike: 82, depay: 84, cubarsi: 82, semenyo: 81,
+    joaopedro: 81, marmoush: 82,
   },
   basketball: {
     mj: 99, lebron: 98, kareem: 98, kobe: 98, magic: 98, wilt: 98,
@@ -529,5 +534,45 @@ export function getPackDefinition(id: CardPackTier): CardPackDefinition {
 /** True when the player has a hand-tuned star rating (recognizable names). */
 export function isCatalogStar(sport: Sport, playerId: string): boolean {
   return STAR_RATINGS[sport][playerId] != null;
+}
+
+/** Short card labels for names that blow out pack UI (SGA, Giannis, etc.). */
+const CARD_SHORT_NAMES: Partial<Record<Sport, Record<string, string>>> = {
+  basketball: {
+    sga: 'SGA',
+    giannis: 'Giannis',
+    wemby: 'Wemby',
+    ant: 'ANT',
+    luka: 'Luka',
+  },
+  soccer: {
+    lewandowski: 'Lewandowski',
+    bellingham: 'Bellingham',
+  },
+  football: {
+    mccaffrey: 'CMC',
+  },
+  hockey: {
+    'wayne-gretzky': 'Gretzky',
+    'alex-ovechkin': 'Ovechkin',
+  },
+};
+
+/** Name shown on pack/collection cards — short aliases + full name for search/aria. */
+export function cardDisplayName(
+  card: Pick<CollectibleCard, 'sport' | 'playerId' | 'name'>,
+): string {
+  return CARD_SHORT_NAMES[card.sport]?.[card.playerId] ?? card.name;
+}
+
+/** Players remembered with a heart on their card (in memoriam). */
+const MEMORIAL_PLAYER_IDS: Partial<Record<Sport, ReadonlySet<string>>> = {
+  soccer: new Set(['jota']),
+};
+
+export function isMemorialCard(
+  card: Pick<CollectibleCard, 'sport' | 'playerId'>,
+): boolean {
+  return MEMORIAL_PLAYER_IDS[card.sport]?.has(card.playerId) ?? false;
 }
 

@@ -217,10 +217,17 @@ export function SettingsScreen({ sport, onBack, onPromoRedeemed }: SettingsScree
       }
       playMenuConfirm();
       setPromoDraft('');
-      setPromoMsg({
-        ok: true,
-        text: `+${(result.coinsGranted ?? 0).toLocaleString()} coins unlocked`,
-      });
+      const coinsGranted = result.coinsGranted ?? 0;
+      const cardsUnlocked = result.cardsUnlocked ?? 0;
+      let text = '';
+      if (cardsUnlocked > 0 && coinsGranted > 0) {
+        text = `Unlocked ${cardsUnlocked.toLocaleString()} cards · +${coinsGranted.toLocaleString()} coins`;
+      } else if (cardsUnlocked > 0) {
+        text = `Unlocked all ${cardsUnlocked.toLocaleString()} catalog cards for review`;
+      } else {
+        text = `+${coinsGranted.toLocaleString()} coins unlocked`;
+      }
+      setPromoMsg({ ok: true, text });
       onPromoRedeemed?.();
     } finally {
       setPromoBusy(false);

@@ -11,6 +11,7 @@ import {
   type CardWagerAgreement,
   type CardWagerStake,
 } from '../lib/cardWager';
+import { cardDisplayName } from '../lib/cardCatalog';
 import type { BotDifficulty } from '../types';
 import { SportBackground } from './SportBackground';
 import { playMenuBack, playMenuClick, playMenuSelect } from '../lib/menuAudio';
@@ -207,8 +208,10 @@ export function CardWagerScreen({
                                   : 'border-white/10 bg-[#12131a]/85 hover:border-white/20'
                               }`}
                             >
-                              <div>
-                                <p className="text-sm font-extrabold text-white">{card.name}</p>
+                              <div className="min-w-0 flex-1 pr-2">
+                                <p className="truncate text-sm font-extrabold text-white" title={card.name}>
+                                  {cardDisplayName(card)}
+                                </p>
                                 <p
                                   className="mt-0.5 text-[10px] font-black uppercase tracking-wide"
                                   style={{ color: RARITY_COLOR[card.rarity] }}

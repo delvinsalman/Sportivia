@@ -18,7 +18,7 @@ import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult } from './seasonMeta';
 import type { CardPackTier, CardRarity, CollectibleCard, OpenedCard } from '../types/cards';
-import { CARD_BY_KEY, CARDS_BY_SPORT, getPackDefinition } from './cardCatalog';
+import { CARD_BY_KEY, CARD_CATALOG, CARDS_BY_SPORT, getPackDefinition } from './cardCatalog';
 import {
   describeWagerSettlement,
   isWagerActive,
@@ -520,11 +520,23 @@ export function settleCardWager(
   return { profile, settlement };
 }
 
+export function unlockAllCatalogCards(profile: PlayerProfile): number {
+  let added = 0;
+  for (const card of CARD_CATALOG) {
+    if ((profile.cardCollection.owned[card.key] ?? 0) > 0) continue;
+    profile.cardCollection.owned[card.key] = 1;
+    added += 1;
+  }
+  return added;
+}
+
 export async function redeemPromoCode(raw: string): Promise<{
   ok: boolean;
   profile: PlayerProfile;
   error?: string;
   coinsGranted?: number;
+  cardsUnlocked?: number;
+  rewardLabel?: string;
 }> {
   const { lookupPromo, markPromoRedeemed } = await import('./promoCodes');
   const result = await lookupPromo(raw);
@@ -536,8 +548,19 @@ export async function redeemPromoCode(raw: string): Promise<{
     return { ok: false, profile, error: 'Invalid code' };
   }
 
+  let cardsUnlocked = 0;
+  if (result.reward.unlockAllCards) {
+    cardsUnlocked = unlockAllCatalogCards(profile);
+  }
+
   profile.coins += result.reward.coins;
   markPromoRedeemed(result.reward.id);
   saveProfile(profile);
-  return { ok: true, profile, coinsGranted: result.reward.coins };
+  return {
+    ok: true,
+    profile,
+    coinsGranted: result.reward.coins,
+    cardsUnlocked,
+    rewardLabel: result.reward.label,
+  };
 }

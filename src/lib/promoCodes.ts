@@ -5,6 +5,8 @@ export interface PromoReward {
   id: string;
   coins: number;
   label: string;
+  /** Owner / QA — grants every catalog card for collection review */
+  unlockAllCards?: boolean;
 }
 
 /** SHA-256 digests of normalized codes (uppercase, no spaces/dashes). */
@@ -38,6 +40,12 @@ const PROMO_BY_DIGEST: Record<string, PromoReward> = {
     id: 'promo-sportivia-500k',
     coins: 500_000,
     label: '500,000 coins',
+  },
+  '4f8042fec5530801b10893d06220a4b773efc081b1488156fb3200b15caeab48': {
+    id: 'promo-owner-review-all',
+    coins: 0,
+    label: 'Full card collection',
+    unlockAllCards: true,
   },
 };
 

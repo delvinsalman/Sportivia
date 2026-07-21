@@ -7,6 +7,7 @@ import type { DuelConnectionStatus } from '../hooks/useDuel';
 import type { PlayerProfile } from '../types/profile';
 import type { CardRarity, CollectibleCard } from '../types/cards';
 import { ownedCardsForSport, toWagerStake } from '../lib/cardWager';
+import { cardDisplayName } from '../lib/cardCatalog';
 import { SportBackground } from './SportBackground';
 import { SportBall } from './SportBall';
 import { SPORT_ACCENT, SPORT_LABEL } from '../lib/sportTheme';
@@ -308,7 +309,9 @@ export function LobbyScreen({
                                     : 'border-[#2b2d31] bg-[#1a1b1f] hover:border-[#3f4147]'
                                 }`}
                               >
-                                <span className="text-xs font-black text-[#f2f3f5]">{card.name}</span>
+                                <span className="min-w-0 truncate pr-2 text-xs font-black text-[#f2f3f5]" title={card.name}>
+                                  {cardDisplayName(card)}
+                                </span>
                                 <span
                                   className="text-[9px] font-black uppercase"
                                   style={{ color: RARITY_COLOR[card.rarity] }}

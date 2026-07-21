@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ChevronDown,
   Coins,
+  Heart,
   Info,
   Layers3,
   Lock,
@@ -22,7 +23,7 @@ import type {
   CollectibleCard,
   OpenedCard,
 } from '../types/cards';
-import { CARD_PACKS, CARDS_BY_SPORT, isCatalogStar } from '../lib/cardCatalog';
+import { CARD_PACKS, CARDS_BY_SPORT, cardDisplayName, isCatalogStar, isMemorialCard } from '../lib/cardCatalog';
 import { openCardPack } from '../lib/profileStorage';
 import {
   cleanTeamName,
@@ -33,6 +34,7 @@ import {
   type PlayerCardBio,
 } from '../lib/playerFaces';
 import { CardPortrait } from './CardPortrait';
+import { CoinBadge } from './LevelBar';
 import {
   playCardReveal,
   playMenuBack,
@@ -167,9 +169,20 @@ function PlayerCard({
           <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/80 to-transparent" />
         </div>
 
-        <div className="relative z-10 border-t border-white/15 pt-2 text-center">
-          <p className="truncate text-base font-black uppercase leading-tight tracking-tight text-white">
-            {locked ? 'Undiscovered' : card.name}
+        <div className="relative z-10 min-w-0 border-t border-white/15 pt-2 text-center">
+          <p
+            className="flex min-w-0 w-full items-center justify-center gap-1 px-0.5 text-base font-black uppercase leading-tight tracking-tight text-white"
+            title={locked ? undefined : card.name}
+          >
+            <span className="min-w-0 truncate">
+              {locked ? 'Undiscovered' : cardDisplayName(card)}
+            </span>
+            {!locked && isMemorialCard(card) && (
+              <Heart
+                className="h-3.5 w-3.5 shrink-0 fill-[#f43f5e] text-[#f43f5e]"
+                aria-label="In memoriam"
+              />
+            )}
           </p>
           <div className="mt-1 flex h-[2.35rem] flex-col items-center justify-center gap-0.5 overflow-hidden">
             {retired ? (
@@ -399,9 +412,18 @@ function CardInspectOverlay({
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/85 to-transparent" />
             </div>
 
-            <div className="relative z-10 border-t border-white/20 pt-3 text-center">
-              <p className="text-xl font-black uppercase leading-tight tracking-tight text-white sm:text-2xl">
-                {card.name}
+            <div className="relative z-10 min-w-0 border-t border-white/20 pt-3 text-center">
+              <p
+                className="flex min-w-0 w-full items-center justify-center gap-1.5 px-1 text-xl font-black uppercase leading-tight tracking-tight text-white sm:text-2xl"
+                title={card.name}
+              >
+                <span className="min-w-0 truncate">{cardDisplayName(card)}</span>
+                {isMemorialCard(card) && (
+                  <Heart
+                    className="h-5 w-5 shrink-0 fill-[#f43f5e] text-[#f43f5e] sm:h-6 sm:w-6"
+                    aria-label="In memoriam"
+                  />
+                )}
               </p>
               <div className="mt-1.5 flex h-[2.75rem] flex-col items-center justify-center gap-1 overflow-hidden">
                 {retired ? (
@@ -661,9 +683,15 @@ function ShowcaseMiniCard({
         {rarity.label.slice(0, 3)}
       </div>
 
-      <div className="absolute inset-x-0 bottom-0 px-2 pb-2">
-        <p className="truncate text-[11px] font-black uppercase tracking-wide text-white">
-          {card.name.split(' ').slice(-1)[0]}
+      <div className="absolute inset-x-0 bottom-0 min-w-0 px-2 pb-2">
+        <p
+          className="flex min-w-0 w-full items-center gap-1 text-[11px] font-black uppercase tracking-wide text-white"
+          title={card.name}
+        >
+          <span className="min-w-0 truncate">{cardDisplayName(card)}</span>
+          {isMemorialCard(card) && (
+            <Heart className="h-3 w-3 shrink-0 fill-[#f43f5e] text-[#f43f5e]" aria-label="In memoriam" />
+          )}
         </p>
         <p className="truncate text-[9px] font-bold uppercase tracking-wider text-white/55">
           {card.positions[0] ?? 'Player'}
@@ -837,6 +865,9 @@ function Odds({ pack }: { pack: CardPackDefinition }) {
 
 const PACKS_DISCLAIMER =
   'Coins, packs, and cards are virtual entertainment items with no real-world or cash value. They cannot be bought, sold, traded, or redeemed for money or prizes. Pack openings use in-game coins only and are not gambling. Athlete names and likenesses are for entertainment purposes only and do not imply endorsement.';
+
+const MENU_BACK_CLASS =
+  'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5] bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5c5e66] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all shrink-0';
 
 export function CardPacksScreen({
   profile,
@@ -1035,67 +1066,65 @@ export function CardPacksScreen({
       </aside>
 
       <div className="relative z-10 flex h-svh flex-col">
-        <header className="flex shrink-0 items-center justify-between gap-3 px-4 pt-4 sm:px-8">
+        <header className="flex shrink-0 items-center justify-between gap-2 px-3 pt-4 sm:px-6">
           <button
             type="button"
             onClick={() => {
               playMenuBack();
               onBack();
             }}
-            className="game-chip"
+            className={MENU_BACK_CLASS}
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ArrowLeft className="w-4 h-4" />
             Back
           </button>
 
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex items-center justify-end gap-1.5 sm:gap-2.5">
             <button
               type="button"
               onClick={() => {
                 playMenuClick();
                 setShowDisclaimer(true);
               }}
-              className="game-chip !px-2.5"
+              className="game-nav-tab !min-h-[2.35rem] !px-2.5 sm:!px-3"
               aria-label="Packs disclaimer"
               title="Disclaimer"
             >
-              <Info className="h-3.5 w-3.5" />
+              <Info className="h-4 w-4" />
             </button>
 
-            <div className="inline-flex gap-1 rounded-full border border-white/8 bg-[#16171b]/90 p-1">
-              {([
-                ['packs', 'Packs', PackageOpen],
-                ['collection', 'Collection', Layers3],
-              ] as const).map(([id, label, Icon]) => {
-                const active = tab === id;
-                return (
-                  <button
-                    key={id}
-                    type="button"
-                    role="tab"
-                    aria-selected={active}
-                    onClick={() => {
-                      playMenuClick();
-                      setTab(id);
-                    }}
-                    className={`game-chip !py-1.5 ${active ? 'game-chip-active' : ''}`}
-                  >
-                    <Icon className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">{label}</span>
-                  </button>
-                );
-              })}
+            {([
+              ['packs', 'Packs', PackageOpen],
+              ['collection', 'Collection', Layers3],
+            ] as const).map(([id, label, Icon]) => {
+              const active = tab === id;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => {
+                    playMenuClick();
+                    setTab(id);
+                  }}
+                  className={`game-nav-tab !min-h-[2.35rem] ${active ? 'game-nav-tab-active' : ''}`}
+                >
+                  <Icon className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
+                  <span className="hidden sm:inline">{label}</span>
+                </button>
+              );
+            })}
+
+            <div
+              className="game-nav-tab hidden !min-h-[2.35rem] pointer-events-none sm:inline-flex"
+              title="Packs until pity"
+            >
+              <Sparkles className="h-4 w-4 text-[#f0b232]" />
+              <span>Pity {pityLeft}</span>
             </div>
 
-            <div className="game-chip hidden sm:inline-flex">
-              <Sparkles className="h-3.5 w-3.5 text-[#f0b232]" />
-              Pity {pityLeft}
-            </div>
-
-            <div className="game-chip game-chip-active !gap-1.5">
-              <Coins className="h-3.5 w-3.5 text-[#f0b232]" />
-              <span className="font-mono text-[#f0b232]">{profile.coins.toLocaleString()}</span>
-            </div>
+            <CoinBadge coins={profile.coins} />
           </div>
         </header>
 
