@@ -269,11 +269,6 @@ async function loadFaceManifest(sport: Sport): Promise<Record<string, string>> {
   return faceManifests[sport]!;
 }
 
-/** @deprecated use loadFaceManifest('soccer') */
-async function loadSoccerFaceManifest(): Promise<Record<string, string>> {
-  return loadFaceManifest('soccer');
-}
-
 function sportsDbQueries(sport: Sport, playerId: string, name: string): string[] {
   const out = new Set<string>();
   const override = SPORTSDB_QUERY_BY_ID[sport]?.[playerId];

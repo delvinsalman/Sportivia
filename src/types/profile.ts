@@ -118,6 +118,7 @@ export interface GameRewards {
   leveledUp: boolean;
   previousLevel: number;
   newLevel: number;
+  milestoneBonus: number;
 }
 
 export const CHARACTERS: CharacterDef[] = [

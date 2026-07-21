@@ -65,6 +65,7 @@ export interface GameResult {
     leveledUp: boolean;
     previousLevel: number;
     newLevel: number;
+    milestoneBonus: number;
   };
   duel?: {
     opponentName: string;
