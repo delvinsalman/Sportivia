@@ -11,17 +11,20 @@ import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, useAnimations, useFBX, useGLTF } from '@react-three/drei';
 import { Box3, LoopOnce, LoopRepeat, Vector3 } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
-import type { AnimationAction, AnimationClip, Bone, Group, Object3D, SkinnedMesh } from 'three';
+import type { AnimationAction, AnimationClip, Bone, Group, Mesh, Object3D, SkinnedMesh } from 'three';
 import type {
   CharacterDef,
   CharacterId,
+  DogVariantId,
   PetDef,
   PetId,
   RabbitVariantId,
 } from '../../types/profile';
 import {
   CHARACTERS,
+  DOG_VARIANTS,
   getCharacterDef,
+  getDogVariantDef,
   getPetDef,
   getRabbitVariantDef,
   PETS,
@@ -42,11 +45,17 @@ const PODIUM_SURFACE_Y = PODIUM_GROUP_Y + 0.094;
 const FEET_LIFT = 0.09;
 const STAND_Y = PODIUM_SURFACE_Y + FEET_LIFT;
 const PODIUM_FACE_Y = 0.35;
+/** Kay Lousberg landing pad — bbox top is y=0.5 at unit scale. */
+const LANDING_PAD_PATH = '/models/landing-pad.glb';
+const LANDING_PAD_HEIGHT = 0.5;
+const LANDING_PAD_SCALE = 0.92;
 
 CHARACTERS.filter(c => c.modelPath.endsWith('.fbx')).forEach(c => useFBX.preload(c.modelPath));
 CHARACTERS.filter(c => c.modelPath.endsWith('.glb')).forEach(c => useGLTF.preload(c.modelPath));
 RABBIT_VARIANTS.forEach(variant => useGLTF.preload(variant.modelPath));
+DOG_VARIANTS.forEach(variant => useGLTF.preload(variant.modelPath));
 PETS.forEach(p => useGLTF.preload(p.modelPath));
+useGLTF.preload(LANDING_PAD_PATH);
 
 class ModelErrorBoundary extends Component<
   { children: ReactNode; characterId: CharacterId },
@@ -733,6 +742,8 @@ const PET_SPECIALS: Record<PetId, PetSpecialMove[]> = {
   sheep: [],
   frog: [],
   shark: [],
+  snake: [],
+  dog: ['look', 'paw', 'bark'],
 };
 
 function petSpecialDuration(type: PetSpecialMove) {
@@ -1076,7 +1087,11 @@ function PodiumRig({
   );
   const baseY = useRef(position[1]);
   const isNaturalPet =
-    petId === 'wolf' || petId === 'alpaca' || petId === 'horse' || petId === 'deer';
+    petId === 'wolf' ||
+    petId === 'alpaca' ||
+    petId === 'horse' ||
+    petId === 'deer' ||
+    petId === 'dog';
   const isStarterSkeletal =
     skeletalIdle && (characterId === 'cube-man' || characterId === 'cube-woman');
   const isCreativeSkeletal = skeletalIdle && characterId === 'creative';
@@ -1395,51 +1410,57 @@ function CharacterModel({
 
 function PetModel({
   petId,
+  dogVariant,
   showcase = false,
   sport,
 }: {
   petId: PetId;
+  dogVariant?: DogVariantId;
   showcase?: boolean;
   sport?: Sport;
 }) {
-  const def = getPetDef(petId);
+  const baseDef = getPetDef(petId);
+  const def =
+    petId === 'dog'
+      ? { ...baseDef, modelPath: getDogVariantDef(dogVariant ?? 'husky').modelPath }
+      : baseDef;
   return <GlbModel def={def} showcase={showcase} sport={sport} petId={petId} />;
 }
 
 function PodiumStage({ accent }: { accent: string }) {
+  const { scene } = useGLTF(LANDING_PAD_PATH);
+  const pad = useMemo(() => {
+    const cloned = SkeletonUtils.clone(scene);
+    cloned.traverse(child => {
+      const mesh = child as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      const applyTint = (material: Mesh['material']) => {
+        if (!material || Array.isArray(material)) return material;
+        const next = material.clone();
+        const std = next as {
+          emissive?: { set: (c: string) => void };
+          emissiveIntensity?: number;
+        };
+        if (std.emissive?.set) {
+          std.emissive.set(accent);
+          std.emissiveIntensity = 0.18;
+        }
+        return next;
+      };
+      mesh.material = Array.isArray(mesh.material)
+        ? mesh.material.map(m => applyTint(m) as typeof m)
+        : (applyTint(mesh.material) as typeof mesh.material);
+    });
+    return cloned;
+  }, [accent, scene]);
+
+  const y = PODIUM_SURFACE_Y - LANDING_PAD_HEIGHT * LANDING_PAD_SCALE;
+
   return (
-    <group position={[0, -0.92, 0]}>
-      <mesh position={[0, 0.01, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[1.05, 64]} />
-        <meshBasicMaterial color={accent} transparent opacity={0.1} />
-      </mesh>
-
-      <mesh position={[0, 0.05, 0]} receiveShadow castShadow>
-        <cylinderGeometry args={[0.82, 0.84, 0.07, 64]} />
-        <meshStandardMaterial
-          color="#141518"
-          emissive={accent}
-          emissiveIntensity={0.12}
-          metalness={0.35}
-          roughness={0.72}
-        />
-      </mesh>
-
-      <mesh position={[0, 0.092, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <circleGeometry args={[0.8, 64]} />
-        <meshStandardMaterial
-          color="#0c0d0f"
-          emissive={accent}
-          emissiveIntensity={0.06}
-          metalness={0.15}
-          roughness={0.85}
-        />
-      </mesh>
-
-      <mesh position={[0, 0.094, 0]} rotation={[-Math.PI / 2, 0, 0]}>
-        <ringGeometry args={[0.78, 0.8, 64]} />
-        <meshBasicMaterial color={accent} transparent opacity={0.65} />
-      </mesh>
+    <group position={[0, y, 0]} scale={LANDING_PAD_SCALE}>
+      <primitive object={pad} />
     </group>
   );
 }
@@ -1467,6 +1488,7 @@ function Scene({
   hidePodium = false,
   creativeLoadout,
   rabbitVariant,
+  dogVariant,
   sport,
 }: {
   characterId?: CharacterId;
@@ -1477,6 +1499,7 @@ function Scene({
   hidePodium?: boolean;
   creativeLoadout?: CreativeLoadout;
   rabbitVariant?: RabbitVariantId;
+  dogVariant?: DogVariantId;
   sport?: Sport;
 }) {
   return (
@@ -1497,7 +1520,7 @@ function Scene({
       {!hidePodium && <PodiumStage accent={accent} />}
       <ModelErrorBoundary characterId={characterId ?? 'cube-man'}>
         {petId ? (
-          <PetModel petId={petId} showcase={showcase} sport={sport} />
+          <PetModel petId={petId} dogVariant={dogVariant} showcase={showcase} sport={sport} />
         ) : characterId ? (
           <CharacterModel
             characterId={characterId}
@@ -1545,6 +1568,8 @@ interface CharacterPodiumProps {
   creativeLoadout?: CreativeLoadout;
   /** Appearance included with the Rabbit skin */
   rabbitVariant?: RabbitVariantId;
+  /** Breed included with the Street Dog pet */
+  dogVariant?: DogVariantId;
   /** Prefer sport-themed flourishes when available (Fitness Geek) */
   sport?: Sport;
 }
@@ -1561,6 +1586,7 @@ export function CharacterPodium({
   hidePodium = false,
   creativeLoadout,
   rabbitVariant,
+  dogVariant,
   sport,
 }: CharacterPodiumProps) {
   const def = petId ? getPetDef(petId) : getCharacterDef(characterId ?? 'cube-man');
@@ -1571,7 +1597,12 @@ export function CharacterPodium({
       ? creativeLoadoutKey(creativeLoadout)
       : '';
   const sceneKey = petId ? `pet-${petId}` : `char-${characterId}-${loadoutKey}`;
-  const variantKey = characterId === 'bunny' ? rabbitVariant ?? 'base' : '';
+  const variantKey =
+    characterId === 'bunny'
+      ? rabbitVariant ?? 'base'
+      : petId === 'dog'
+        ? dogVariant ?? 'husky'
+        : '';
 
   return (
     <div
@@ -1632,6 +1663,7 @@ export function CharacterPodium({
             hidePodium={hidePodium}
             creativeLoadout={creativeLoadout}
             rabbitVariant={rabbitVariant}
+            dogVariant={dogVariant}
             sport={sport}
           />
         </Suspense>

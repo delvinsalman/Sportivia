@@ -7,7 +7,6 @@ import { SportBackground } from './SportBackground';
 import { SportBall } from './SportBall';
 import { SPORT_ACCENT, SPORT_LABEL, SPORTS } from '../lib/sportTheme';
 import { xpProgress } from '../lib/progression';
-import { loadSeasonMeta } from '../lib/seasonMeta';
 import { getTodayKey } from '../lib/seed';
 import { playMenuBack, playMenuClick } from '../lib/menuAudio';
 
@@ -28,8 +27,6 @@ export function CareerScreen({
   const accent = SPORT_ACCENT[sport];
   const progress = xpProgress(profile.xp);
   const stats = profile.stats[sport];
-  const meta = loadSeasonMeta();
-  const sportRuns = meta.recentRuns.filter(r => r.sport === sport);
 
   const today = getTodayKey();
   const dailyToday = stats.dailyCompleted.includes(today) ? 'Done' : 'Open';
@@ -149,33 +146,6 @@ export function CareerScreen({
                     <p className="text-xl font-black text-[#f2f3f5] mt-1">{value}</p>
                   </div>
                 ))}
-              </div>
-
-              <div className="rounded-2xl border-[2.5px] border-[#2b2d31] bg-[#121316]/85 p-3 text-center">
-                <p className="text-xs font-black text-[#f2f3f5] mb-2">
-                  Recent {SPORT_LABEL[sport]} runs
-                </p>
-                {sportRuns.length === 0 ? (
-                  <p className="text-xs text-[#7a7d86]">
-                    No {SPORT_LABEL[sport]} finishes yet. Play Daily, Ranked, or Duel to log runs.
-                  </p>
-                ) : (
-                  <ul className="space-y-1.5 text-left">
-                    {sportRuns.slice(0, 8).map((run, i) => (
-                      <li
-                        key={`${run.date}-${run.mode}-${i}`}
-                        className="flex items-center justify-between text-xs rounded-xl bg-[#1e1f22]/70 px-2.5 py-2 border border-[#2b2d31]"
-                      >
-                        <span className="font-bold text-[#b5bac1] capitalize">{run.mode}</span>
-                        <span className="font-mono font-black text-[#f2f3f5]">
-                          {run.score}
-                          {run.perfectBoard ? ' ★' : ''}
-                          <span className="text-[#6d6f78] font-bold ml-2">{run.correct}✓</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
               </div>
             </div>
           </div>

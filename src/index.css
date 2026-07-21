@@ -1,7 +1,16 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: "Quick Zap";
+  src: url("/fonts/QuickZap.ttf") format("truetype");
+  font-weight: 400 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @theme {
-  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-sans: "Quick Zap", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --font-display: "Quick Zap", "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
@@ -21,7 +30,7 @@ body {
   color: #e3e5e8;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.02em;
 }
 
 #root { min-height: 100svh; overflow-x: hidden; }
@@ -394,6 +403,165 @@ body {
   color: #f2f3f5;
   background: rgba(28, 29, 34, 0.98);
   box-shadow: 0 0 0 1px rgba(240, 178, 50, 0.2), 0 0 16px rgba(240, 178, 50, 0.28);
+}
+
+/* Home top nav — bigger slanted game tabs (BingoFC-style) */
+.game-nav-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  min-height: 2.55rem;
+  padding: 0.55rem 1.15rem;
+  border-radius: 0.45rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, #2a2c33 0%, #1a1b20 100%);
+  color: #f2f3f5;
+  font-weight: 900;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transform: skewX(-12deg);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.game-nav-tab > * {
+  transform: skewX(12deg);
+}
+
+.game-nav-tab:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+  background: linear-gradient(180deg, #32343c 0%, #1f2026 100%);
+}
+
+.game-nav-tab-active {
+  border-color: #f0b232;
+  color: #f0b232;
+  background: linear-gradient(180deg, #2f3038 0%, #1c1d22 100%);
+  box-shadow:
+    0 0 0 1px rgba(240, 178, 50, 0.35),
+    0 0 18px rgba(240, 178, 50, 0.28),
+    0 4px 14px rgba(0, 0, 0, 0.4);
+}
+
+.game-nav-tab-active:hover {
+  border-color: #f5c451;
+  color: #f5c451;
+}
+
+@media (min-width: 640px) {
+  .game-nav-tab {
+    min-height: 2.75rem;
+    padding: 0.6rem 1.35rem;
+    font-size: 0.88rem;
+    letter-spacing: 0.1em;
+  }
+}
+
+/* Pack store panels — base shell; per-pack tint applied inline */
+.game-pack-panel {
+  display: flex;
+  flex-direction: column;
+  width: calc(100% + 0.85rem);
+  margin-inline: -0.425rem;
+  border-radius: 0.45rem;
+  border: 2px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(
+    180deg,
+    rgba(28, 30, 36, 0.55) 0%,
+    rgba(16, 17, 20, 0.4) 100%
+  );
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transition:
+    border-color 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.game-pack-panel:hover {
+  border-color: rgba(255, 255, 255, 0.28);
+  filter: brightness(1.04);
+  box-shadow:
+    0 10px 28px rgba(0, 0, 0, 0.34),
+    0 0 0 1px rgba(255, 255, 255, 0.06);
+  transform: translateY(-2px);
+}
+
+/* Home sports rail tabs — same slanted game-tab look, no panel wrapper */
+.game-sport-rail-label {
+  padding: 0 0.35rem 0.15rem;
+  font-size: 0.65rem;
+  font-weight: 900;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #949ba4;
+}
+
+.game-sport-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  min-height: 2.7rem;
+  padding: 0.5rem 0.85rem;
+  border-radius: 0.45rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, #2a2c33 0%, #1a1b20 100%);
+  color: #c5c8d0;
+  font-weight: 900;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.game-sport-tab:hover {
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #f2f3f5;
+  background: linear-gradient(180deg, #32343c 0%, #1f2026 100%);
+}
+
+.game-sport-tab-active {
+  color: #f0b232;
+  border-color: #f0b232;
+  background: linear-gradient(180deg, #2f3038 0%, #1c1d22 100%);
+  box-shadow:
+    0 0 0 1px rgba(240, 178, 50, 0.35),
+    0 0 18px rgba(240, 178, 50, 0.22),
+    0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.game-sport-record {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(42, 44, 51, 0.98), rgba(22, 23, 27, 0.98));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+}
+
+@media (min-width: 640px) {
+  .game-sport-tab {
+    min-height: 2.9rem;
+    padding: 0.55rem 1rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.1em;
+  }
 }
 
 .game-gold-cta {

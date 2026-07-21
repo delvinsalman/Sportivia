@@ -13,6 +13,11 @@ export interface DuelPlayerInfo {
   correct: number;
   wrong: number;
   maxStreak: number;
+  wagerDecided?: boolean;
+  wagerCardKey?: string | null;
+  wagerCardName?: string | null;
+  wagerCardRarity?: string | null;
+  wagerCardRating?: number | null;
 }
 
 export interface DuelLobbyState {
@@ -48,6 +53,16 @@ export interface DuelMatchResult {
     correct: number;
     wrong: number;
     maxStreak: number;
+  };
+  wager?: {
+    yourCardKey: string | null;
+    yourCardName: string | null;
+    yourCardRarity: string | null;
+    yourCardRating: number | null;
+    opponentCardKey: string | null;
+    opponentCardName: string | null;
+    opponentCardRarity: string | null;
+    opponentCardRating: number | null;
   };
 }
 

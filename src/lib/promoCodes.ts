@@ -34,6 +34,11 @@ const PROMO_BY_DIGEST: Record<string, PromoReward> = {
     coins: 500_000,
     label: '500,000 tester coins',
   },
+  '8d7616718a25a8db3681572e9908acf802c0501e725d9fc1c7061c2b1784770a': {
+    id: 'promo-sportivia-500k',
+    coins: 500_000,
+    label: '500,000 coins',
+  },
 };
 
 const REDEEMED_KEY = 'sportivia-promos-redeemed-v1';

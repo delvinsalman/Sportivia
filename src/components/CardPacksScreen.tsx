@@ -4,6 +4,7 @@ import {
   ArrowLeft,
   ChevronDown,
   Coins,
+  Info,
   Layers3,
   Lock,
   PackageOpen,
@@ -21,14 +22,17 @@ import type {
   CollectibleCard,
   OpenedCard,
 } from '../types/cards';
-import { CARD_PACKS, CARDS_BY_SPORT } from '../lib/cardCatalog';
+import { CARD_PACKS, CARDS_BY_SPORT, isCatalogStar } from '../lib/cardCatalog';
 import { openCardPack } from '../lib/profileStorage';
 import {
   cleanTeamName,
+  prefetchFaceManifests,
   resolvePlayerCardBio,
+  invalidatePlayerFace,
   resolvePlayerFace,
   type PlayerCardBio,
 } from '../lib/playerFaces';
+import { CardPortrait } from './CardPortrait';
 import {
   playCardReveal,
   playMenuBack,
@@ -96,54 +100,39 @@ function PlayerCard({
   duplicate,
   refund,
   locked = false,
+  onInspect,
 }: {
   card: CollectibleCard;
   duplicate?: boolean;
   refund?: number;
   locked?: boolean;
+  onInspect?: (card: CollectibleCard) => void;
 }) {
-  const [face, setFace] = useState<string | null>(null);
   const [bio, setBio] = useState<PlayerCardBio | null>(null);
   const rarity = RARITY_META[card.rarity];
   const age = bio?.age ?? card.age;
   const retired = bio?.retired ?? card.retired;
   const team = cleanTeamName(bio?.team) ?? cleanTeamName(card.team);
+  const canInspect = !locked && !!onInspect;
 
   useEffect(() => {
     let active = true;
     if (locked) return;
-    void resolvePlayerFace(card.sport, card.playerId, card.name)
-      .then(url => {
-        if (active) setFace(url);
-        return resolvePlayerCardBio(card.sport, card.name);
-      })
-      .then(details => {
-        if (active) setBio(details);
-      });
+    void resolvePlayerCardBio(card.sport, card.name).then(details => {
+      if (active) setBio(details);
+    });
     return () => {
       active = false;
     };
-  }, [card.name, card.playerId, card.sport, locked]);
+  }, [card.name, card.sport, locked]);
 
-  return (
-    <div
-      className={`relative aspect-[3/4.25] w-full overflow-hidden rounded-[22px] border-[3px] ${
-        locked ? 'opacity-55 grayscale' : ''
-      }`}
-      style={{
-        borderColor: locked ? '#3f4147' : rarity.border,
-        background: locked ? 'linear-gradient(145deg,#2b2d31,#111214)' : rarity.background,
-        boxShadow: locked
-          ? '0 7px 0 #111214'
-          : `0 8px 0 #111214, 0 0 24px ${rarity.glow}, inset 0 0 0 1px rgba(255,255,255,.16)`,
-      }}
-    >
-      <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_25%_15%,white,transparent_28%)]" />
+  const body = (
+    <>
       <div className="absolute -right-8 top-16 rotate-90 text-[54px] font-black tracking-tighter text-white/[0.045]">
         SPORTIVIA
       </div>
 
-      <div className="relative z-10 flex h-full flex-col p-3">
+      <div className="relative z-10 grid h-full grid-rows-[auto_minmax(0,1fr)_auto] gap-1 p-3 pl-2.5 pt-2.5">
         <div className="flex items-start justify-between gap-2">
           <div>
             <p className="text-2xl font-black leading-none text-white font-mono">{card.rating}</p>
@@ -162,48 +151,44 @@ function PlayerCard({
           </div>
         </div>
 
-        <div className="relative my-1 min-h-0 flex-1 overflow-hidden rounded-xl">
+        {/* Portrait fills leftover space; image stays bottom-aligned */}
+        <div className="relative min-h-0 overflow-hidden rounded-xl">
           {locked ? (
             <div className="absolute inset-0 flex items-center justify-center">
               <Lock className="h-12 w-12 text-white/20" />
             </div>
-          ) : face ? (
-            <img
-              src={face}
-              alt={card.name}
-              className="absolute inset-0 h-full w-full object-contain object-bottom drop-shadow-[0_8px_10px_rgba(0,0,0,.75)]"
-              referrerPolicy="no-referrer"
-            />
           ) : (
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="text-5xl font-black text-white/15">
-                {card.name.split(/\s+/).map(part => part[0]).slice(0, 2).join('')}
-              </span>
-            </div>
+            <CardPortrait
+              sport={card.sport}
+              playerId={card.playerId}
+              playerName={card.name}
+            />
           )}
-          <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/80 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/80 to-transparent" />
         </div>
 
         <div className="relative z-10 border-t border-white/15 pt-2 text-center">
           <p className="truncate text-base font-black uppercase leading-tight tracking-tight text-white">
             {locked ? 'Undiscovered' : card.name}
           </p>
-          {retired ? (
-            <div className="mt-1.5 flex flex-col items-center gap-1">
-              <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/80">
-                Retired
-              </span>
-              {team && (
-                <p className="truncate text-[10px] font-bold text-white/55">
-                  Last club · {team}
-                </p>
-              )}
-            </div>
-          ) : (
-            <p className="mt-1 truncate text-[10px] font-bold text-white/70">
-              {team ?? 'Free agent'}
-            </p>
-          )}
+          <div className="mt-1 flex h-[2.35rem] flex-col items-center justify-center gap-0.5 overflow-hidden">
+            {retired ? (
+              <>
+                <span className="rounded-full border border-white/20 bg-white/10 px-2.5 py-0.5 text-[8px] font-black uppercase tracking-[0.16em] text-white/80">
+                  Retired
+                </span>
+                {team && (
+                  <p className="max-w-full truncate text-[10px] font-bold text-white/55">
+                    LC · {team}
+                  </p>
+                )}
+              </>
+            ) : (
+              <p className="max-w-full truncate text-[10px] font-bold text-white/70">
+                {team ?? 'Free agent'}
+              </p>
+            )}
+          </div>
           <div className="mt-2 grid grid-cols-2 gap-1 border-t border-white/10 pt-2">
             <div className="min-w-0">
               <p className="text-[7px] font-black uppercase tracking-widest text-white/35">Country</p>
@@ -225,61 +210,395 @@ function PlayerCard({
           <p className="text-xs font-black text-white">+{refund} coins</p>
         </div>
       )}
+    </>
+  );
+
+  const shellClass = `relative aspect-[3/4.25] w-full overflow-hidden rounded-[22px] border-[3px] ${
+    locked ? 'opacity-55 grayscale' : ''
+  } ${canInspect ? 'cursor-pointer transition-transform hover:-translate-y-0.5 active:scale-[0.98]' : ''}`;
+
+  const shellStyle = {
+    borderColor: locked ? '#3f4147' : rarity.border,
+    background: locked ? 'linear-gradient(145deg,#2b2d31,#111214)' : rarity.background,
+    boxShadow: locked
+      ? '0 7px 0 #111214'
+      : `0 8px 0 #111214, 0 0 24px ${rarity.glow}, inset 0 0 0 1px rgba(255,255,255,.16)`,
+  } as const;
+
+  if (canInspect) {
+    return (
+      <button
+        type="button"
+        onClick={() => onInspect(card)}
+        className={shellClass}
+        style={shellStyle}
+        aria-label={`Inspect ${card.name}`}
+      >
+        {body}
+      </button>
+    );
+  }
+
+  return (
+    <div className={shellClass} style={shellStyle}>
+      {body}
     </div>
   );
 }
 
-/** Showcase 3 players from this sport/tier as a tight portrait stack. */
-function pickShowcaseCards(sport: Sport, tier: CardPackTier): CollectibleCard[] {
-  const pool = [...CARDS_BY_SPORT[sport]].sort((a, b) => b.rating - a.rating);
+function CardInspectOverlay({
+  card,
+  onClose,
+}: {
+  card: CollectibleCard;
+  onClose: () => void;
+}) {
+  const [face, setFace] = useState<string | null>(null);
+  const [bio, setBio] = useState<PlayerCardBio | null>(null);
+  const inspectRetriesRef = useRef(0);
+  const rarity = RARITY_META[card.rarity];
+  const age = bio?.age ?? card.age;
+  const retired = bio?.retired ?? card.retired;
+  const team = cleanTeamName(bio?.team) ?? cleanTeamName(card.team);
+
+  useEffect(() => {
+    let active = true;
+    inspectRetriesRef.current = 0;
+    void resolvePlayerFace(card.sport, card.playerId, card.name)
+      .then(url => {
+        if (active) setFace(url);
+        return resolvePlayerCardBio(card.sport, card.name);
+      })
+      .then(details => {
+        if (active) setBio(details);
+      });
+    return () => {
+      active = false;
+    };
+  }, [card.name, card.playerId, card.sport]);
+
+  const handleInspectFaceError = () => {
+    if (inspectRetriesRef.current >= 2) {
+      setFace(null);
+      return;
+    }
+    inspectRetriesRef.current += 1;
+    invalidatePlayerFace(card.sport, card.playerId);
+    void resolvePlayerFace(card.sport, card.playerId, card.name, { force: true }).then(setFace);
+  };
+
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.22 }}
+      className="fixed inset-0 z-[70] flex items-center justify-center bg-[#030406]/88 px-4 backdrop-blur-md"
+      onClick={() => {
+        playMenuBack();
+        onClose();
+      }}
+      role="dialog"
+      aria-modal="true"
+      aria-label={card.name}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.42, y: 48, rotateX: 18 }}
+        animate={{ opacity: 1, scale: 1, y: 0, rotateX: 0 }}
+        exit={{ opacity: 0, scale: 0.72, y: 24 }}
+        transition={{ type: 'spring', stiffness: 280, damping: 22, mass: 0.85 }}
+        className="relative w-full max-w-[min(92vw,340px)]"
+        style={{ perspective: 1200 }}
+        onClick={event => event.stopPropagation()}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            playMenuBack();
+            onClose();
+          }}
+          className="absolute -right-1 -top-10 z-20 rounded-full border border-white/15 bg-[#1e1f22] p-2 text-[#b5bac1] hover:text-white"
+          aria-label="Close"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <motion.div
+          className="relative aspect-[3/4.25] w-full overflow-hidden rounded-[28px] border-[3px]"
+          style={{
+            borderColor: rarity.border,
+            background: rarity.background,
+            boxShadow: `0 24px 60px rgba(0,0,0,.55), 0 0 48px ${rarity.glow}, inset 0 0 0 1px rgba(255,255,255,.18)`,
+          }}
+          animate={{
+            boxShadow: [
+              `0 24px 60px rgba(0,0,0,.55), 0 0 28px ${rarity.glow}`,
+              `0 24px 60px rgba(0,0,0,.55), 0 0 56px ${rarity.glow}`,
+              `0 24px 60px rgba(0,0,0,.55), 0 0 28px ${rarity.glow}`,
+            ],
+          }}
+          transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <div className="absolute -right-10 top-20 rotate-90 text-[72px] font-black tracking-tighter text-white/[0.05]">
+            SPORTIVIA
+          </div>
+
+          <div className="relative z-10 grid h-full grid-rows-[auto_minmax(0,1fr)_auto] gap-1.5 p-4 pl-3.5 pt-3.5 sm:p-5 sm:pl-4 sm:pt-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="font-mono text-4xl font-black leading-none text-white sm:text-5xl">
+                  {card.rating}
+                </p>
+                <p
+                  className="mt-1.5 text-[11px] font-black uppercase tracking-[0.18em]"
+                  style={{ color: rarity.color }}
+                >
+                  {card.positions.join(' · ') || 'Player'}
+                </p>
+              </div>
+              <div className="flex flex-col items-end gap-1.5">
+                <span className="text-2xl leading-none">{SPORT_META[card.sport].icon}</span>
+                <span
+                  className="rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider"
+                  style={{ color: rarity.color, borderColor: `${rarity.border}aa` }}
+                >
+                  {rarity.label}
+                </span>
+              </div>
+            </div>
+
+            <div className="relative min-h-0 overflow-hidden rounded-2xl">
+              {face ? (
+                <motion.img
+                  key={face}
+                  src={face}
+                  alt={card.name}
+                  initial={{ scale: 1.28, y: 18, opacity: 0.55 }}
+                  animate={{ scale: 1, y: 0, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 160, damping: 20, delay: 0.08 }}
+                  className="absolute inset-0 h-full w-full object-contain object-bottom drop-shadow-[0_16px_28px_rgba(0,0,0,.85)]"
+                  referrerPolicy="no-referrer"
+                  draggable={false}
+                  onError={handleInspectFaceError}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-7xl font-black text-white/15">
+                    {card.name.split(/\s+/).map(part => part[0]).slice(0, 2).join('')}
+                  </span>
+                </div>
+              )}
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/85 to-transparent" />
+            </div>
+
+            <div className="relative z-10 border-t border-white/20 pt-3 text-center">
+              <p className="text-xl font-black uppercase leading-tight tracking-tight text-white sm:text-2xl">
+                {card.name}
+              </p>
+              <div className="mt-1.5 flex h-[2.75rem] flex-col items-center justify-center gap-1 overflow-hidden">
+                {retired ? (
+                  <>
+                    <span className="rounded-full border border-white/25 bg-white/10 px-3 py-0.5 text-[9px] font-black uppercase tracking-[0.16em] text-white/85">
+                      Retired
+                    </span>
+                    {team && (
+                      <p className="max-w-full truncate text-xs font-bold text-white/60">LC · {team}</p>
+                    )}
+                  </>
+                ) : (
+                  <p className="max-w-full truncate text-xs font-bold text-white/75">{team ?? 'Free agent'}</p>
+                )}
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 border-t border-white/15 pt-3">
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-white/35">Country</p>
+                  <p className="mt-0.5 truncate text-[11px] font-black text-white/90">{card.country}</p>
+                </div>
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-white/35">
+                    {age ? 'Age' : 'Era'}
+                  </p>
+                  <p className="mt-0.5 text-[11px] font-black text-white/90">{age ?? card.era}</p>
+                </div>
+                <div>
+                  <p className="text-[8px] font-black uppercase tracking-widest text-white/35">Sport</p>
+                  <p className="mt-0.5 text-[11px] font-black text-white/90">
+                    {SPORT_META[card.sport].label}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        <p className="mt-4 text-center text-[10px] font-bold uppercase tracking-[0.18em] text-[#6d6f78]">
+          Tap outside to close
+        </p>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+/** Hand-picked recognizable faces for each pack tier showcase. */
+const SHOWCASE_FACE_IDS: Record<Sport, Record<CardPackTier, string[]>> = {
+  soccer: {
+    prospect: [
+      'camavinga', 'gvardiol', 'olise', 'rashford', 'grealish', 'eze',
+      'kenanyildiz', 'morganrogers', 'chiesa', 'vlahovic', 'gavi', 'endo', 'joaofelix',
+    ],
+    elite: [
+      'haaland', 'vinicius', 'mbappe', 'bellingham', 'salah', 'rodri', 'kane',
+      'yamal', 'saka', 'palmer', 'foden', 'wirtz', 'musiala', 'leao', 'isak',
+    ],
+    icon: ['messi', 'cr7', 'maradona', 'pele', 'zidane', 'r9', 'ronaldinho', 'cruyff', 'maldini', 'buffon'],
+  },
+  basketball: {
+    prospect: [
+      'zion', 'wagner', 'scottie', 'mobley', 'cade', 'banchero', 'chet',
+      'middleton', 'trae', 'fox', 'siakam', 'jalengreen',
+    ],
+    elite: [
+      'luka', 'sga', 'jokic', 'giannis', 'tatum', 'wemby', 'ant', 'booker',
+      'embiid', 'brunson', 'kawhi', 'ad', 'ja', 'haliburton',
+    ],
+    icon: ['lebron', 'kobe', 'mj', 'curry', 'magic', 'bird', 'shaq', 'duncan', 'kareem', 'wilt'],
+  },
+  baseball: {
+    prospect: [
+      'raleigh', 'perdomo', 'correa', 'bregman', 'yamamoto', 'darvish',
+      'chapman', 'smithwill', 'stanton',
+    ],
+    elite: [
+      'ohtani', 'judge', 'betts', 'soto', 'acuna', 'witt', 'trout', 'harper',
+      'freeman', 'skubal', 'skenes', 'henderson', 'tucker', 'lindor',
+    ],
+    icon: ['ruth', 'aaron', 'mays', 'mantle', 'jeter', 'griffey', 'bonds', 'pedro', 'jackie', 'cobb'],
+  },
+  football: {
+    prospect: [
+      'tua', 'mayfield', 'lawrence', 'dak', 'diggs', 'metcalf', 'waddle',
+      'smith', 'wilson', 'purdy',
+    ],
+    elite: [
+      'mahomes', 'allen', 'lamar', 'jefferson', 'chase', 'burrow', 'mccaffrey',
+      'kelce', 'barkley', 'parsons', 'garrett', 'cdlamb', 'puka', 'hurts',
+    ],
+    icon: ['brady', 'montana', 'rice', 'lt', 'barry', 'moss', 'deion', 'payton', 'manning', 'gronk'],
+  },
+  hockey: {
+    prospect: [
+      'macklin-celebrini', 'matvei-michkov', 'adam-fantilli', 'connor-bedard',
+      'adam-fox', 'brayden-point',
+    ],
+    elite: [
+      'connor-mcdavid', 'nathan-mackinnon', 'auston-matthews', 'cale-makar',
+      'leon-draisaitl', 'nikita-kucherov', 'david-pastrnak', 'quinn-hughes',
+      'matthew-tkachuk', 'kirill-kaprizov',
+    ],
+    icon: [
+      'wayne-gretzky', 'mario-lemieux', 'gordie-howe', 'bobby-orr',
+      'sidney-crosby', 'alex-ovechkin', 'patrick-roy', 'martin-brodeur',
+    ],
+  },
+};
+
+/** Showcase recognizable players that match the pack tier. */
+function pickShowcaseCards(sport: Sport, tier: CardPackTier, count = 5): CollectibleCard[] {
+  const byId = new Map(CARDS_BY_SPORT[sport].map(card => [card.playerId, card]));
+  const preferred = SHOWCASE_FACE_IDS[sport][tier]
+    .map(id => byId.get(id))
+    .filter((card): card is CollectibleCard => Boolean(card));
+
+  if (preferred.length >= count) return preferred.slice(0, count);
+
+  const pool = [...CARDS_BY_SPORT[sport]].sort((a, b) => {
+    const starDelta =
+      Number(isCatalogStar(sport, b.playerId)) - Number(isCatalogStar(sport, a.playerId));
+    if (starDelta !== 0) return starDelta;
+    return b.rating - a.rating;
+  });
+
   const prefer: CardRarity[] =
     tier === 'icon'
       ? ['legendary', 'epic', 'rare']
       : tier === 'elite'
         ? ['epic', 'rare']
-        : ['rare', 'common', 'epic'];
+        : ['rare', 'common'];
 
-  const fitsEliteFace = (card: CollectibleCard) => {
-    if (tier !== 'elite') return true;
-    // Elite art should feel current — skip retired icons like Kaká on the pack face.
+  const fitsTier = (card: CollectibleCard, starsOnly: boolean) => {
+    if (starsOnly && !isCatalogStar(sport, card.playerId)) return false;
+    if (tier === 'icon') {
+      return card.rarity === 'legendary' || card.rarity === 'epic' || card.rating >= 90;
+    }
     if (card.retired) return false;
-    if (sport === 'soccer' && card.playerId === 'kaka') return false;
-    return true;
+    if (tier === 'elite') {
+      return (
+        (card.rarity === 'epic' || card.rarity === 'rare') &&
+        card.rating >= 87 &&
+        card.rating <= 95
+      );
+    }
+    return (
+      (card.rarity === 'rare' || card.rarity === 'common') &&
+      card.rating >= 76 &&
+      card.rating <= 86
+    );
   };
 
-  const picked: CollectibleCard[] = [];
-  for (const rarity of prefer) {
+  const picked = [...preferred];
+  const take = (starsOnly: boolean) => {
+    for (const rarity of prefer) {
+      for (const card of pool) {
+        if (card.rarity !== rarity) continue;
+        if (!fitsTier(card, starsOnly)) continue;
+        if (picked.some(item => item.key === card.key)) continue;
+        picked.push(card);
+        if (picked.length >= count) return;
+      }
+    }
+  };
+
+  take(true);
+  if (picked.length < count) take(false);
+
+  if (picked.length < count) {
     for (const card of pool) {
-      if (card.rarity !== rarity) continue;
-      if (!fitsEliteFace(card)) continue;
       if (picked.some(item => item.key === card.key)) continue;
+      if (tier !== 'icon' && card.retired) continue;
       picked.push(card);
-      if (picked.length >= 3) return picked;
+      if (picked.length >= count) break;
     }
   }
-  for (const card of pool) {
-    if (!fitsEliteFace(card)) continue;
-    if (picked.some(item => item.key === card.key)) continue;
-    picked.push(card);
-    if (picked.length >= 3) break;
-  }
-  return picked;
+
+  return picked.slice(0, count);
 }
 
 function ShowcaseMiniCard({
   card,
   large = false,
   dimmed = false,
+  fade = 1,
 }: {
   card: CollectibleCard;
   large?: boolean;
   dimmed?: boolean;
+  fade?: number;
 }) {
   const [face, setFace] = useState<string | null>(null);
+  const miniRetriesRef = useRef(0);
   const rarity = RARITY_META[card.rarity];
 
   useEffect(() => {
     let active = true;
+    miniRetriesRef.current = 0;
     void resolvePlayerFace(card.sport, card.playerId, card.name).then(url => {
       if (active) setFace(url);
     });
@@ -288,18 +607,29 @@ function ShowcaseMiniCard({
     };
   }, [card.name, card.playerId, card.sport]);
 
+  const handleMiniFaceError = () => {
+    if (miniRetriesRef.current >= 2) {
+      setFace(null);
+      return;
+    }
+    miniRetriesRef.current += 1;
+    invalidatePlayerFace(card.sport, card.playerId);
+    void resolvePlayerFace(card.sport, card.playerId, card.name, { force: true }).then(setFace);
+  };
+
   return (
     <div
-      className={`relative overflow-hidden rounded-[18px] border-2 ${
-        large ? 'h-[250px] w-[168px]' : 'h-[200px] w-[134px]'
+      className={`relative overflow-hidden rounded-[14px] border-[2.5px] ${
+        large ? 'h-[236px] w-[172px]' : 'h-[188px] w-[138px]'
       }`}
       style={{
         borderColor: rarity.border,
         background: '#0b0c10',
         boxShadow: dimmed
-          ? '0 8px 16px rgba(0,0,0,0.4)'
-          : `0 14px 28px rgba(0,0,0,0.55), 0 0 20px ${rarity.glow}`,
-        opacity: dimmed ? 0.92 : 1,
+          ? '0 6px 12px rgba(0,0,0,0.35)'
+          : `0 10px 22px rgba(0,0,0,0.5), 0 0 16px ${rarity.glow}`,
+        opacity: fade,
+        filter: dimmed ? 'saturate(0.7) brightness(0.82)' : undefined,
       }}
     >
       {face ? (
@@ -307,7 +637,9 @@ function ShowcaseMiniCard({
           src={face}
           alt=""
           draggable={false}
+          referrerPolicy="no-referrer"
           className="absolute inset-0 h-full w-full object-cover object-[center_18%]"
+          onError={handleMiniFaceError}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center bg-[#16171b] text-3xl">
@@ -318,7 +650,7 @@ function ShowcaseMiniCard({
       {/* Bottom fade for name */}
       <div className="absolute inset-x-0 bottom-0 h-2/5 bg-gradient-to-t from-black/90 via-black/45 to-transparent" />
 
-      <div className="absolute left-2 top-2 rounded-md bg-black/55 px-1.5 py-0.5 backdrop-blur-[2px]">
+      <div className="absolute left-1.5 top-1.5 rounded-md bg-black/55 px-1.5 py-0.5 backdrop-blur-[2px]">
         <p className="font-mono text-sm font-black leading-none text-white">{card.rating}</p>
       </div>
 
@@ -352,42 +684,56 @@ function PackArt({
   sport,
   large = false,
   tearing = false,
+  interactive = false,
 }: {
   pack: CardPackDefinition;
   sport: Sport;
   large?: boolean;
   tearing?: boolean;
+  interactive?: boolean;
 }) {
+  const [hovered, setHovered] = useState(false);
   const accent = PACK_ACCENT[pack.id] ?? PACK_ACCENT.prospect;
   const tier = pack.name.replace(' Pack', '').toUpperCase();
-  const cards = useMemo(() => pickShowcaseCards(sport, pack.id), [sport, pack.id]);
+  const cards = useMemo(() => pickShowcaseCards(sport, pack.id, 5), [sport, pack.id]);
+  const expanded = interactive && hovered && !tearing;
 
-  // Tight overlapping fan — center card in front
+  // Straight row: center crisp, sides fade out — stays put on hover
   const poses = large
     ? [
-        { rotate: -11, x: -54, y: 22, z: 1, dimmed: true },
-        { rotate: 0, x: 0, y: 0, z: 3, dimmed: false },
-        { rotate: 11, x: 54, y: 22, z: 2, dimmed: true },
+        { rotate: 0, x: -132, y: 2, z: 1, scale: 0.78, dimmed: true, fade: 0.28 },
+        { rotate: 0, x: -66, y: 0, z: 2, scale: 0.88, dimmed: true, fade: 0.55 },
+        { rotate: 0, x: 0, y: 0, z: 3, scale: 0.98, dimmed: false, fade: 1 },
+        { rotate: 0, x: 66, y: 0, z: 2, scale: 0.88, dimmed: true, fade: 0.55 },
+        { rotate: 0, x: 132, y: 2, z: 1, scale: 0.78, dimmed: true, fade: 0.28 },
       ]
     : [
-        { rotate: -10, x: -42, y: 18, z: 1, dimmed: true },
-        { rotate: 0, x: 0, y: 0, z: 3, dimmed: false },
-        { rotate: 10, x: 42, y: 18, z: 2, dimmed: true },
+        { rotate: 0, x: -108, y: 2, z: 1, scale: 0.76, dimmed: true, fade: 0.26 },
+        { rotate: 0, x: -54, y: 0, z: 2, scale: 0.86, dimmed: true, fade: 0.52 },
+        { rotate: 0, x: 0, y: 0, z: 3, scale: 0.96, dimmed: false, fade: 1 },
+        { rotate: 0, x: 54, y: 0, z: 2, scale: 0.86, dimmed: true, fade: 0.52 },
+        { rotate: 0, x: 108, y: 2, z: 1, scale: 0.76, dimmed: true, fade: 0.26 },
       ];
 
   return (
     <motion.div
       className={`relative mx-auto flex shrink-0 flex-col items-center ${
-        large ? 'h-[380px] w-[300px]' : 'h-[290px] w-[230px]'
+        large ? 'h-[400px] w-[400px]' : 'h-[250px] w-full max-w-[320px]'
       }`}
+      onMouseEnter={() => interactive && setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
       animate={
         tearing
           ? { scale: [1, 1.03, 0.95], rotate: [0, -2, 3, 0], y: [0, -6, 10] }
-          : undefined
+          : { y: expanded ? -3 : 0 }
       }
-      transition={tearing ? { duration: 0.85, ease: 'easeInOut' } : undefined}
+      transition={
+        tearing
+          ? { duration: 0.85, ease: 'easeInOut' }
+          : { duration: 0.22, ease: [0.22, 1, 0.36, 1] }
+      }
     >
-      <div className="mb-3 text-center">
+      <div className="mb-1.5 text-center">
         <p
           className={`font-black uppercase tracking-[0.22em] ${large ? 'text-[10px]' : 'text-[8px]'}`}
           style={{ color: accent }}
@@ -396,33 +742,56 @@ function PackArt({
         </p>
       </div>
 
-      <div className="relative flex-1 w-full">
-        {/* Soft ground glow */}
-        <div
+      <div
+        className="relative w-full flex-1"
+        style={{
+          perspective: 900,
+          maskImage:
+            'linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(90deg, transparent 0%, black 10%, black 90%, transparent 100%)',
+        }}
+      >
+        <motion.div
           aria-hidden
-          className="pointer-events-none absolute left-1/2 top-[58%] h-24 w-40 -translate-x-1/2 rounded-full blur-2xl"
-          style={{ background: accent, opacity: 0.18 }}
+          className="pointer-events-none absolute left-1/2 top-[58%] h-24 -translate-x-1/2 rounded-full blur-2xl"
+          animate={{
+            opacity: expanded ? 0.32 : 0.14,
+            width: expanded ? 260 : 200,
+          }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+          style={{ background: accent }}
         />
 
         {cards.map((card, index) => {
-          const pose = poses[index] ?? poses[1];
+          const pose = poses[index] ?? poses[2]!;
           return (
             <div
               key={card.key}
-              className="absolute left-1/2 top-[46%]"
-              style={{
-                zIndex: pose.z,
-                transform: `translate(-50%, -50%) translate(${pose.x}px, ${pose.y}px) rotate(${pose.rotate}deg)`,
-              }}
+              className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2"
+              style={{ zIndex: pose.z }}
             >
-              <ShowcaseMiniCard card={card} large={large} dimmed={pose.dimmed} />
+              <div
+                style={{
+                  transform: `translate(${pose.x}px, ${pose.y}px) scale(${pose.scale})`,
+                  opacity: pose.fade,
+                  transformOrigin: '50% 50%',
+                }}
+              >
+                <ShowcaseMiniCard
+                  card={card}
+                  large={large}
+                  dimmed={pose.dimmed}
+                  fade={1}
+                />
+              </div>
             </div>
           );
         })}
       </div>
 
       <p
-        className={`mt-1 font-black uppercase tracking-[0.16em] text-white/50 ${
+        className={`mt-0 font-black uppercase tracking-[0.16em] text-white/50 ${
           large ? 'text-[10px]' : 'text-[8px]'
         }`}
       >
@@ -466,6 +835,9 @@ function Odds({ pack }: { pack: CardPackDefinition }) {
   );
 }
 
+const PACKS_DISCLAIMER =
+  'Coins, packs, and cards are virtual entertainment items with no real-world or cash value. They cannot be bought, sold, traded, or redeemed for money or prizes. Pack openings use in-game coins only and are not gambling. Athlete names and likenesses are for entertainment purposes only and do not imply endorsement.';
+
 export function CardPacksScreen({
   profile,
   initialSport,
@@ -479,11 +851,22 @@ export function CardPacksScreen({
   const [tearing, setTearing] = useState(false);
   const [revealed, setRevealed] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
   const [search, setSearch] = useState('');
   const [rarityFilter, setRarityFilter] = useState<CardRarity | 'all'>('all');
   const [showAll, setShowAll] = useState(false);
   const [visibleCount, setVisibleCount] = useState(48);
+  const [inspected, setInspected] = useState<CollectibleCard | null>(null);
   const revealRefs = useRef<(HTMLDivElement | null)[]>([]);
+
+  useEffect(() => {
+    prefetchFaceManifests();
+  }, []);
+
+  function inspectCard(card: CollectibleCard) {
+    playMenuClick();
+    setInspected(card);
+  }
 
   useEffect(() => {
     if (!openingStarted || !opening) return;
@@ -666,6 +1049,19 @@ export function CardPacksScreen({
           </button>
 
           <div className="flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                playMenuClick();
+                setShowDisclaimer(true);
+              }}
+              className="game-chip !px-2.5"
+              aria-label="Packs disclaimer"
+              title="Disclaimer"
+            >
+              <Info className="h-3.5 w-3.5" />
+            </button>
+
             <div className="inline-flex gap-1 rounded-full border border-white/8 bg-[#16171b]/90 p-1">
               {([
                 ['packs', 'Packs', PackageOpen],
@@ -703,7 +1099,11 @@ export function CardPacksScreen({
           </div>
         </header>
 
-        <main className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] pt-8 sm:px-8 sm:pt-10">
+        <main
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8 ${
+            tab === 'packs' ? 'pt-3 sm:pt-4' : 'pt-8 sm:pt-10'
+          }`}
+        >
           {tab === 'packs' ? (
             <div className="mx-auto flex w-full max-w-5xl flex-col">
               {error && (
@@ -725,38 +1125,37 @@ export function CardPacksScreen({
               <div className="mt-10 grid gap-5 sm:grid-cols-3 sm:gap-6">
                 {CARD_PACKS.map((pack, index) => {
                   const affordable = profile.coins >= pack.cost;
-                  const [, c1] = pack.colors;
+                  const [accent, glow, deep] = pack.colors;
                   return (
                     <motion.article
                       key={pack.id}
                       initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05, duration: 0.28 }}
-                      className="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#12131a]/80 p-3.5 sm:p-4"
+                      className="game-pack-panel group relative overflow-visible px-5 py-4 sm:px-6 sm:py-4"
                       style={{
-                        boxShadow: `0 8px 24px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.04)`,
-                        borderColor: `${c1}40`,
+                        borderColor: `${accent}55`,
+                        background: `linear-gradient(165deg, ${accent}2e 0%, ${deep}b8 42%, rgba(12, 13, 16, 0.72) 100%)`,
+                        boxShadow: `0 4px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 ${glow}22`,
                       }}
                     >
-                      <div className="relative flex min-h-[300px] items-center justify-center py-1 sm:min-h-[310px]">
-                        <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                          <PackArt pack={pack} sport={sport} />
-                        </div>
+                      <div className="relative z-10 flex min-h-[250px] items-center justify-center overflow-hidden py-0 sm:min-h-[255px]">
+                        <PackArt pack={pack} sport={sport} interactive />
                       </div>
 
-                      <div className="mt-3 flex flex-1 flex-col border-t border-white/10 pt-3">
+                      <div className="relative z-0 mt-1.5 flex flex-1 flex-col border-t border-white/10 pt-2.5">
                         <h3 className="text-base font-extrabold tracking-tight text-white sm:text-lg">{pack.name}</h3>
                         <p className="mt-0.5 text-[12px] font-semibold leading-snug text-[#949ba4]">
                           {pack.cardCount} cards · {pack.tagline}
                         </p>
-                        <div className="mt-2.5">
+                        <div className="mt-2">
                           <Odds pack={pack} />
                         </div>
                         <button
                           type="button"
                           onClick={() => buyPack(pack.id)}
                           disabled={!affordable}
-                          className="game-gold-cta mt-3.5 w-full py-2.5 text-sm"
+                          className="game-gold-cta mt-2.5 w-full py-2.5 text-sm"
                         >
                           <Coins className="h-4 w-4" />
                           {affordable ? pack.cost.toLocaleString() : 'Need more coins'}
@@ -821,19 +1220,18 @@ export function CardPacksScreen({
               {filteredCards.length ? (
                 <>
                   <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
-                    {filteredCards.slice(0, visibleCount).map(card => (
-                      <div key={card.key} className="relative">
-                        <PlayerCard
-                          card={card}
-                          locked={(profile.cardCollection.owned[card.key] ?? 0) === 0}
-                        />
-                        {(profile.cardCollection.owned[card.key] ?? 0) > 1 && (
-                          <span className="game-chip game-chip-active absolute -right-1 -top-1 z-20 !min-h-0 !px-2 !py-0.5 text-[9px] text-[#f0b232]">
-                            ×{profile.cardCollection.owned[card.key]}
-                          </span>
-                        )}
-                      </div>
-                    ))}
+                    {filteredCards.slice(0, visibleCount).map(card => {
+                      const owned = (profile.cardCollection.owned[card.key] ?? 0) > 0;
+                      return (
+                        <div key={card.key} className="relative">
+                          <PlayerCard
+                            card={card}
+                            locked={!owned}
+                            onInspect={owned ? inspectCard : undefined}
+                          />
+                        </div>
+                      );
+                    })}
                   </div>
                   {visibleCount < filteredCards.length && (
                     <button
@@ -865,6 +1263,80 @@ export function CardPacksScreen({
           )}
         </main>
       </div>
+
+      <AnimatePresence>
+        {inspected && (
+          <CardInspectOverlay
+            key={inspected.key}
+            card={inspected}
+            onClose={() => setInspected(null)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDisclaimer && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-[#050608]/72 px-4 backdrop-blur-sm"
+            onClick={() => {
+              playMenuBack();
+              setShowDisclaimer(false);
+            }}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ type: 'spring', stiffness: 360, damping: 24 }}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="packs-disclaimer-title"
+              className="game-panel relative w-full max-w-md border-white/12 p-5 shadow-[0_18px_50px_rgba(0,0,0,0.45)]"
+              onClick={event => event.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  playMenuBack();
+                  setShowDisclaimer(false);
+                }}
+                className="absolute right-3 top-3 rounded-full border border-white/10 bg-white/5 p-1.5 text-[#949ba4] transition-colors hover:text-white"
+                aria-label="Close disclaimer"
+              >
+                <X className="h-4 w-4" />
+              </button>
+              <div className="mb-3 flex items-center gap-2 pr-8">
+                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#f0b232]/35 bg-[#f0b232]/12 text-[#f0b232]">
+                  <Info className="h-4 w-4" />
+                </span>
+                <h3
+                  id="packs-disclaimer-title"
+                  className="text-sm font-black uppercase tracking-[0.16em] text-white"
+                >
+                  Disclaimer
+                </h3>
+              </div>
+              <p className="text-sm font-semibold leading-relaxed text-[#c5c7cc]">
+                {PACKS_DISCLAIMER}{' '}
+                <span className="font-black uppercase text-[#ed4245]">NEVER START GAMBLING</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  playMenuClick();
+                  setShowDisclaimer(false);
+                }}
+                className="game-gold-cta mt-5 w-full py-2.5 text-sm"
+              >
+                Got it
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <AnimatePresence>
         {opening && (
@@ -949,6 +1421,7 @@ export function CardPacksScreen({
                               card={opened.card}
                               duplicate={opened.duplicate}
                               refund={opened.duplicateCoins}
+                              onInspect={inspectCard}
                             />
                           </motion.div>
                         )}

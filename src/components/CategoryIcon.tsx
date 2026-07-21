@@ -22,7 +22,7 @@ interface VisualMeta {
   /** Scale logo inside its box (1 = default). Use >1 for emblems that look small. */
   logoScale?: number;
   jerseyPattern?: JerseyPattern;
-  allStarVariant?: 'nba' | 'mlb';
+  allStarVariant?: 'nba' | 'mlb' | 'nhl';
   awardVariant?: 'mvp' | 'scoring' | 'championship' | 'olympic';
   hockeyAwardVariant?: HockeyAwardVariant;
 }
@@ -59,7 +59,7 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'pos-fwd': { type: 'position', colors: ['#f0b232'], initials: 'FW' },
   'pos-mid': { type: 'position', colors: ['#23a559'], initials: 'MF' },
   'pos-def': { type: 'position', colors: ['#5865f2'], initials: 'DF' },
-  'trophy-wc': { type: 'trophy', colors: ['#f0b232'] },
+  'trophy-wc': { type: 'trophy', logoUrl: '/icons/trophies/world-cup.png', logoScale: 1.2 },
   'trophy-ucl': { type: 'trophy', logoUrl: '/icons/trophies/ucl.png', logoScale: 1.15 },
   'trophy-euro': { type: 'trophy', logoUrl: '/icons/trophies/euro-trophy.png', logoScale: 1.35 },
   'trophy-bdo': { type: 'trophy', logoUrl: '/icons/trophies/ballon-dor-nobg.png', logoScale: 1.25 },
@@ -299,8 +299,8 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'champ-stanley': { type: 'trophy', hockeyAwardVariant: 'stanley' },
   'champ-stanley-3': { type: 'trophy', hockeyAwardVariant: 'stanley' },
   'award-hart': { type: 'award', hockeyAwardVariant: 'hart' },
-  'award-nhl-allstar': { type: 'award', hockeyAwardVariant: 'allstar' },
-  'award-hockey-hof': { type: 'award', hockeyAwardVariant: 'hall' },
+  'award-nhl-allstar': { type: 'allstar', allStarVariant: 'nhl' },
+  'award-hockey-hof': { type: 'trophy', logoUrl: '/icons/trophies/nhl-hof.png', logoScale: 1.2 },
 };
 
 function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMeta {

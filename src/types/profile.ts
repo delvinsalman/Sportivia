@@ -14,6 +14,7 @@ export type CharacterId =
   | 'nerd-player'
   | 'ref-bot'
   | 'officer'
+  | 'manager'
   | 'astronaut'
   | 'cosmo'
   | 'panda'
@@ -23,10 +24,30 @@ export type CharacterId =
   | 'mako'
   | 'creative';
 export type RabbitVariantId = 'base' | 'grey' | 'blond' | 'pigtails' | 'cyan-hair';
-export type PetId = 'pug' | 'fish' | 'cat' | 'raccoon' | 'wolf' | 'alpaca' | 'sheep' | 'deer' | 'horse' | 'shark' | 'frog';
+export type DogVariantId = 'husky' | 'shiba' | 'black-shiba' | 'german-shepherd';
+export type PetId =
+  | 'pug'
+  | 'dog'
+  | 'fish'
+  | 'cat'
+  | 'raccoon'
+  | 'wolf'
+  | 'alpaca'
+  | 'sheep'
+  | 'deer'
+  | 'horse'
+  | 'shark'
+  | 'frog'
+  | 'snake';
 
 export interface RabbitVariantDef {
   id: RabbitVariantId;
+  name: string;
+  modelPath: string;
+}
+
+export interface DogVariantDef {
+  id: DogVariantId;
   name: string;
   modelPath: string;
 }
@@ -85,6 +106,8 @@ export interface PlayerProfile {
   creativeLoadout: CreativeLoadout;
   /** Selected look included with the Rabbit skin bundle */
   rabbitVariant: RabbitVariantId;
+  /** Selected breed included with the Dog pet */
+  dogVariant: DogVariantId;
   cardCollection: CardCollectionState;
   stats: PlayerStats;
 }
@@ -193,6 +216,17 @@ export const CHARACTERS: CharacterDef[] = [
     accent: '#3b82f6',
     footOffsetY: 0,
     targetHeight: 1.7,
+  },
+  {
+    id: 'manager',
+    name: 'The Manager',
+    tagline: 'Sideline boss · clipboard energy',
+    price: 7_500,
+    modelPath: '/models/manager.glb',
+    accent: '#f59e0b',
+    footOffsetY: 0,
+    targetHeight: 1.72,
+    showcaseRestMs: [4200, 7800],
   },
   {
     id: 'astronaut',
@@ -389,6 +423,28 @@ export const PETS: PetDef[] = [
     animTimeScale: 0.45,
     showcaseRestMs: [8000, 15000],
   },
+  {
+    id: 'snake',
+    name: 'Sideline Snake',
+    tagline: 'Coils quiet · strikes on cue',
+    price: 52_000,
+    modelPath: '/models/pets/snake.glb',
+    accent: '#84cc16',
+    footOffsetY: 0,
+    targetHeight: 1.25,
+    animTimeScale: 0.9,
+    showcaseRestMs: [9000, 16_000],
+  },
+  {
+    id: 'dog',
+    name: 'Street Dog',
+    tagline: 'Four breeds · swap anytime',
+    price: 68_000,
+    modelPath: '/models/pets/dog/husky.glb',
+    accent: '#e2e8f0',
+    footOffsetY: 0,
+    targetHeight: 1.58,
+  },
 ];
 
 export const STARTER_CHARACTERS: CharacterId[] = ['cube-man', 'cube-woman', 'ava'];
@@ -402,6 +458,7 @@ export const DEFAULT_CHARACTER: CharacterId = 'cube-man';
 /** Fallback pet id for migrations only — new profiles start with none equipped. */
 export const DEFAULT_PET: PetId = 'pug';
 export const DEFAULT_RABBIT_VARIANT: RabbitVariantId = 'base';
+export const DEFAULT_DOG_VARIANT: DogVariantId = 'husky';
 export { DEFAULT_CREATIVE_LOADOUT };
 
 export const RABBIT_VARIANTS: RabbitVariantDef[] = [
@@ -412,8 +469,19 @@ export const RABBIT_VARIANTS: RabbitVariantDef[] = [
   { id: 'cyan-hair', name: 'Cyan Hair', modelPath: '/models/rabbit/cyan-hair.glb' },
 ];
 
+export const DOG_VARIANTS: DogVariantDef[] = [
+  { id: 'husky', name: 'Husky', modelPath: '/models/pets/dog/husky.glb' },
+  { id: 'shiba', name: 'Shiba', modelPath: '/models/pets/dog/shiba.glb' },
+  { id: 'black-shiba', name: 'Black Shiba', modelPath: '/models/pets/dog/black-shiba.glb' },
+  { id: 'german-shepherd', name: 'German Shepherd', modelPath: '/models/pets/dog/german-shepherd.glb' },
+];
+
 export function getRabbitVariantDef(id: RabbitVariantId): RabbitVariantDef {
   return RABBIT_VARIANTS.find(variant => variant.id === id) ?? RABBIT_VARIANTS[0];
+}
+
+export function getDogVariantDef(id: DogVariantId): DogVariantDef {
+  return DOG_VARIANTS.find(variant => variant.id === id) ?? DOG_VARIANTS[0];
 }
 
 export function getCharacterDef(id: CharacterId): CharacterDef {

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import type { Sport } from '../types';
 import { SportBall } from './SportBall';
 import { SPORT_ACCENT } from '../lib/sportTheme';
+import { PAGE_SPRING } from '../lib/pageTransitions';
 
 interface BallRainIntroProps {
   sport: Sport;
@@ -48,14 +49,9 @@ export function BallRainIntro({ sport, mode, detail, onComplete }: BallRainIntro
           : 'radial-gradient(ellipse at 50% 30%, rgba(255,255,255,0.14) 0%, #0a0a0b 70%)';
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden"
-      style={{
-        background: bgGradient,
-      }}
+    <div
+      className="flex h-full w-full items-center justify-center overflow-hidden"
+      style={{ background: bgGradient }}
     >
       {/* Raining balls */}
       {balls.map(b => (
@@ -82,9 +78,9 @@ export function BallRainIntro({ sport, mode, detail, onComplete }: BallRainIntro
 
       {/* Center burst */}
       <motion.div
-        initial={{ scale: 0.5, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 22, delay: 0.15 }}
+        initial={{ scale: 0.72, opacity: 0, y: 16 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ ...PAGE_SPRING, delay: 0.08 }}
         className="relative z-10 text-center px-6"
       >
         <motion.div
@@ -116,6 +112,6 @@ export function BallRainIntro({ sport, mode, detail, onComplete }: BallRainIntro
 
       {/* Vignette */}
       <div className="absolute inset-0 pointer-events-none bg-gradient-to-b from-transparent via-transparent to-[#0a0a0b]/80" />
-    </motion.div>
+    </div>
   );
 }

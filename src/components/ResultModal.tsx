@@ -7,7 +7,7 @@ import { SportBall } from './SportBall';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import type { CharacterId, PetId, RabbitVariantId } from '../types/profile';
+import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 
 interface ResultModalProps {
@@ -16,6 +16,7 @@ interface ResultModalProps {
   petId?: PetId | null;
   creativeLoadout?: CreativeLoadout;
   rabbitVariant?: RabbitVariantId;
+  dogVariant?: DogVariantId;
   onPlayAgain: () => void;
   onHome: () => void;
   waitingForOpponent?: boolean;
@@ -35,6 +36,7 @@ export function ResultModal({
   petId,
   creativeLoadout,
   rabbitVariant,
+  dogVariant,
   onPlayAgain,
   onHome,
   waitingForOpponent = false,
@@ -133,6 +135,7 @@ export function ResultModal({
                   hidePodium
                   height={260}
                   className="w-full"
+                  {...(petId === 'dog' && dogVariant ? { dogVariant } : {})}
                 />
               </div>
             )}
@@ -160,6 +163,19 @@ export function ResultModal({
                 <p className="text-sm sm:text-base mt-2 font-black" style={{ color: accent }}>
                   You {result.score} — {duel.opponentScore} {duel.opponentName}
                   {waitingForOpponent ? ' · waiting…' : ''}
+                </p>
+              )}
+              {result.cardWager?.active && result.cardWager.outcome !== 'none' && !waitingForOpponent && (
+                <p
+                  className={`text-sm sm:text-base mt-2 font-black ${
+                    result.cardWager.outcome === 'win'
+                      ? 'text-[#23a559]'
+                      : result.cardWager.outcome === 'loss'
+                        ? 'text-[#ed4245]'
+                        : 'text-[#949ba4]'
+                  }`}
+                >
+                  {result.cardWager.message}
                 </p>
               )}
               {!result.completed && (
@@ -209,11 +225,18 @@ export function ResultModal({
             )}
 
             {rewards?.leveledUp && (
-              <div className="flex items-center gap-2 mb-5 py-2.5 px-4 rounded-2xl bg-[#5865f2]/15 border-[3px] border-[#5865f2]/60 shadow-[0_4px_0_#2f3aa8]">
-                <Sparkles className="w-4 h-4 text-[#5865f2] shrink-0" />
-                <span className="text-sm font-black text-[#b5bac1]">
-                  Leveled up to <strong className="text-[#f2f3f5]">{rewards.newLevel}</strong>
-                </span>
+              <div className="flex flex-col gap-1.5 mb-5 py-2.5 px-4 rounded-2xl bg-[#5865f2]/15 border-[3px] border-[#5865f2]/60 shadow-[0_4px_0_#2f3aa8]">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#5865f2] shrink-0" />
+                  <span className="text-sm font-black text-[#b5bac1]">
+                    Leveled up to <strong className="text-[#f2f3f5]">{rewards.newLevel}</strong>
+                  </span>
+                </div>
+                {(rewards.milestoneBonus ?? 0) > 0 && (
+                  <p className="text-xs font-black text-[#f0b232] pl-6">
+                    Milestone bonus +{rewards.milestoneBonus!.toLocaleString()} coins
+                  </p>
+                )}
               </div>
             )}
 

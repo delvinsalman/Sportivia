@@ -1,11 +1,13 @@
 import type { GameResult, Sport } from '../types';
-import type { CharacterId, PetId, PlayerProfile, RabbitVariantId } from '../types/profile';
+import type { CharacterId, DogVariantId, PetId, PlayerProfile, RabbitVariantId } from '../types/profile';
 import {
   CHARACTERS,
   DEFAULT_CHARACTER,
   DEFAULT_CREATIVE_LOADOUT,
+  DEFAULT_DOG_VARIANT,
   DEFAULT_PLAYER_NAME,
   DEFAULT_RABBIT_VARIANT,
+  DOG_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
   STARTER_CHARACTERS,
@@ -16,7 +18,13 @@ import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult } from './seasonMeta';
 import type { CardPackTier, CardRarity, CollectibleCard, OpenedCard } from '../types/cards';
-import { CARDS_BY_SPORT, getPackDefinition } from './cardCatalog';
+import { CARD_BY_KEY, CARDS_BY_SPORT, getPackDefinition } from './cardCatalog';
+import {
+  describeWagerSettlement,
+  isWagerActive,
+  type CardWagerAgreement,
+  type CardWagerSettlement,
+} from './cardWager';
 
 const PROFILE_KEY = 'gridiq-profile-v4';
 const PAID_SKINS_MIGRATION_KEY = 'gridiq-paid-skins-v1';
@@ -64,6 +72,7 @@ function defaultProfile(): PlayerProfile {
     unlockedPets: [],
     creativeLoadout: { ...DEFAULT_CREATIVE_LOADOUT },
     rabbitVariant: DEFAULT_RABBIT_VARIANT,
+    dogVariant: DEFAULT_DOG_VARIANT,
     cardCollection: {
       owned: {},
       packsOpened: 0,
@@ -105,18 +114,23 @@ export function loadProfile(): PlayerProfile {
     const rabbitVariant = RABBIT_VARIANTS.some(variant => variant.id === parsed.rabbitVariant)
       ? (parsed.rabbitVariant as RabbitVariantId)
       : DEFAULT_RABBIT_VARIANT;
+    const dogVariant = DOG_VARIANTS.some(variant => variant.id === parsed.dogVariant)
+      ? (parsed.dogVariant as DogVariantId)
+      : DEFAULT_DOG_VARIANT;
     const rawCollection = parsed.cardCollection;
     const cardCollection = {
       owned:
         rawCollection?.owned && typeof rawCollection.owned === 'object'
           ? Object.fromEntries(
-              Object.entries(rawCollection.owned).filter(
-                ([key, count]) =>
-                  /^(soccer|basketball|baseball|football|hockey):/.test(key) &&
-                  typeof count === 'number' &&
-                  Number.isFinite(count) &&
-                  count > 0,
-              ),
+              Object.entries(rawCollection.owned)
+                .filter(
+                  ([key, count]) =>
+                    /^(soccer|basketball|baseball|football|hockey):/.test(key) &&
+                    typeof count === 'number' &&
+                    Number.isFinite(count) &&
+                    count > 0,
+                )
+                .map(([key]) => [key, 1]),
             )
           : {},
       packsOpened:
@@ -141,6 +155,7 @@ export function loadProfile(): PlayerProfile {
       unlockedPets,
       creativeLoadout,
       rabbitVariant,
+      dogVariant,
       cardCollection,
       stats: loadStats(),
     };
@@ -158,10 +173,14 @@ export function loadProfile(): PlayerProfile {
       parsed.equippedPet === undefined ||
       safePet !== parsed.equippedPet ||
       unlockedPets.length !== (parsed.unlockedPets?.length ?? 0);
-    const cardsChanged = !parsed.cardCollection;
+    const hadMultiCopies = Object.values(rawCollection?.owned ?? {}).some(
+      count => typeof count === 'number' && count > 1,
+    );
+    const cardsChanged = !parsed.cardCollection || hadMultiCopies;
     const rabbitChanged = parsed.rabbitVariant !== rabbitVariant;
+    const dogChanged = parsed.dogVariant !== dogVariant;
 
-    if (equippedMigrated || unlockedChanged || petsChanged || cardsChanged || rabbitChanged) {
+    if (equippedMigrated || unlockedChanged || petsChanged || cardsChanged || rabbitChanged || dogChanged) {
       saveProfile(profile);
     }
 
@@ -323,6 +342,15 @@ export function saveRabbitVariant(variant: RabbitVariantId): PlayerProfile {
   return profile;
 }
 
+export function saveDogVariant(variant: DogVariantId): PlayerProfile {
+  const profile = loadProfile();
+  if (!profile.unlockedPets.includes('dog')) return profile;
+  if (!DOG_VARIANTS.some(item => item.id === variant)) return profile;
+  profile.dogVariant = variant;
+  saveProfile(profile);
+  return profile;
+}
+
 const RARITY_ORDER: Record<CardRarity, number> = {
   common: 0,
   rare: 1,
@@ -406,10 +434,12 @@ export function openCardPack(
   profile.coins -= pack.cost;
   let duplicateCoins = 0;
   const cards = rolled.map(card => {
-    const previousCount = profile.cardCollection.owned[card.key] ?? 0;
-    const duplicate = previousCount > 0;
+    const alreadyOwned = (profile.cardCollection.owned[card.key] ?? 0) > 0;
+    const duplicate = alreadyOwned;
     const refund = duplicate ? pack.duplicateRefund[card.rarity] : 0;
-    profile.cardCollection.owned[card.key] = previousCount + 1;
+    if (!alreadyOwned) {
+      profile.cardCollection.owned[card.key] = 1;
+    }
     profile.coins += refund;
     duplicateCoins += refund;
     return { card, duplicate, duplicateCoins: refund };
@@ -423,6 +453,71 @@ export function openCardPack(
   saveProfile(profile);
 
   return { ok: true, profile, cards, duplicateCoins };
+}
+
+export function addCardToCollection(cardKey: string): {
+  ok: boolean;
+  profile: PlayerProfile;
+  duplicate: boolean;
+  error?: string;
+} {
+  const profile = loadProfile();
+  const card = CARD_BY_KEY.get(cardKey);
+  if (!card) return { ok: false, profile, duplicate: false, error: 'Unknown card' };
+  const alreadyOwned = (profile.cardCollection.owned[cardKey] ?? 0) > 0;
+  if (!alreadyOwned) {
+    profile.cardCollection.owned[cardKey] = 1;
+    saveProfile(profile);
+  }
+  return { ok: true, profile, duplicate: alreadyOwned };
+}
+
+export function removeCardFromCollection(cardKey: string): {
+  ok: boolean;
+  profile: PlayerProfile;
+  error?: string;
+} {
+  const profile = loadProfile();
+  if ((profile.cardCollection.owned[cardKey] ?? 0) <= 0) {
+    return { ok: false, profile, error: 'Card not owned' };
+  }
+  delete profile.cardCollection.owned[cardKey];
+  saveProfile(profile);
+  return { ok: true, profile };
+}
+
+/** Apply win/loss card stake. Win adds their card if new; loss removes yours entirely. */
+export function settleCardWager(
+  outcome: 'win' | 'loss' | 'draw',
+  agreement: CardWagerAgreement,
+): {
+  profile: PlayerProfile;
+  settlement: CardWagerSettlement;
+} {
+  const settlement = describeWagerSettlement(outcome, agreement);
+  let profile = loadProfile();
+
+  if (!isWagerActive(agreement) || outcome === 'draw') {
+    return { profile, settlement };
+  }
+
+  if (outcome === 'win') {
+    if (agreement.opponentCard) {
+      const added = addCardToCollection(agreement.opponentCard.cardKey);
+      profile = added.profile;
+    }
+    if (agreement.yourCard) {
+      const restored = addCardToCollection(agreement.yourCard.cardKey);
+      profile = restored.profile;
+    }
+  }
+
+  if (outcome === 'loss' && agreement.yourCard) {
+    const removed = removeCardFromCollection(agreement.yourCard.cardKey);
+    profile = removed.ok ? removed.profile : profile;
+  }
+
+  return { profile, settlement };
 }
 
 export async function redeemPromoCode(raw: string): Promise<{

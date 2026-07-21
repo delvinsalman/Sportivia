@@ -6,6 +6,15 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   assetsInclude: ['**/*.fbx'],
   server: {
+    watch: {
+      ignored: [
+        '**/public/data/soccer-faces.json',
+        '**/public/data/basketball-faces.json',
+        '**/public/data/baseball-faces.json',
+        '**/public/data/football-faces.json',
+        '**/public/data/hockey-faces.json',
+      ],
+    },
     proxy: {
       '/duel': {
         target: 'ws://localhost:3001',

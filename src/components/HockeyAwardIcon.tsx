@@ -1,4 +1,11 @@
+import { assetUrl } from '../lib/assetUrl';
+
 export type HockeyAwardVariant = 'stanley' | 'hart' | 'allstar' | 'hall';
+
+const AWARD_LOGOS: Partial<Record<HockeyAwardVariant, string>> = {
+  allstar: '/icons/nhl-all-star-2024.png',
+  hall: '/icons/trophies/nhl-hof.png',
+};
 
 export function HockeyAwardIcon({
   variant,
@@ -7,6 +14,25 @@ export function HockeyAwardIcon({
   variant: HockeyAwardVariant;
   size?: number;
 }) {
+  const logoUrl = AWARD_LOGOS[variant];
+  if (logoUrl) {
+    return (
+      <div
+        className="shrink-0 flex items-center justify-center drop-shadow-md"
+        style={{ width: size, height: size }}
+      >
+        <img
+          src={assetUrl(logoUrl)}
+          alt=""
+          draggable={false}
+          className="select-none object-contain pointer-events-none"
+          style={{ width: '100%', height: '100%' }}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
   if (variant === 'stanley') {
     return (
       <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden className="shrink-0 drop-shadow-md">
@@ -27,22 +53,20 @@ export function HockeyAwardIcon({
     );
   }
 
-  const label = variant === 'hart' ? 'MVP' : variant === 'allstar' ? '★' : 'HHOF';
-  const primary = variant === 'hart' ? '#f0b232' : variant === 'allstar' ? '#38bdf8' : '#b91c1c';
   return (
     <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden className="shrink-0 drop-shadow-md">
-      <path d="M24 4 L39 10 V23 C39 33 32 40 24 44 C16 40 9 33 9 23 V10Z" fill={primary} stroke="#f8fafc" strokeWidth="2" />
+      <path d="M24 4 L39 10 V23 C39 33 32 40 24 44 C16 40 9 33 9 23 V10Z" fill="#f0b232" stroke="#f8fafc" strokeWidth="2" />
       <path d="M24 8 L35 12 V23 C35 30 31 35 24 39 C17 35 13 30 13 23 V12Z" fill="#0f172a" opacity="0.38" />
       <text
         x="24"
-        y={variant === 'allstar' ? 30 : 28}
+        y="28"
         textAnchor="middle"
         fill="#fff"
-        fontSize={variant === 'hall' ? 8 : variant === 'allstar' ? 20 : 10}
+        fontSize={10}
         fontWeight="900"
         fontFamily="system-ui, sans-serif"
       >
-        {label}
+        MVP
       </text>
     </svg>
   );

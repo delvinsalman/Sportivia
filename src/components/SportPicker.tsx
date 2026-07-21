@@ -20,58 +20,31 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
 
   if (rail) {
     return (
-      <div className="flex flex-col items-stretch gap-3" role="tablist" aria-label="Choose sport">
-        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#949ba4] px-1">
-          Sports
-        </p>
-        <div className="flex flex-col items-stretch gap-2.5">
-          {SPORTS.map(sp => {
-            const active = sport === sp;
-            const accent = SPORT_ACCENT[sp];
-            const label = SPORT_LABEL[sp];
-            return (
-              <button
-                key={sp}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                aria-label={label}
-                onClick={() => {
-                  playMenuClick();
-                  onSportChange(sp);
-                }}
-                className={`relative flex items-center gap-2.5 sm:gap-3 px-2.5 py-2 sm:px-3 sm:py-2.5 min-h-[48px] sm:min-h-[52px] rounded-2xl border-[3px] transition-colors ${
-                  active ? '' : 'opacity-45 hover:opacity-80'
-                }`}
-                style={
-                  active
-                    ? {
-                        borderColor: `${accent}cc`,
-                        background: `${accent}18`,
-                        boxShadow: `0 4px 0 ${accent}55`,
-                      }
-                    : {
-                        borderColor: '#2b2d31',
-                        background: 'transparent',
-                        boxShadow: '0 4px 0 transparent',
-                      }
-                }
-              >
-                <span className="shrink-0 w-[30px] h-[30px] flex items-center justify-center">
-                  <SportBall sport={sp} size={30} />
-                </span>
-                <span
-                  className={`text-[11px] sm:text-sm font-black uppercase tracking-wide leading-none ${
-                    active ? 'text-[#f2f3f5]' : 'text-[#5c5e66]'
-                  }`}
-                  style={active ? { color: accent === '#f4f4f5' ? '#f2f3f5' : accent } : undefined}
-                >
-                  {label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+      <div className="flex flex-col items-stretch gap-2 sm:gap-2.5" role="tablist" aria-label="Choose sport">
+        <p className="game-sport-rail-label">Sports</p>
+        {SPORTS.map(sp => {
+          const active = sport === sp;
+          const label = SPORT_LABEL[sp];
+          return (
+            <button
+              key={sp}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              aria-label={label}
+              onClick={() => {
+                playMenuClick();
+                onSportChange(sp);
+              }}
+              className={`game-sport-tab ${active ? 'game-sport-tab-active' : ''}`}
+            >
+              <span className="shrink-0 w-[28px] h-[28px] flex items-center justify-center">
+                <SportBall sport={sp} size={28} />
+              </span>
+              <span className="leading-none">{label}</span>
+            </button>
+          );
+        })}
       </div>
     );
   }

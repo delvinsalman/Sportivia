@@ -15,6 +15,7 @@ import { HeaderStats, LevelCorner } from './LevelBar';
 import { getCharacterDef, getPetDef } from '../types/profile';
 import { SPORT_ACCENT, SPORT_PODIUM_ACCENT, SPORT_LABEL } from '../lib/sportTheme';
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
+import { PAGE_TRANSITION } from '../lib/pageTransitions';
 import { useSettings } from '../hooks/useSettings';
 import { BOT_DIFFICULTIES } from '../lib/botOpponent';
 
@@ -44,8 +45,8 @@ const MODE_META: Record<GameMode, { tone: string; icon: string; detail: string }
   training: { tone: '#949ba4', icon: '/icons/modes/training.png', detail: '1 min · practice · no rewards' },
   daily: { tone: '#23a559', icon: '/icons/modes/daily.png', detail: '2 min · first finish pays' },
   timed: { tone: '#5865f2', icon: '/icons/modes/ranked.png', detail: '2 min · ranked bonus' },
-  bot: { tone: '#a855f7', icon: '/icons/modes/bot.png', detail: 'Race a bot · pick skill' },
-  duel: { tone: '#ed4245', icon: '/icons/modes/duel.png', detail: 'Lobby code · highest score wins' },
+  bot: { tone: '#a855f7', icon: '/icons/modes/bot.png', detail: 'Race a bot · optional card stake' },
+  duel: { tone: '#ed4245', icon: '/icons/modes/duel.png', detail: 'Lobby code · stake a card · highest wins' },
 };
 
 function EditableName({
@@ -160,22 +161,9 @@ export function HomeScreen({
       >
         <SportPicker sport={sport} onSportChange={onSportChange} layout="rail" />
 
-        <div
-          className="flex items-center gap-2.5 sm:gap-3 px-2.5 py-2 sm:px-3 sm:py-2.5 rounded-2xl border-[3px]"
-          style={{
-            borderColor: `${accent}88`,
-            background: `${accent}14`,
-            boxShadow: `0 4px 0 ${accent}44`,
-          }}
-        >
-          <div
-            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-xl border-2 border-white/20 shrink-0"
-            style={{ background: accent }}
-          >
-            <Trophy
-              className="w-4 h-4"
-              style={{ color: accent === '#f4f4f5' ? '#18191c' : '#fff' }}
-            />
+        <div className="game-sport-record">
+          <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg border-2 border-[#f0b232]/55 bg-[#f0b232]/18 shrink-0">
+            <Trophy className="w-4 h-4 text-[#f0b232]" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#949ba4] leading-none mb-1">
@@ -202,11 +190,11 @@ export function HomeScreen({
         </div>
       </motion.aside>
 
-      {/* Coins, level, about, store — very top right */}
+      {/* Coins + game nav tabs — top right */}
       <motion.div
         initial={{ opacity: 0, x: 12 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed top-0 right-0 z-30 p-2 sm:p-4 flex items-center gap-1 sm:gap-2"
+        className="fixed top-0 right-0 z-30 p-2 sm:p-4 flex items-center gap-1.5 sm:gap-2.5"
       >
         <HeaderStats profile={profile} online={showOnline} />
         <button
@@ -215,10 +203,10 @@ export function HomeScreen({
             playMenuClick();
             onOpenCards();
           }}
-          className="game-chip game-chip-active"
+          className="game-nav-tab game-nav-tab-active"
           aria-label="Card Packs"
         >
-          <Layers3 className="h-3.5 w-3.5 text-[#f0b232]" />
+          <Layers3 className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
           <span className="hidden sm:inline">Packs</span>
         </button>
         <button
@@ -227,10 +215,10 @@ export function HomeScreen({
             playMenuClick();
             onOpenSettings();
           }}
-          className="game-chip"
+          className="game-nav-tab"
           aria-label="Settings"
         >
-          <Settings className="h-3.5 w-3.5" />
+          <Settings className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
           <span className="hidden sm:inline">Settings</span>
         </button>
         <button
@@ -239,10 +227,10 @@ export function HomeScreen({
             playMenuClick();
             onOpenAbout();
           }}
-          className="game-chip"
+          className="game-nav-tab"
           aria-label="About"
         >
-          <Info className="h-3.5 w-3.5" />
+          <Info className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
           <span className="hidden sm:inline">About</span>
         </button>
         <button
@@ -251,10 +239,10 @@ export function HomeScreen({
             playMenuClick();
             onOpenCareer();
           }}
-          className="game-chip"
+          className="game-nav-tab"
           aria-label="Career"
         >
-          <Medal className="h-3.5 w-3.5" />
+          <Medal className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
           <span className="hidden sm:inline">Career</span>
         </button>
         <button
@@ -263,10 +251,10 @@ export function HomeScreen({
             playMenuClick();
             onOpenStore();
           }}
-          className="game-chip"
+          className="game-nav-tab"
           aria-label="Store"
         >
-          <ShoppingBag className="h-3.5 w-3.5" />
+          <ShoppingBag className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
           <span className="hidden sm:inline">Store</span>
         </button>
       </motion.div>
@@ -281,7 +269,7 @@ export function HomeScreen({
       </motion.div>
 
       {/* Hero — character center stage */}
-      <div className="relative z-10 h-svh flex flex-col items-center justify-center pl-14 sm:pl-4 pr-3 sm:px-4 pt-14 sm:pt-12 pb-16 sm:pb-10 max-sm:translate-y-0 sm:-translate-y-4">
+      <div className="relative z-10 h-svh flex flex-col items-center justify-center pl-14 sm:pl-4 pr-3 sm:px-4 pt-16 sm:pt-14 pb-16 sm:pb-10 max-sm:translate-y-0 sm:-translate-y-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -324,6 +312,9 @@ export function HomeScreen({
                   hero
                   hidePodium
                   className="w-full"
+                  {...(profile.equippedPet === 'dog'
+                    ? { dogVariant: profile.dogVariant }
+                    : {})}
                 />
               </div>
             )}
@@ -360,7 +351,8 @@ export function HomeScreen({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40"
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px]"
             onClick={() => {
               playMenuBack();
               setShowModes(false);
@@ -379,10 +371,10 @@ export function HomeScreen({
             </button>
 
             <motion.div
-              initial={{ opacity: 0, y: 40 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 40 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+              initial={{ opacity: 0, y: 36, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 28, scale: 0.97 }}
+              transition={PAGE_TRANSITION}
               className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-8 sm:px-8"
               onClick={e => e.stopPropagation()}
             >
@@ -401,10 +393,15 @@ export function HomeScreen({
               </div>
 
               <div className="mx-auto flex w-full max-w-lg flex-col gap-3">
-                {(['daily', 'training', 'timed', 'bot', 'duel'] as GameMode[]).map(m => {
+                {(['daily', 'training', 'timed', 'bot', 'duel'] as GameMode[]).map((m, i) => {
                   const meta = MODE_META[m];
                   return (
-                    <div key={m}>
+                    <motion.div
+                      key={m}
+                      initial={{ opacity: 0, y: 14 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ ...PAGE_TRANSITION, delay: 0.04 * i }}
+                    >
                       <button
                         type="button"
                         onClick={() => {
@@ -467,6 +464,7 @@ export function HomeScreen({
                             initial={{ opacity: 0, height: 0 }}
                             animate={{ opacity: 1, height: 'auto' }}
                             exit={{ opacity: 0, height: 0 }}
+                            transition={PAGE_TRANSITION}
                             className="overflow-hidden"
                           >
                             <div className="grid grid-cols-3 gap-2 px-1 pt-3">
@@ -498,7 +496,7 @@ export function HomeScreen({
                           </motion.div>
                         )}
                       </AnimatePresence>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>

@@ -3,12 +3,14 @@ import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import { ArrowLeft, ChevronLeft, ChevronRight, Coins, Lock, Palette, PawPrint, Sparkles, SlidersHorizontal, Check } from 'lucide-react';
 import type {
   CharacterId,
+  DogVariantId,
   PetId,
   PlayerProfile,
   RabbitVariantId,
 } from '../types/profile';
 import {
   CHARACTERS,
+  DOG_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
   getCharacterDef,
@@ -38,6 +40,7 @@ interface StoreScreenProps {
   onUnequipPet: () => void;
   onSaveCreativeLoadout: (loadout: CreativeLoadout) => void;
   onSaveRabbitVariant: (variant: RabbitVariantId) => void;
+  onSaveDogVariant: (variant: DogVariantId) => void;
 }
 
 const SWIPE_THRESHOLD = 56;
@@ -53,6 +56,7 @@ export function StoreScreen({
   onUnequipPet,
   onSaveCreativeLoadout,
   onSaveRabbitVariant,
+  onSaveDogVariant,
 }: StoreScreenProps) {
   const [tab, setTab] = useState<StoreTab>('skins');
   const [previewCharId, setPreviewCharId] = useState<CharacterId>(() =>
@@ -72,6 +76,7 @@ export function StoreScreen({
   const [draftRabbitVariant, setDraftRabbitVariant] = useState<RabbitVariantId>(
     profile.rabbitVariant,
   );
+  const [draftDogVariant, setDraftDogVariant] = useState<DogVariantId>(profile.dogVariant);
   const [slotId, setSlotId] = useState<CreativeSlotId>('face');
   const slotBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
@@ -96,6 +101,10 @@ export function StoreScreen({
     setDraftRabbitVariant(profile.rabbitVariant);
   }, [profile.rabbitVariant]);
 
+  useEffect(() => {
+    setDraftDogVariant(profile.dogVariant);
+  }, [profile.dogVariant]);
+
   const isPets = tab === 'pets';
   const catalog = isPets ? PETS : CHARACTERS;
   const previewId = isPets ? previewPetId : previewCharId;
@@ -115,7 +124,8 @@ export function StoreScreen({
   const nextItem = previewIndex < catalog.length - 1 ? catalog[previewIndex + 1] : null;
   const isCreativePreview = !isPets && safePreviewId === 'creative';
   const isRabbitPreview = !isPets && safePreviewId === 'bunny';
-  const canCustomize = (isCreativePreview || isRabbitPreview) && owned;
+  const isDogPreview = isPets && safePreviewId === 'dog';
+  const canCustomize = (isCreativePreview || isRabbitPreview || isDogPreview) && owned;
   const previewLoadout =
     isCreativePreview ? (customizing ? draftLoadout : profile.creativeLoadout) : undefined;
   const activeSlot = CREATIVE_SLOTS.find(s => s.id === slotId) ?? CREATIVE_SLOTS[0];
@@ -176,6 +186,7 @@ export function StoreScreen({
     playMenuClick();
     setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
     setDraftRabbitVariant(profile.rabbitVariant);
+    setDraftDogVariant(profile.dogVariant);
     setSlotId('face');
     setCustomizing(true);
   };
@@ -183,6 +194,7 @@ export function StoreScreen({
   const saveCustomize = () => {
     playMenuConfirm();
     if (isRabbitPreview) onSaveRabbitVariant(draftRabbitVariant);
+    else if (isDogPreview) onSaveDogVariant(draftDogVariant);
     else onSaveCreativeLoadout(draftLoadout);
     setCustomizing(false);
   };
@@ -190,6 +202,7 @@ export function StoreScreen({
   const resetCustomize = () => {
     playMenuClick();
     if (isRabbitPreview) setDraftRabbitVariant('base');
+    else if (isDogPreview) setDraftDogVariant('husky');
     else setDraftLoadout({ ...DEFAULT_CREATIVE_LOADOUT });
   };
 
@@ -207,6 +220,7 @@ export function StoreScreen({
                 setCustomizing(false);
                 setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
                 setDraftRabbitVariant(profile.rabbitVariant);
+                setDraftDogVariant(profile.dogVariant);
                 return;
               }
               playMenuBack();
@@ -263,7 +277,12 @@ export function StoreScreen({
                     >
                       <CharacterPodium
                         {...(isPets
-                          ? { petId: prevItem.id as PetId }
+                          ? {
+                              petId: prevItem.id as PetId,
+                              ...(prevItem.id === 'dog'
+                                ? { dogVariant: profile.dogVariant }
+                                : {}),
+                            }
                           : {
                               characterId: prevItem.id as CharacterId,
                               ...(prevItem.id === 'creative'
@@ -305,7 +324,16 @@ export function StoreScreen({
                   >
                     <CharacterPodium
                       {...(isPets
-                        ? { petId: safePreviewId as PetId }
+                        ? {
+                            petId: safePreviewId as PetId,
+                            ...(isDogPreview
+                              ? {
+                                  dogVariant: customizing
+                                    ? draftDogVariant
+                                    : profile.dogVariant,
+                                }
+                              : {}),
+                          }
                         : {
                             characterId: safePreviewId as CharacterId,
                             ...(previewLoadout ? { creativeLoadout: previewLoadout } : {}),
@@ -354,7 +382,12 @@ export function StoreScreen({
                     >
                       <CharacterPodium
                         {...(isPets
-                          ? { petId: nextItem.id as PetId }
+                          ? {
+                              petId: nextItem.id as PetId,
+                              ...(nextItem.id === 'dog'
+                                ? { dogVariant: profile.dogVariant }
+                                : {}),
+                            }
                           : {
                               characterId: nextItem.id as CharacterId,
                               ...(nextItem.id === 'creative'
@@ -398,6 +431,29 @@ export function StoreScreen({
                           className={`px-3 py-3 rounded-xl text-xs font-black border-[2.5px] transition-all ${
                             active
                               ? 'border-[#67e8f9] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#155e75]'
+                              : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
+                          }`}
+                        >
+                          {variant.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : isDogPreview ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {DOG_VARIANTS.map(variant => {
+                      const active = draftDogVariant === variant.id;
+                      return (
+                        <button
+                          key={variant.id}
+                          type="button"
+                          onClick={() => {
+                            playMenuSelect();
+                            setDraftDogVariant(variant.id);
+                          }}
+                          className={`px-3 py-3 rounded-xl text-xs font-black border-[2.5px] transition-all ${
+                            active
+                              ? 'border-[#e2e8f0] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#64748b]'
                               : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
                           }`}
                         >
@@ -510,7 +566,7 @@ export function StoreScreen({
                     className="flex-[1.4] py-3 rounded-2xl text-sm font-black border-[3px] border-white/25 bg-[#5865f2] hover:bg-[#4752c4] text-white shadow-[0_5px_0_#2f3aa8] flex items-center justify-center gap-2"
                   >
                     <Check className="w-4 h-4" />
-                    {isRabbitPreview ? 'Save Rabbit' : 'Save Look'}
+                    {isRabbitPreview ? 'Save Rabbit' : isDogPreview ? 'Save Breed' : 'Save Look'}
                   </button>
                 </div>
               </div>
@@ -525,7 +581,11 @@ export function StoreScreen({
                         className="w-full py-3 rounded-2xl text-sm font-black border-[3px] border-[#f472b6]/70 bg-[#1e1f22] text-[#f2f3f5] shadow-[0_5px_0_#7a3a5c] hover:translate-y-[1px] hover:shadow-[0_4px_0_#7a3a5c] transition-all flex items-center justify-center gap-2"
                       >
                         <SlidersHorizontal className="w-4 h-4 text-[#f472b6]" />
-                        {isRabbitPreview ? 'Choose Rabbit Look' : 'Customize Kit'}
+                        {isRabbitPreview
+                          ? 'Choose Rabbit Look'
+                          : isDogPreview
+                            ? 'Choose Dog Breed'
+                            : 'Customize Kit'}
                       </button>
                     )}
                     <button

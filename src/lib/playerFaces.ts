@@ -1,11 +1,11 @@
 /**
  * Resolve professional player portrait images for cards / board faces.
- * Preference order (TV / broadcast style first):
+ * Preference order (clean cutouts first, then always fill a portrait):
  *   1) Manual portrait overrides
- *   2) ESPN official headshots
- *   3) TheSportsDB cutouts (clean portrait cutouts)
- *   4) TheSportsDB thumbs
- *   5) Wikipedia (enlarged page image) for older / obscure players
+ *   2) TheSportsDB cutouts (transparent / no-bg portraits)
+ *   3) ESPN official headshots (studio portraits)
+ *   4) TheSportsDB thumbs / renders
+ *   5) Wikipedia page image (last resort so every card still has a face)
  */
 
 import type { Sport } from '../types';
@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v9';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v17';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -28,13 +28,30 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     rodman: 'https://cdn.nba.com/headshots/nba/latest/1040x760/23.png',
     isiah: 'https://cdn.nba.com/headshots/nba/latest/1040x760/78318.png',
     bigben: 'https://cdn.nba.com/headshots/nba/latest/1040x760/1112.png',
+    ktown: 'https://cdn.nba.com/headshots/nba/latest/1040x760/1626157.png',
+    jalengreen: 'https://cdn.nba.com/headshots/nba/latest/1040x760/1630224.png',
+    ray: 'https://cdn.nba.com/headshots/nba/latest/1040x760/951.png',
+    johnwall: 'https://cdn.nba.com/headshots/nba/latest/1040x760/202322.png',
+    mj: 'https://cdn.nba.com/headshots/nba/latest/1040x760/893.png',
+    // Was wrongly resolving to a women's college player named Nene
+    nene: 'https://cdn.nba.com/headshots/nba/latest/1040x760/2403.png',
+    lou: 'https://cdn.nba.com/headshots/nba/latest/1040x760/101150.png',
   },
   soccer: {
-    // SportsDB cutouts / clean portraits for ambiguous or hard-to-match names
-    pele: 'https://r2.thesportsdb.com/images/media/player/cutout/s4apzi1615723073.png',
-    kaka: 'https://r2.thesportsdb.com/images/media/player/cutout/6uj1nl1665653279.png',
-    eusebio:
-      'https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Eusebio_en_1973.jpg/500px-Eusebio_en_1973.jpg',
+    // Permanent local portraits (see public/faces/soccer + localizeSoccerFaces.mts)
+    pele: '/faces/soccer/pele.png',
+    kaka: '/faces/soccer/kaka.png',
+    lewandowski: '/faces/soccer/lewandowski.png',
+    eusebio: '/faces/soccer/eusebio.webp',
+    cruyff: '/faces/soccer/cruyff.png',
+    r9: '/faces/soccer/r9.png',
+    nedved: '/faces/soccer/nedved.jpg',
+    figo: '/faces/soccer/figo.png',
+    rodri: '/faces/soccer/rodri.png',
+    pique: '/faces/soccer/pique.webp',
+  },
+  football: {
+    watt: 'https://static.www.nfl.com/image/private/t_headshot_desktop/league/pooulgm7mdcx5x9gza7l',
   },
 };
 
@@ -47,12 +64,24 @@ const SPORTSDB_QUERY_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     kaka: 'Kaka',
     ronaldinho: 'Ronaldinho',
     maradona: 'Diego Maradona',
+    vinicius: 'Vinicius Junior',
+    pedri: 'Pedri',
+    rodri: 'Rodri Hernandez',
+    nunez: 'Darwin Nunez',
+    soyuncu: 'Caglar Soyuncu',
+    kimminjae: 'Kim Min-Jae',
   },
   basketball: {
     mj: 'Michael Jordan',
     kd: 'Kevin Durant',
     ai: 'Allen Iverson',
     cp3: 'Chris Paul',
+    ktown: 'Karl-Anthony Towns',
+    jalengreen: 'Jalen Green',
+    ray: 'Ray Allen',
+    johnwall: 'John Wall',
+    nene: 'Nene Hilario',
+    lou: 'Lou Williams',
   },
   baseball: {
     babe: 'Babe Ruth',
@@ -118,7 +147,6 @@ const WIKI_TITLE_BY_ID: Record<Sport, Record<string, string>> = {
     messi: 'Lionel_Messi',
     keita: 'Seydou_Keita_(footballer)',
     despodov: 'Kiril_Despodov',
-    rodri: 'Rodri_(footballer,_born_1996)',
     aouar: 'Houssem_Aouar',
     verratti: 'Marco_Verratti',
     fabinho: 'Fabinho_(footballer,_born_1993)',
@@ -131,6 +159,9 @@ const WIKI_TITLE_BY_ID: Record<Sport, Record<string, string>> = {
     maldini: 'Paolo_Maldini',
     buffon: 'Gianluigi_Buffon',
     maignan: 'Mike_Maignan',
+    rodri: 'Rodri_(footballer,_born_1996)',
+    vinicius: 'Vinícius_Júnior',
+    'amadou-onana': 'Amadou_Onana',
   },
   basketball: {
     mj: 'Michael_Jordan',
@@ -146,6 +177,10 @@ const WIKI_TITLE_BY_ID: Record<Sport, Record<string, string>> = {
     giannis: 'Giannis_Antetokounmpo',
     jokic: 'Nikola_Jokić',
     luka: 'Luka_Dončić',
+    ktown: 'Karl-Anthony_Towns',
+    jalengreen: 'Jalen_Green',
+    ray: 'Ray_Allen',
+    johnwall: 'John_Wall',
   },
   baseball: {
     judge: 'Aaron_Judge',
@@ -203,6 +238,58 @@ type BioCacheMap = Record<string, PlayerCardBio | null>;
 
 const memory = new Map<string, string | null>();
 const inflight = new Map<string, Promise<string | null>>();
+const faceManifests: Partial<Record<Sport, Record<string, string>>> = {};
+const faceManifestPromises: Partial<Record<Sport, Promise<Record<string, string>>>> = {};
+
+const API_GAP_MS = 320;
+let apiQueue = Promise.resolve();
+
+function enqueueApi<T>(task: () => Promise<T>): Promise<T> {
+  const next = apiQueue.then(task, task);
+  apiQueue = next.then(
+    () => sleep(API_GAP_MS),
+    () => sleep(API_GAP_MS),
+  );
+  return next;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function loadFaceManifest(sport: Sport): Promise<Record<string, string>> {
+  if (faceManifests[sport]) return faceManifests[sport]!;
+  if (!faceManifestPromises[sport]) {
+    faceManifestPromises[sport] = fetch(`/data/${sport}-faces.json`)
+      .then(res => (res.ok ? res.json() : {}))
+      .then(data => (data && typeof data === 'object' ? (data as Record<string, string>) : {}))
+      .catch(() => ({}));
+  }
+  faceManifests[sport] = await faceManifestPromises[sport]!;
+  return faceManifests[sport]!;
+}
+
+/** @deprecated use loadFaceManifest('soccer') */
+async function loadSoccerFaceManifest(): Promise<Record<string, string>> {
+  return loadFaceManifest('soccer');
+}
+
+function sportsDbQueries(sport: Sport, playerId: string, name: string): string[] {
+  const out = new Set<string>();
+  const override = SPORTSDB_QUERY_BY_ID[sport]?.[playerId];
+  if (override) out.add(override);
+  out.add(name);
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    out.add(parts[parts.length - 1]!);
+    out.add(`${parts[parts.length - 1]} ${parts[0]}`);
+    if (/^jr\.?$/i.test(parts[parts.length - 1]!) && parts.length >= 2) {
+      out.add(`${parts[parts.length - 2]} Junior`);
+      out.add(`${parts.slice(0, -1).join(' ')} Junior`);
+    }
+  }
+  return [...out];
+}
 
 function cacheId(sport: Sport, playerId: string): string {
   return `${sport}:${playerId}`;
@@ -277,6 +364,13 @@ function norm(s: string): string {
     .trim();
 }
 
+function tokenMatch(qToken: string, resultTokens: string[]): boolean {
+  if (resultTokens.includes(qToken)) return true;
+  if ((qToken === 'jr' || qToken === 'jr.') && resultTokens.includes('junior')) return true;
+  if (qToken === 'junior' && (resultTokens.includes('jr') || resultTokens.includes('jr.'))) return true;
+  return false;
+}
+
 /** True when SportsDB / ESPN result is plausibly the same person as our roster name. */
 export function namesLikelyMatch(query: string, result: string): boolean {
   const q = norm(query);
@@ -287,10 +381,8 @@ export function namesLikelyMatch(query: string, result: string): boolean {
 
   const qt = q.split(' ');
   const rt = r.split(' ');
-  // Single-token query must equal the first token (blocks Pedri → Pedrinho)
-  if (qt.length === 1) return rt[0] === q;
-  // Multi-token: every query token appears in the result
-  return qt.every(t => rt.includes(t));
+  if (qt.length === 1) return rt[0] === q || rt.at(-1) === q;
+  return qt.every(t => tokenMatch(t, rt));
 }
 
 function pickCutout(player: {
@@ -314,34 +406,60 @@ async function fetchEspnHeadshot(
   playerId: string,
   name: string,
 ): Promise<string | null> {
-  const query = SPORTSDB_QUERY_BY_ID[sport]?.[playerId] || name;
-  const wantSport = ESPN_SPORT[sport];
-  try {
-    const res = await fetch(
-      `${ESPN_SEARCH}?query=${encodeURIComponent(query)}&limit=12&type=player`,
-      { headers: { Accept: 'application/json' } },
-    );
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      items?: Array<{
-        id?: string;
-        displayName?: string;
-        sport?: string;
-        headshot?: { href?: string } | null;
-      }>;
-    };
-    const items = data.items ?? [];
-    const match = items.find(
-      item =>
-        item.sport === wantSport &&
-        item.displayName &&
-        namesLikelyMatch(query, item.displayName),
-    );
-    // Only trust ESPN when they provide an official headshot URL (TV / media portrait).
-    return match?.headshot?.href || null;
-  } catch {
-    return null;
-  }
+  return enqueueApi(async () => {
+    const query = SPORTSDB_QUERY_BY_ID[sport]?.[playerId] || name;
+    const wantSport = ESPN_SPORT[sport];
+    try {
+      const res = await fetch(
+        `${ESPN_SEARCH}?query=${encodeURIComponent(query)}&limit=12&type=player`,
+        { headers: { Accept: 'application/json' } },
+      );
+      if (!res.ok) return null;
+      const data = (await res.json()) as {
+        items?: Array<{
+          id?: string;
+          displayName?: string;
+          sport?: string;
+          headshot?: { href?: string } | null;
+        }>;
+      };
+      const items = data.items ?? [];
+      const match = items.find(
+        item =>
+          item.sport === wantSport &&
+          item.displayName &&
+          namesLikelyMatch(query, item.displayName),
+      );
+      return match?.headshot?.href || null;
+    } catch {
+      return null;
+    }
+  });
+}
+
+async function fetchSportsDbOnce(query: string, wantSport: string, name: string) {
+  const q = query.trim().replace(/\s+/g, '_');
+  if (!q) return null;
+  const res = await fetch(`${SPORTSDB}?p=${encodeURIComponent(q)}`);
+  const text = await res.text();
+  if (!res.ok || /error code/i.test(text)) return null;
+  const data = JSON.parse(text) as {
+    player?: Array<{
+      strPlayer?: string;
+      strSport?: string;
+      strCutout?: string | null;
+      strThumb?: string | null;
+      strRender?: string | null;
+      dateBorn?: string | null;
+      dateDied?: string | null;
+      strTeam?: string | null;
+      strStatus?: string | null;
+    }> | null;
+  };
+  const all = data.player ?? [];
+  const sportPool = all.filter(p => (p.strSport || '').toLowerCase() === wantSport);
+  const match = sportPool.find(p => p.strPlayer && namesLikelyMatch(name, p.strPlayer));
+  return match ?? null;
 }
 
 async function fetchSportsDb(
@@ -350,50 +468,35 @@ async function fetchSportsDb(
   name: string,
   cutoutOnly: boolean,
 ): Promise<string | null> {
-  const query = SPORTSDB_QUERY_BY_ID[sport]?.[playerId] || name;
-  const q = query.trim().replace(/\s+/g, '_');
-  if (!q) return null;
-  const want = SPORTSDB_SPORT[sport].toLowerCase();
-  try {
-    const res = await fetch(`${SPORTSDB}?p=${encodeURIComponent(q)}`);
-    if (!res.ok) return null;
-    const data = (await res.json()) as {
-      player?: Array<{
-        strPlayer?: string;
-        strSport?: string;
-        strCutout?: string | null;
-        strThumb?: string | null;
-        strRender?: string | null;
-        dateBorn?: string | null;
-        dateDied?: string | null;
-        strTeam?: string | null;
-        strStatus?: string | null;
-      }> | null;
-    };
-    const all = data.player ?? [];
-    const sportPool = all.filter(p => (p.strSport || '').toLowerCase() === want);
-    // Never fall back to other sports — ambiguous names (Will Smith) pull actors / boxers.
-    const match = sportPool.find(p => p.strPlayer && namesLikelyMatch(query, p.strPlayer));
-    if (!match) return null;
-    const statusText = match.strStatus ?? '';
-    const teamName = cleanTeamName(match.strTeam);
-    saveBio(sport, name, {
-      age: ageFromDates(match.dateBorn, match.dateDied),
-      team: teamName,
-      retired: match.dateDied
-        ? true
-        : /retired|deceased/i.test(statusText)
-          ? true
-          : /active/i.test(statusText)
-            ? false
-            : !teamName && /^_?retired/i.test((match.strTeam ?? '').trim())
+  return enqueueApi(async () => {
+    const want = SPORTSDB_SPORT[sport].toLowerCase();
+    for (const query of sportsDbQueries(sport, playerId, name)) {
+      try {
+        const match = await fetchSportsDbOnce(query, want, name);
+        if (!match) continue;
+        const statusText = match.strStatus ?? '';
+        const teamName = cleanTeamName(match.strTeam);
+        saveBio(sport, name, {
+          age: ageFromDates(match.dateBorn, match.dateDied),
+          team: teamName,
+          retired: match.dateDied
+            ? true
+            : /retired|deceased/i.test(statusText)
               ? true
-              : undefined,
-    });
-    return cutoutOnly ? pickCutout(match) : pickAnySportsDbImage(match);
-  } catch {
+              : /active/i.test(statusText)
+                ? false
+                : !teamName && /^_?retired/i.test((match.strTeam ?? '').trim())
+                  ? true
+                  : undefined,
+        });
+        const url = cutoutOnly ? pickCutout(match) : pickAnySportsDbImage(match);
+        if (url) return url;
+      } catch {
+        /* try next query */
+      }
+    }
     return null;
-  }
+  });
 }
 
 /** SportsDB often returns placeholders like "_Retired Soccer" for retired players. */
@@ -488,19 +591,20 @@ async function fetchWikipedia(
   playerId: string,
   name: string,
 ): Promise<string | null> {
-  const override = WIKI_TITLE_BY_ID[sport][playerId];
-  // Prefer sport-disambiguated titles before the bare name (blocks actor Will Smith, etc.).
-  const tries = [
-    override,
-    ...WIKI_SUFFIXES[sport].map(s => `${name} ${s}`),
-    name,
-  ].filter(Boolean) as string[];
+  return enqueueApi(async () => {
+    const override = WIKI_TITLE_BY_ID[sport][playerId];
+    const tries = [
+      override,
+      ...WIKI_SUFFIXES[sport].map(s => `${name} ${s}`),
+      name,
+    ].filter(Boolean) as string[];
 
-  for (const title of tries) {
-    const url = await fetchWikiTitle(wikiPath(title));
-    if (url) return url;
-  }
-  return null;
+    for (const title of tries) {
+      const url = await fetchWikiTitle(wikiPath(title));
+      if (url) return url;
+    }
+    return null;
+  });
 }
 
 function getCached(sport: Sport, playerId: string): string | null | undefined {
@@ -516,51 +620,102 @@ function getCached(sport: Sport, playerId: string): string | null | undefined {
 
 function setCached(sport: Sport, playerId: string, url: string | null) {
   const key = cacheId(sport, playerId);
+  if (!url) {
+    memory.delete(key);
+    try {
+      const disk = loadDisk();
+      if (key in disk) {
+        delete disk[key];
+        localStorage.setItem(CACHE_KEY, JSON.stringify(disk));
+      }
+    } catch {
+      /* ignore */
+    }
+    return;
+  }
   memory.set(key, url);
   saveDisk(key, url);
 }
 
+/** Drop a cached portrait so the next resolve can hit alternate sources. */
+export function invalidatePlayerFace(sport: Sport, playerId: string): void {
+  const key = cacheId(sport, playerId);
+  memory.delete(key);
+  inflight.delete(key);
+  try {
+    const disk = loadDisk();
+    if (key in disk) {
+      delete disk[key];
+      localStorage.setItem(CACHE_KEY, JSON.stringify(disk));
+    }
+  } catch {
+    /* ignore */
+  }
+}
+
+export interface ResolvePlayerFaceOptions {
+  /** Skip disk/memory cache and hit sources again (e.g. after img onError). */
+  force?: boolean;
+}
+
+async function resolvePlayerFaceInternal(
+  sport: Sport,
+  playerId: string,
+  playerName: string,
+): Promise<string | null> {
+  const manifest = await loadFaceManifest(sport);
+  const fromManifest = manifest[playerId];
+  if (fromManifest) return fromManifest;
+
+  const url =
+    (await fetchEspnHeadshot(sport, playerId, playerName)) ||
+    (await fetchSportsDb(sport, playerId, playerName, false)) ||
+    (await fetchWikipedia(sport, playerId, playerName));
+
+  if (url) setCached(sport, playerId, url);
+  return url;
+}
+
 /**
  * Resolve a professional portrait URL for a player.
- * Cached once resolved (including null = not found).
+ * Successful lookups are cached; misses are not persisted so they can retry later.
  */
 export async function resolvePlayerFace(
   sport: Sport,
   playerId: string,
   playerName: string,
+  options?: ResolvePlayerFaceOptions,
 ): Promise<string | null> {
-  const cached = getCached(sport, playerId);
-  if (cached !== undefined) return cached;
+  const direct = FACE_URL_BY_ID[sport]?.[playerId];
+  if (direct) {
+    const cached = getCached(sport, playerId);
+    if (cached !== direct) setCached(sport, playerId, direct);
+    return direct;
+  }
+
+  if (!options?.force) {
+    const manifest = await loadFaceManifest(sport);
+    const fromManifest = manifest[playerId];
+    if (fromManifest) {
+      setCached(sport, playerId, fromManifest);
+      return fromManifest;
+    }
+  }
+
+  if (!options?.force) {
+    const cached = getCached(sport, playerId);
+    if (cached !== undefined) return cached;
+  }
 
   const key = cacheId(sport, playerId);
   const existing = inflight.get(key);
   if (existing) return existing;
 
-  const promise = (async () => {
-    const direct = FACE_URL_BY_ID[sport]?.[playerId];
-    if (direct) {
-      setCached(sport, playerId, direct);
+  const promise = resolvePlayerFaceInternal(sport, playerId, playerName)
+    .catch(() => null)
+    .finally(() => {
       inflight.delete(key);
-      return direct;
-    }
-
-    // 1) ESPN broadcast / media headshot
-    // 2) SportsDB cutout (clean portrait)
-    // 3) SportsDB thumb
-    // 4) Wikipedia enlarged page image (best-effort for older athletes)
-    const url =
-      (await fetchEspnHeadshot(sport, playerId, playerName)) ||
-      (await fetchSportsDb(sport, playerId, playerName, true)) ||
-      (await fetchSportsDb(sport, playerId, playerName, false)) ||
-      (await fetchWikipedia(sport, playerId, playerName));
-
-    setCached(sport, playerId, url);
-    inflight.delete(key);
-    return url;
-  })().catch(() => {
-    inflight.delete(key);
-    return null;
-  });
+    });
 
   inflight.set(key, promise);
   return promise;
@@ -575,7 +730,21 @@ export function getCachedPlayerFace(
   sport: Sport,
   playerId: string,
 ): string | null | undefined {
+  const direct = FACE_URL_BY_ID[sport]?.[playerId];
+  if (direct) return direct;
+  const fromManifest = faceManifests[sport]?.[playerId];
+  if (fromManifest) return fromManifest;
   return getCached(sport, playerId);
+}
+
+/** Warm face manifests early on collection screens. */
+export function prefetchFaceManifests(sports: Sport[] = ['soccer', 'basketball', 'baseball', 'football', 'hockey']): void {
+  for (const sport of sports) void loadFaceManifest(sport);
+}
+
+/** @deprecated use prefetchFaceManifests */
+export function prefetchSoccerFaceManifest(): void {
+  void loadFaceManifest('soccer');
 }
 
 /** @deprecated use resolvePlayerFace('soccer', ...) */

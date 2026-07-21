@@ -107,6 +107,7 @@ const KNOWN_AGES: Partial<Record<Sport, Record<string, number>>> = {
   basketball: {
     lebron: 41, curry: 38, kd: 37, mj: 63, kobe: 47, giannis: 31, jokic: 31,
     luka: 27, wemby: 22, tatum: 28, magic: 66, bird: 69, shaq: 54,
+    simmons: 29, ktown: 31, jalengreen: 24, johnwall: 35,
   },
   baseball: {
     judge: 34, ohtani: 32, trout: 34, betts: 33, soto: 27, acuna: 28,
@@ -160,7 +161,7 @@ const STAR_RATINGS: Record<Sport, Record<string, number>> = {
     dybala: 88, higuain: 89, tevez: 89, chiesa: 85, vlahovic: 84,
     firmino: 87, gabriel: 84, joaofelix: 82, cancelo: 87, grealish: 83,
     jorginho: 86, james: 87, vidal: 88, park: 86, carvajal: 88,
-    theo: 87, hakimi: 87, reina: 78,
+    theo: 87, hakimi: 87, dimarco: 87, reina: 78,
   },
   basketball: {
     mj: 99, lebron: 98, kareem: 98, kobe: 98, magic: 98, wilt: 98,
@@ -176,10 +177,14 @@ const STAR_RATINGS: Record<Sport, Record<string, number>> = {
     kidd: 93, payton: 93, howard: 91, mutombo: 91, mourning: 91,
     jaylen: 91, derozan: 89, kawhi4: 89, pg13: 90, siakam: 88,
     lowry: 87, jrue: 88, middleton: 86, jokic2: 88, cade: 88,
-    mobley: 87, scottie: 86, banchero: 88, chet: 88, wagner: 87,
+    mobley: 87,     scottie: 86, banchero: 88, chet: 88, wagner: 87,
     sabonis: 89, markkanen: 87, rudy: 88, bigben: 91,
+    ktown: 91, jalengreen: 88, johnwall: 90,
     billups: 90, rip: 88, rondo: 89, blake: 89, hill: 91,
     webber: 91, gasol2: 91, petrovic: 91, peja: 89, kukoc: 87,
+    simmons: 88,
+    tobias: 84, ayton: 86,
+    jerrywest: 95, olajuwon2: 92, penny: 88, barkley: 94, drj: 96, robinson: 94,
   },
   baseball: {
     ruth: 99, babe: 99, aaron: 98, mays: 98, williams: 98,
@@ -260,14 +265,11 @@ function rarityFromScore(
 }
 
 function ratingFor(
-  sport: Sport,
+  _sport: Sport,
   rarity: CardRarity,
   score: number,
   id: string,
 ): number {
-  const starRating = STAR_RATINGS[sport][id];
-  if (starRating !== undefined) return starRating;
-
   const ranges: Record<CardRarity, [number, number]> = {
     common: [68, 78],
     rare: [79, 86],
@@ -277,6 +279,107 @@ function ratingFor(
   const [min, max] = ranges[rarity];
   const hash = [...id].reduce((total, char) => total + char.charCodeAt(0), 0);
   return Math.min(max, min + Math.floor(score / 2) + (hash % 3));
+}
+
+function basketballRatingFloor(player: {
+  mvp: boolean;
+  allStar: boolean;
+  championships: number;
+  scoringTitle: boolean;
+  olympicGold: boolean;
+}): number {
+  let floor = 68;
+  if (player.mvp) floor = Math.max(floor, 94);
+  if (player.championships >= 4) floor = Math.max(floor, 93);
+  else if (player.championships >= 2) floor = Math.max(floor, 89);
+  else if (player.championships >= 1) floor = Math.max(floor, 84);
+  if (player.scoringTitle) floor = Math.max(floor, 88);
+  if (player.allStar) floor = Math.max(floor, 85);
+  if (player.olympicGold && player.allStar) floor = Math.max(floor, 86);
+  return floor;
+}
+
+function footballRatingFloor(player: {
+  mvp: boolean;
+  proBowl: boolean;
+  superBowls: number;
+}): number {
+  let floor = 68;
+  if (player.mvp) floor = Math.max(floor, 94);
+  if (player.superBowls >= 3) floor = Math.max(floor, 93);
+  else if (player.superBowls >= 2) floor = Math.max(floor, 90);
+  else if (player.superBowls >= 1) floor = Math.max(floor, 86);
+  if (player.proBowl) floor = Math.max(floor, 85);
+  return floor;
+}
+
+function hockeyRatingFloor(player: {
+  hart: boolean;
+  allStar: boolean;
+  hallOfFame: boolean;
+  stanleyCups: number;
+}): number {
+  let floor = 68;
+  if (player.hart) floor = Math.max(floor, 94);
+  if (player.hallOfFame) floor = Math.max(floor, 92);
+  if (player.stanleyCups >= 2) floor = Math.max(floor, 90);
+  else if (player.stanleyCups >= 1) floor = Math.max(floor, 86);
+  if (player.allStar) floor = Math.max(floor, 85);
+  return floor;
+}
+
+function soccerRatingFloor(player: { trophies: string[]; decades: string[] }): number {
+  const joined = player.trophies.join(' ');
+  let floor = 68;
+  if (/Ballon/i.test(joined)) floor = Math.max(floor, 94);
+  if (/World Cup Winner/i.test(joined)) floor = Math.max(floor, 90);
+  if (/Euro Winner|Copa America Winner/i.test(joined)) floor = Math.max(floor, 88);
+  if (/Champions League/i.test(joined)) floor = Math.max(floor, 86);
+  const majorCount = player.trophies.filter(t =>
+    /Ballon|World Cup|Champions League|Euro Winner|Copa America/i.test(t),
+  ).length;
+  if (majorCount >= 2) floor = Math.max(floor, 88);
+  else if (majorCount >= 1) floor = Math.max(floor, 84);
+  if (player.decades.length >= 3 && majorCount >= 1) floor = Math.max(floor, 86);
+  return floor;
+}
+
+function baseballRatingFloor(player: { awards: string[]; battingTitle: boolean }): number {
+  const joined = player.awards.join(' ');
+  let floor = 68;
+  if (/MVP/i.test(joined)) floor = Math.max(floor, 92);
+  if (/Cy Young/i.test(joined)) floor = Math.max(floor, 92);
+  if (/World Series/i.test(joined) && /MVP|Cy Young/i.test(joined)) floor = Math.max(floor, 94);
+  else if (/World Series/i.test(joined)) floor = Math.max(floor, 84);
+  if (/All-Star/i.test(joined)) floor = Math.max(floor, 82);
+  if (player.battingTitle) floor = Math.max(floor, 86);
+  return floor;
+}
+
+function rarityFromRating(sport: Sport, id: string, rating: number): CardRarity {
+  if (LEGENDARY_IDS[sport].has(id)) return 'legendary';
+  if (rating >= 88) return 'epic';
+  if (rating >= 80) return 'rare';
+  return 'common';
+}
+
+function resolveCardRating(
+  sport: Sport,
+  id: string,
+  score: number,
+  ratingFloor: number,
+): { rating: number; rarity: CardRarity } {
+  const manual = STAR_RATINGS[sport][id];
+  const seedRarity = rarityFromScore(sport, id, score, manual);
+  const hashRating = ratingFor(sport, seedRarity, score, id);
+  let rating = Math.max(manual ?? hashRating, ratingFloor);
+
+  if (LEGENDARY_IDS[sport].has(id)) {
+    rating = manual ?? Math.max(rating, 94);
+    return { rating, rarity: 'legendary' };
+  }
+
+  return { rating, rarity: rarityFromRating(sport, id, rating) };
 }
 
 function latestEra(decades: string[]): string {
@@ -298,9 +401,9 @@ function makeCard(
   teams: string[],
   decades: string[],
   score: number,
+  ratingFloor = 68,
 ): CollectibleCard {
-  const starRating = STAR_RATINGS[sport][player.id];
-  const rarity = rarityFromScore(sport, player.id, score, starRating);
+  const { rating, rarity } = resolveCardRating(sport, player.id, score, ratingFloor);
   const playerId =
     sport === 'soccer' && player.id === 'onana' && player.name === 'Amadou Onana'
       ? 'amadou-onana'
@@ -316,7 +419,7 @@ function makeCard(
     retired: status(sport, player.id, decades),
     era: latestEra(decades),
     rarity,
-    rating: ratingFor(sport, rarity, score, player.id),
+    rating,
     age: KNOWN_AGES[sport]?.[player.id],
   };
 }
@@ -333,6 +436,7 @@ const soccerCards = SOCCER_PLAYERS.map(player => {
     player.clubs,
     player.decades,
     trophyScore + Math.max(0, player.decades.length - 1),
+    soccerRatingFloor(player),
   );
 });
 
@@ -345,7 +449,14 @@ const basketballCards = BASKETBALL_PLAYERS.map(player => {
     (player.olympicGold ? 1 : 0);
   const decades = [player.draftDecade, ...(player.draftDecade === '2020s' ? ['2020s'] : [])];
   if (!KNOWN_RETIRED.basketball.has(player.id)) decades.push('2020s');
-  return makeCard('basketball', player, player.nbaTeams, [...new Set(decades)], score);
+  return makeCard(
+    'basketball',
+    player,
+    player.nbaTeams,
+    [...new Set(decades)],
+    score,
+    basketballRatingFloor(player),
+  );
 });
 
 const baseballCards = BASEBALL_PLAYERS.map(player => {
@@ -355,12 +466,26 @@ const baseballCards = BASEBALL_PLAYERS.map(player => {
     if (/All-Star|Gold Glove/i.test(award)) return total + 1;
     return total;
   }, player.battingTitle ? 2 : 0);
-  return makeCard('baseball', player, player.mlbTeams, player.decades, score);
+  return makeCard(
+    'baseball',
+    player,
+    player.mlbTeams,
+    player.decades,
+    score,
+    baseballRatingFloor(player),
+  );
 });
 
 const footballCards = FOOTBALL_PLAYERS.map(player => {
   const score = player.superBowls * 2 + (player.mvp ? 5 : 0) + (player.proBowl ? 2 : 0);
-  return makeCard('football', player, player.nflTeams, player.decades, score);
+  return makeCard(
+    'football',
+    player,
+    player.nflTeams,
+    player.decades,
+    score,
+    footballRatingFloor(player),
+  );
 });
 
 const hockeyCards = HOCKEY_PLAYERS.map(player => {
@@ -369,7 +494,14 @@ const hockeyCards = HOCKEY_PLAYERS.map(player => {
     (player.hart ? 5 : 0) +
     (player.allStar ? 2 : 0) +
     (player.hallOfFame ? 4 : 0);
-  return makeCard('hockey', player, player.nhlTeams, player.decades, score);
+  return makeCard(
+    'hockey',
+    player,
+    player.nhlTeams,
+    player.decades,
+    score,
+    hockeyRatingFloor(player),
+  );
 });
 
 export const CARD_CATALOG: CollectibleCard[] = [
@@ -392,5 +524,10 @@ export const CARD_BY_KEY = new Map(CARD_CATALOG.map(card => [card.key, card]));
 
 export function getPackDefinition(id: CardPackTier): CardPackDefinition {
   return CARD_PACKS.find(pack => pack.id === id) ?? CARD_PACKS[0];
+}
+
+/** True when the player has a hand-tuned star rating (recognizable names). */
+export function isCatalogStar(sport: Sport, playerId: string): boolean {
+  return STAR_RATINGS[sport][playerId] != null;
 }
 

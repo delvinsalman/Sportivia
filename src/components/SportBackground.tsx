@@ -158,9 +158,9 @@ function SoccerPitch({
         className="absolute inset-0 transition-opacity duration-700"
         style={{
           background: `
-            radial-gradient(ellipse 120% 80% at 50% 100%, rgba(35,165,89,0.22) 0%, transparent 55%),
-            radial-gradient(ellipse 80% 50% at 50% 50%, rgba(35,165,89,0.08) 0%, transparent 70%),
-            linear-gradient(180deg, #0a0a0b 0%, #0a120e 50%, #0a0a0b 100%)
+            radial-gradient(ellipse 120% 80% at 50% 100%, rgba(35,165,89,0.32) 0%, transparent 55%),
+            radial-gradient(ellipse 80% 50% at 50% 50%, rgba(35,165,89,0.14) 0%, transparent 70%),
+            linear-gradient(180deg, #12161a 0%, #0f1a14 50%, #12161a 100%)
           `,
         }}
       />
@@ -200,9 +200,9 @@ function BasketballCourt({
         className="absolute inset-0 transition-opacity duration-700"
         style={{
           background: `
-            radial-gradient(ellipse 100% 70% at 50% 80%, rgba(249,115,22,0.2) 0%, transparent 50%),
-            radial-gradient(ellipse 60% 40% at 50% 40%, rgba(234,88,12,0.06) 0%, transparent 60%),
-            linear-gradient(180deg, #0a0a0b 0%, #120c08 50%, #0a0a0b 100%)
+            radial-gradient(ellipse 100% 70% at 50% 80%, rgba(249,115,22,0.28) 0%, transparent 50%),
+            radial-gradient(ellipse 60% 40% at 50% 40%, rgba(234,88,12,0.1) 0%, transparent 60%),
+            linear-gradient(180deg, #16120f 0%, #1a140e 50%, #16120f 100%)
           `,
         }}
       />
@@ -243,9 +243,9 @@ function BaseballField({
         className="absolute inset-0 transition-opacity duration-700"
         style={{
           background: `
-            radial-gradient(ellipse 90% 60% at 50% 30%, rgba(255,255,255,0.12) 0%, transparent 55%),
-            radial-gradient(ellipse 80% 50% at 50% 80%, rgba(244,244,245,0.08) 0%, transparent 60%),
-            linear-gradient(180deg, #0a0a0b 0%, #111113 45%, #0a0a0b 100%)
+            radial-gradient(ellipse 90% 60% at 50% 30%, rgba(255,255,255,0.16) 0%, transparent 55%),
+            radial-gradient(ellipse 80% 50% at 50% 80%, rgba(244,244,245,0.12) 0%, transparent 60%),
+            linear-gradient(180deg, #151618 0%, #1a1b1f 45%, #151618 100%)
           `,
         }}
       />
@@ -286,10 +286,10 @@ function FootballField({
         className="absolute inset-0 transition-opacity duration-700"
         style={{
           background: `
-            radial-gradient(ellipse 95% 60% at 50% 45%, rgba(139,90,43,0.28) 0%, transparent 58%),
-            radial-gradient(ellipse 80% 50% at 50% 85%, rgba(92,61,46,0.22) 0%, transparent 62%),
-            radial-gradient(ellipse 50% 35% at 50% 20%, rgba(166,124,82,0.14) 0%, transparent 55%),
-            linear-gradient(180deg, #0a0a0b 0%, #14100c 40%, #100c09 70%, #0a0a0b 100%)
+            radial-gradient(ellipse 95% 60% at 50% 45%, rgba(139,90,43,0.34) 0%, transparent 58%),
+            radial-gradient(ellipse 80% 50% at 50% 85%, rgba(92,61,46,0.26) 0%, transparent 62%),
+            radial-gradient(ellipse 50% 35% at 50% 20%, rgba(166,124,82,0.18) 0%, transparent 55%),
+            linear-gradient(180deg, #16120e 0%, #1c1610 40%, #18140f 70%, #16120e 100%)
           `,
         }}
       />
@@ -336,9 +336,9 @@ function HockeyRink({
         className="absolute inset-0 transition-opacity duration-700"
         style={{
           background: `
-            radial-gradient(ellipse 105% 65% at 50% 48%, rgba(56,189,248,0.2) 0%, transparent 60%),
-            radial-gradient(ellipse 75% 45% at 50% 85%, rgba(226,232,240,0.13) 0%, transparent 62%),
-            linear-gradient(180deg, #080b10 0%, #0b1620 45%, #081018 72%, #080a0e 100%)
+            radial-gradient(ellipse 105% 65% at 50% 48%, rgba(56,189,248,0.28) 0%, transparent 60%),
+            radial-gradient(ellipse 75% 45% at 50% 85%, rgba(226,232,240,0.16) 0%, transparent 62%),
+            linear-gradient(180deg, #10151c 0%, #12202c 45%, #101820 72%, #10141a 100%)
           `,
         }}
       />

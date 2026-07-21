@@ -24,6 +24,10 @@ interface ClientMsg {
   correct?: number;
   wrong?: number;
   maxStreak?: number;
+  cardKey?: string | null;
+  cardName?: string | null;
+  cardRarity?: string | null;
+  cardRating?: number | null;
 }
 
 interface PlayerInfo {
@@ -36,6 +40,11 @@ interface PlayerInfo {
   correct: number;
   wrong: number;
   maxStreak: number;
+  wagerDecided: boolean;
+  wagerCardKey: string | null;
+  wagerCardName: string | null;
+  wagerCardRarity: string | null;
+  wagerCardRating: number | null;
 }
 
 interface Player extends PlayerInfo {
@@ -135,6 +144,11 @@ function publicPlayers(room: Room): PlayerInfo[] {
     correct: p.correct,
     wrong: p.wrong,
     maxStreak: p.maxStreak,
+    wagerDecided: p.wagerDecided,
+    wagerCardKey: p.wagerCardKey,
+    wagerCardName: p.wagerCardName,
+    wagerCardRarity: p.wagerCardRarity,
+    wagerCardRating: p.wagerCardRating,
   }));
 }
 
@@ -183,7 +197,7 @@ function removePlayer(ws: WebSocket) {
 function tryStart(room: Room) {
   if (room.status !== 'lobby') return;
   if (room.players.size !== 2) return;
-  if (![...room.players.values()].every(p => p.ready)) return;
+  if (![...room.players.values()].every(p => p.ready && p.wagerDecided)) return;
 
   room.status = 'playing';
   room.seed = `duel-${room.code}-${Date.now()}`;
@@ -235,6 +249,16 @@ function tryFinish(room: Room) {
         correct: opp.correct,
         wrong: opp.wrong,
         maxStreak: opp.maxStreak,
+      },
+      wager: {
+        yourCardKey: p.wagerCardKey,
+        yourCardName: p.wagerCardName,
+        yourCardRarity: p.wagerCardRarity,
+        yourCardRating: p.wagerCardRating,
+        opponentCardKey: opp.wagerCardKey,
+        opponentCardName: opp.wagerCardName,
+        opponentCardRarity: opp.wagerCardRarity,
+        opponentCardRating: opp.wagerCardRating,
       },
     });
   }
@@ -503,6 +527,11 @@ wss.on('connection', ws => {
         correct: 0,
         wrong: 0,
         maxStreak: 0,
+        wagerDecided: false,
+        wagerCardKey: null,
+        wagerCardName: null,
+        wagerCardRarity: null,
+        wagerCardRating: null,
         ws,
         alive: true,
       };
@@ -549,6 +578,11 @@ wss.on('connection', ws => {
         correct: 0,
         wrong: 0,
         maxStreak: 0,
+        wagerDecided: false,
+        wagerCardKey: null,
+        wagerCardName: null,
+        wagerCardRarity: null,
+        wagerCardRating: null,
         ws,
         alive: true,
       };
@@ -575,6 +609,10 @@ wss.on('connection', ws => {
 
     if (msg.type === 'ready') {
       if (room.status !== 'lobby') return;
+      if (!player.wagerDecided) {
+        send(ws, { type: 'error', message: 'Choose a card stake or skip first' });
+        return;
+      }
       player.ready = true;
       broadcast(room, lobbyPayload(room));
       tryStart(room);
@@ -583,6 +621,31 @@ wss.on('connection', ws => {
 
     if (msg.type === 'unready') {
       if (room.status !== 'lobby') return;
+      player.ready = false;
+      broadcast(room, lobbyPayload(room));
+      return;
+    }
+
+    if (msg.type === 'wager') {
+      if (room.status !== 'lobby') return;
+      const cardKey =
+        typeof msg.cardKey === 'string' && msg.cardKey.trim()
+          ? msg.cardKey.trim().slice(0, 80)
+          : null;
+      player.wagerDecided = true;
+      player.wagerCardKey = cardKey;
+      player.wagerCardName =
+        cardKey && typeof msg.cardName === 'string'
+          ? msg.cardName.trim().slice(0, 48)
+          : null;
+      player.wagerCardRarity =
+        cardKey && typeof msg.cardRarity === 'string'
+          ? msg.cardRarity.trim().slice(0, 16)
+          : null;
+      player.wagerCardRating =
+        cardKey && typeof msg.cardRating === 'number' && Number.isFinite(msg.cardRating)
+          ? Math.max(1, Math.min(99, Math.floor(msg.cardRating)))
+          : null;
       player.ready = false;
       broadcast(room, lobbyPayload(room));
       return;
@@ -647,6 +710,11 @@ wss.on('connection', ws => {
           p.correct = 0;
           p.wrong = 0;
           p.maxStreak = 0;
+          p.wagerDecided = false;
+          p.wagerCardKey = null;
+          p.wagerCardName = null;
+          p.wagerCardRarity = null;
+          p.wagerCardRating = null;
         }
       } else if (room.status !== 'lobby') {
         send(ws, { type: 'error', message: 'Match is still in progress' });

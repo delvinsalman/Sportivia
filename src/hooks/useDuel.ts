@@ -228,6 +228,24 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
     [send],
   );
 
+  const setWager = useCallback(
+    (stake: {
+      cardKey: string | null;
+      cardName?: string | null;
+      cardRarity?: string | null;
+      cardRating?: number | null;
+    }) => {
+      send({
+        type: 'wager',
+        cardKey: stake.cardKey,
+        cardName: stake.cardName ?? null,
+        cardRarity: stake.cardRarity ?? null,
+        cardRating: stake.cardRating ?? null,
+      });
+    },
+    [send],
+  );
+
   const requestRematch = useCallback(() => {
     send({ type: 'rematch' });
     setDuelResult(null);
@@ -268,6 +286,7 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
     setReady,
     reportScore,
     reportFinish,
+    setWager,
     requestRematch,
     leaveLobby,
     clearError: () => setError(null),

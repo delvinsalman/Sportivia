@@ -39,6 +39,42 @@ export function xpProgress(xp: number): { level: number; current: number; needed
   return { level, current, needed, pct: needed > 0 ? Math.min(100, (current / needed) * 100) : 100 };
 }
 
+/**
+ * Coin bonus when reaching milestone levels.
+ * Tuned so early rewards feel good without printing money at high levels.
+ * 5 → 3k, 10 → 10k, then modest steps every 5 levels.
+ */
+export function milestoneBonusForLevel(level: number): number {
+  const table: Record<number, number> = {
+    5: 3_000,
+    10: 10_000,
+    15: 16_000,
+    20: 24_000,
+    25: 32_000,
+    30: 42_000,
+    35: 52_000,
+    40: 65_000,
+    45: 78_000,
+    50: 95_000,
+  };
+  if (table[level] != null) return table[level]!;
+  if (level > 50 && level % 5 === 0) {
+    // Soft curve after 50 — caps so it stays farmable but not crazy
+    return Math.min(150_000, 95_000 + Math.floor((level - 50) / 5) * 12_000);
+  }
+  return 0;
+}
+
+/** Sum of milestone bonuses crossed when leveling from previousLevel → newLevel. */
+export function milestoneBonusBetween(previousLevel: number, newLevel: number): number {
+  if (newLevel <= previousLevel) return 0;
+  let total = 0;
+  for (let level = previousLevel + 1; level <= newLevel; level++) {
+    total += milestoneBonusForLevel(level);
+  }
+  return total;
+}
+
 export function computeGameRewards(result: GameResult): GameRewards {
   let coins = Math.floor(result.score / 5) + result.correct * 3;
   let xp = result.correct * 12 + Math.floor(result.score / 8);
@@ -76,27 +112,31 @@ export function computeGameRewards(result: GameResult): GameRewards {
     leveledUp: false,
     previousLevel: 1,
     newLevel: 1,
+    milestoneBonus: 0,
   };
 }
 
 export function applyRewards(
   coins: number,
   xp: number,
-  rewards: Omit<GameRewards, 'leveledUp' | 'previousLevel' | 'newLevel'>,
+  rewards: Omit<GameRewards, 'leveledUp' | 'previousLevel' | 'newLevel' | 'milestoneBonus'>,
 ): { coins: number; xp: number; rewards: GameRewards } {
   const previousLevel = levelFromXp(xp);
   const newXp = xp + rewards.xpEarned;
-  const newCoins = coins + rewards.coinsEarned;
   const newLevel = levelFromXp(newXp);
+  const milestoneBonus = milestoneBonusBetween(previousLevel, newLevel);
+  const newCoins = coins + rewards.coinsEarned + milestoneBonus;
 
   return {
     coins: newCoins,
     xp: newXp,
     rewards: {
       ...rewards,
+      coinsEarned: rewards.coinsEarned + milestoneBonus,
       leveledUp: newLevel > previousLevel,
       previousLevel,
       newLevel,
+      milestoneBonus,
     },
   };
 }
