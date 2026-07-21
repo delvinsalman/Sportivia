@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v47';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v48';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -346,6 +346,11 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     'luc-robitaille': '/faces/hockey/luc-robitaille.png',
     'marcel-dionne': '/faces/hockey/marcel-dionne.png',
     'mats-sundin': '/faces/hockey/mats-sundin.png',
+    'mike-modano': '/faces/hockey/mike-modano.png',
+    'pat-lafontaine': '/faces/hockey/pat-lafontaine.png',
+    'paul-kariya': '/faces/hockey/paul-kariya.png',
+    'pavel-bure': '/faces/hockey/pavel-bure.png',
+    'peter-stastny': '/faces/hockey/peter-stastny.png',
 
   },
 };
