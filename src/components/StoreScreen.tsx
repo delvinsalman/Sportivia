@@ -295,9 +295,27 @@ export function StoreScreen({
           </div>
         </header>
 
-        <div className="flex-1 flex flex-col items-center min-h-0 overflow-y-auto overscroll-contain px-2 sm:px-5 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-          <div className="w-full max-w-2xl flex flex-col items-center gap-3 sm:gap-5 py-2 sm:py-0 sm:justify-center sm:flex-1">
-            <div className="relative w-full flex items-center justify-center min-h-[220px] sm:min-h-[340px]">
+        <div
+          className={`flex-1 flex flex-col items-center min-h-0 px-2 sm:px-5 pb-[max(1rem,env(safe-area-inset-bottom))] ${
+            customizing && isAthletePreview
+              ? 'overflow-hidden'
+              : 'overflow-y-auto overscroll-contain'
+          }`}
+        >
+          <div
+            className={`w-full max-w-2xl flex flex-col items-center py-1 sm:py-0 ${
+              customizing && isAthletePreview
+                ? 'gap-1.5 flex-1 min-h-0 justify-between'
+                : 'gap-3 sm:gap-5 sm:justify-center sm:flex-1'
+            }`}
+          >
+            <div
+              className={`relative w-full flex items-center justify-center ${
+                customizing && isAthletePreview
+                  ? 'min-h-0 flex-[1.1] max-h-[38svh]'
+                  : 'min-h-[220px] sm:min-h-[340px]'
+              }`}
+            >
               {!customizing && (
                 <div className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-[28%] max-w-[140px]">
                   {prevItem ? (
@@ -345,7 +363,11 @@ export function StoreScreen({
 
               <div
                 className={`relative z-20 flex flex-col items-center ${
-                  customizing ? 'w-[70%] max-w-[420px]' : 'w-[58%] max-w-[380px]'
+                  customizing && isAthletePreview
+                    ? 'w-[55%] max-w-[280px]'
+                    : customizing
+                      ? 'w-[70%] max-w-[420px]'
+                      : 'w-[58%] max-w-[380px]'
                 }`}
               >
                 <AnimatePresence mode="wait">
@@ -384,7 +406,9 @@ export function StoreScreen({
                               : {}),
                           })}
                       accent={previewDef.accent}
-                      height={customizing ? 280 : 300}
+                      height={
+                        customizing && isAthletePreview ? 168 : customizing ? 280 : 300
+                      }
                       bare
                       hero
                       sport={sport}
@@ -399,11 +423,23 @@ export function StoreScreen({
                         onDragEnd={onDragEnd}
                       />
                     )}
-                    <div className="text-center -mt-1 pointer-events-none">
-                      <p className="text-lg font-black text-[#f2f3f5]">{previewDef.name}</p>
-                      <p className="text-xs font-semibold text-[#6d6f78] mt-0.5">
-                        {customizing ? 'Mix your look · save when ready' : previewDef.tagline}
+                    <div
+                      className={`text-center pointer-events-none ${
+                        customizing && isAthletePreview ? '-mt-2' : '-mt-1'
+                      }`}
+                    >
+                      <p
+                        className={`font-black text-[#f2f3f5] ${
+                          customizing && isAthletePreview ? 'text-sm' : 'text-lg'
+                        }`}
+                      >
+                        {previewDef.name}
                       </p>
+                      {!(customizing && isAthletePreview) && (
+                        <p className="text-xs font-semibold text-[#6d6f78] mt-0.5">
+                          {customizing ? 'Mix your look · save when ready' : previewDef.tagline}
+                        </p>
+                      )}
                     </div>
                   </motion.div>
                 </AnimatePresence>
@@ -456,7 +492,11 @@ export function StoreScreen({
             </div>
 
             {customizing ? (
-              <div className="w-full max-w-lg px-2 flex flex-col gap-3">
+              <div
+                className={`w-full max-w-lg px-2 flex flex-col ${
+                  isAthletePreview ? 'gap-1.5 shrink-0' : 'gap-3'
+                }`}
+              >
                 {isRabbitPreview ? (
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                     {RABBIT_VARIANTS.map(variant => {
@@ -505,7 +545,7 @@ export function StoreScreen({
                   </div>
                 ) : isAthletePreview ? (
                   <>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
                       {ATHLETE_PRESETS.map(preset => {
                         const active =
                           draftAthleteLoadout.jersey === preset.loadout.jersey &&
@@ -520,10 +560,10 @@ export function StoreScreen({
                               playMenuSelect();
                               setDraftAthleteLoadout({ ...preset.loadout });
                             }}
-                            className={`px-2 py-2.5 rounded-xl text-[11px] font-black border-[2.5px] transition-all flex flex-col items-center gap-1.5 ${
+                            className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-black border-2 transition-all flex items-center gap-1.5 ${
                               active
-                                ? 'border-[#22c55e] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#166534]'
-                                : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
+                                ? 'border-[#22c55e] bg-[#1e1f22] text-[#f2f3f5]'
+                                : 'border-[#3f4147] bg-[#151618] text-[#949ba4]'
                             }`}
                           >
                             <span className="flex gap-0.5">
@@ -534,7 +574,7 @@ export function StoreScreen({
                               ].map((hex, i) => (
                                 <span
                                   key={i}
-                                  className="w-3.5 h-3.5 rounded-full border border-white/20"
+                                  className="w-2.5 h-2.5 rounded-full border border-white/20"
                                   style={{ background: hex }}
                                 />
                               ))}
@@ -545,7 +585,7 @@ export function StoreScreen({
                       })}
                     </div>
 
-                    <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                    <div className="grid grid-cols-4 gap-1">
                       {ATHLETE_SLOTS.map(slot => {
                         const active = slot.id === activeAthleteSlot.id;
                         return (
@@ -556,10 +596,10 @@ export function StoreScreen({
                               playMenuClick();
                               setAthleteSlotId(slot.id);
                             }}
-                            className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-black border-[2.5px] transition-all ${
+                            className={`px-1 py-1.5 rounded-lg text-[10px] font-black border-2 transition-all ${
                               active
                                 ? 'text-[#f2f3f5] border-[#22c55e] bg-[#1e1f22]'
-                                : 'text-[#949ba4] border-[#3f4147] bg-[#151618] hover:text-[#dbdee1]'
+                                : 'text-[#949ba4] border-[#3f4147] bg-[#151618]'
                             }`}
                           >
                             {slot.label}
@@ -568,7 +608,7 @@ export function StoreScreen({
                       })}
                     </div>
 
-                    <div className="grid grid-cols-5 sm:grid-cols-6 gap-2">
+                    <div className="grid grid-cols-8 gap-1">
                       {athleteSlotColors.map(opt => {
                         const active =
                           draftAthleteLoadout[activeAthleteSlot.id].toLowerCase() ===
@@ -578,6 +618,7 @@ export function StoreScreen({
                             key={opt.id}
                             type="button"
                             title={opt.label}
+                            aria-label={opt.label}
                             onClick={() => {
                               playMenuSelect();
                               setDraftAthleteLoadout(prev => ({
@@ -585,10 +626,10 @@ export function StoreScreen({
                                 [activeAthleteSlot.id]: opt.hex,
                               }));
                             }}
-                            className={`aspect-square rounded-xl border-[2.5px] transition-all ${
+                            className={`h-7 rounded-md border-2 transition-all ${
                               active
-                                ? 'border-white scale-105 shadow-[0_0_0_2px_#22c55e]'
-                                : 'border-[#3f4147] hover:border-[#6d6f78]'
+                                ? 'border-white ring-2 ring-[#22c55e]'
+                                : 'border-[#3f4147]'
                             }`}
                             style={{ background: opt.hex }}
                           />
@@ -686,18 +727,22 @@ export function StoreScreen({
                   </>
                 )}
 
-                <div className="flex gap-2">
+                <div className={`flex gap-2 ${isAthletePreview ? 'mt-0.5' : ''}`}>
                   <button
                     type="button"
                     onClick={resetCustomize}
-                    className="flex-1 py-3 rounded-2xl text-sm font-black border-[3px] border-[#3f4147] bg-[#2b2d31] text-[#dbdee1] shadow-[0_4px_0_#1a1b1f]"
+                    className={`flex-1 rounded-2xl text-sm font-black border-[3px] border-[#3f4147] bg-[#2b2d31] text-[#dbdee1] shadow-[0_4px_0_#1a1b1f] ${
+                      isAthletePreview ? 'py-2' : 'py-3'
+                    }`}
                   >
                     Reset
                   </button>
                   <button
                     type="button"
                     onClick={saveCustomize}
-                    className="flex-[1.4] py-3 rounded-2xl text-sm font-black border-[3px] border-white/25 bg-[#5865f2] hover:bg-[#4752c4] text-white shadow-[0_5px_0_#2f3aa8] flex items-center justify-center gap-2"
+                    className={`flex-[1.4] rounded-2xl text-sm font-black border-[3px] border-white/25 bg-[#5865f2] hover:bg-[#4752c4] text-white shadow-[0_5px_0_#2f3aa8] flex items-center justify-center gap-2 ${
+                      isAthletePreview ? 'py-2' : 'py-3'
+                    }`}
                   >
                     <Check className="w-4 h-4" />
                     {isRabbitPreview
