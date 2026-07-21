@@ -47,6 +47,9 @@ const STABLE_OVERRIDES: Record<string, string> = {
     "https://static.wikia.nocookie.net/dlls/images/9/9e/Gabriel_Batistuta.webp/revision/latest?cb=20250411201220",
   "mata":
     "https://melbournevictory.com.au/wp-content/uploads/sites/7/2025/10/2526ALM-Headshot_0000s_0003_Juan-Mata_0520.png",
+  "shearer": "https://officialpsds.com/imageview/7z/08/7z0831_large.png?1521316464",
+  "dimaria": "https://b.fssta.com/uploads/application/soccer/headshots/871.png",
+  "lautaro": "https://cdn.futwiz.com/assets/img/fc25/faces/231478.png?25",
   "kenanyildiz":
     "https://cdn-img.staticzz.com/img/planteis/new/51/98/11535198_kenan_yildiz_20240918191043.png",
   "gavi":
