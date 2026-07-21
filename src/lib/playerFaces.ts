@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v37';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v38';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -291,6 +291,12 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     'miikka-kiprusoff': '/faces/hockey/miikka-kiprusoff.png',
     'saku-koivu': '/faces/hockey/saku-koivu.png',
     'zigmund-palffy': '/faces/hockey/zigmund-palffy.png',
+    'maurice-richard': '/faces/hockey/maurice-richard.png',
+    'bobby-hull': '/faces/hockey/bobby-hull.png',
+    'guy-lafleur': '/faces/hockey/guy-lafleur.png',
+    'jean-beliveau': '/faces/hockey/jean-beliveau.png',
+    'mark-messier': '/faces/hockey/mark-messier.png',
+    'mike-bossy': '/faces/hockey/mike-bossy.png',
 
   },
 };
