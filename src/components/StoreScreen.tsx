@@ -344,12 +344,8 @@ export function StoreScreen({
               )}
 
               <div
-                className={`relative z-20 flex flex-col items-center justify-center ${
-                  customizing && isAthletePreview
-                    ? 'w-[86%] max-w-[460px] h-full'
-                    : customizing
-                      ? 'w-[70%] max-w-[420px]'
-                      : 'w-[58%] max-w-[380px]'
+                className={`relative z-20 flex flex-col items-center ${
+                  customizing ? 'w-[70%] max-w-[420px]' : 'w-[58%] max-w-[380px]'
                 }`}
               >
                 <AnimatePresence mode="wait">
@@ -359,9 +355,7 @@ export function StoreScreen({
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.96 }}
                     transition={{ duration: 0.2 }}
-                    className={`relative w-full flex flex-col items-center ${
-                      customizing && isAthletePreview ? 'h-full justify-center' : ''
-                    }`}
+                    className="relative w-full flex flex-col items-center"
                   >
                     <CharacterPodium
                       {...(isPets
@@ -390,17 +384,11 @@ export function StoreScreen({
                               : {}),
                           })}
                       accent={previewDef.accent}
-                      height={
-                        customizing && isAthletePreview ? '100%' : customizing ? 280 : 300
-                      }
+                      height={customizing ? 280 : 300}
                       bare
                       hero
                       sport={sport}
-                      className={`w-full pointer-events-none ${
-                        customizing && isAthletePreview
-                          ? 'min-h-[280px] max-h-full'
-                          : 'max-sm:scale-95 max-sm:origin-top'
-                      }`}
+                      className="w-full pointer-events-none max-sm:scale-95 max-sm:origin-top"
                     />
                     {!customizing && (
                       <motion.div
@@ -411,17 +399,11 @@ export function StoreScreen({
                         onDragEnd={onDragEnd}
                       />
                     )}
-                    <div
-                      className={`text-center pointer-events-none ${
-                        customizing && isAthletePreview ? '-mt-4' : '-mt-1'
-                      }`}
-                    >
+                    <div className="text-center -mt-1 pointer-events-none">
                       <p className="text-lg font-black text-[#f2f3f5]">{previewDef.name}</p>
-                      {!(customizing && isAthletePreview) && (
-                        <p className="text-xs font-semibold text-[#6d6f78] mt-0.5">
-                          {customizing ? 'Mix your look · save when ready' : previewDef.tagline}
-                        </p>
-                      )}
+                      <p className="text-xs font-semibold text-[#6d6f78] mt-0.5">
+                        {customizing ? 'Mix your look · save when ready' : previewDef.tagline}
+                      </p>
                     </div>
                   </motion.div>
                 </AnimatePresence>

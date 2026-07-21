@@ -285,7 +285,7 @@ export const CHARACTERS: CharacterDef[] = [
     targetHeight: 1.7,
     poseMode: 'animated',
     customizable: true,
-    showcaseRestMs: [5_000, 9_000],
+    showcaseRestMs: [3_200, 5_800],
   },
   {
     id: 'bob',

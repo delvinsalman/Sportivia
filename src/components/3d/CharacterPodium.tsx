@@ -189,6 +189,15 @@ const RABBIT_FLOURISH_PATTERNS = [
   'no',
 ];
 
+/** Quaternius athlete — punch / jump / work fidgets between idle */
+const ATHLETE_FLOURISH_PATTERNS = [
+  'jump',
+  'punch',
+  'working',
+];
+
+const ATHLETE_FLOURISH_CHANCE = 0.88;
+
 interface ProceduralState {
   move: ProceduralMove | null;
   start: number;
@@ -300,6 +309,22 @@ function collectRabbitFlourishes(names: string[], idleName?: string): string[] {
   return found;
 }
 
+function collectAthleteFlourishes(names: string[], idleName?: string): string[] {
+  const pool = filterAnimNames(names, [
+    ...SHOWCASE_EXCLUDE,
+    'armatureaction',
+    'death',
+  ]).filter(n => n !== idleName);
+  const found: string[] = [];
+  for (const pattern of ATHLETE_FLOURISH_PATTERNS) {
+    const hits = pool.filter(n => new RegExp(pattern, 'i').test(n));
+    for (const hit of hits) {
+      if (!found.includes(hit)) found.push(hit);
+    }
+  }
+  return found;
+}
+
 /**
  * Home page only: loop idle, then every few seconds play a random cool flourish
  * (skeletal clip when available, otherwise a procedural move).
@@ -314,6 +339,7 @@ function useHomeShowcase(
     restMs?: [number, number];
     sport?: Sport;
     petId?: PetId;
+    characterId?: CharacterId;
   },
 ) {
   const restTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -324,6 +350,8 @@ function useHomeShowcase(
   const restMax = opts?.restMs?.[1] ?? 7000;
   const sport = opts?.sport;
   const petId = opts?.petId;
+  const characterId = opts?.characterId;
+  const isAthlete = characterId === 'athlete';
 
   useEffect(() => {
     if (!enabled) return;
@@ -332,12 +360,15 @@ function useHomeShowcase(
     const idleName = findIdleName(names);
     const flourishes = petId
       ? collectPetFlourishes(names, idleName)
-      : collectFlourishes(names, idleName, sport);
-    const sportFlourishes = collectSportFlourishes(names, sport);
+      : isAthlete
+        ? collectAthleteFlourishes(names, idleName)
+        : collectFlourishes(names, idleName, sport);
+    const sportFlourishes = isAthlete ? [] : collectSportFlourishes(names, sport);
     const idleAction = idleName ? actions[idleName] : null;
     // Single Mixamo-style clip: keep it as ambient idle, never "flourish" with itself
     const onlyGenericClip =
       names.length === 1 && !/idle|stand|breath|float/i.test(names[0] ?? '');
+    const clipChance = isAthlete ? ATHLETE_FLOURISH_CHANCE : CLIP_FLOURISH_CHANCE;
 
     const clearTimers = () => {
       clearTimeout(restTimerRef.current);
@@ -388,7 +419,7 @@ function useHomeShowcase(
       const useClip =
         !onlyGenericClip &&
         candidates.length > 0 &&
-        (petId ? true : Math.random() < CLIP_FLOURISH_CHANCE);
+        (petId ? true : Math.random() < clipChance);
 
       if (useClip) {
         const clipName = pickRandom(candidates);
@@ -423,7 +454,9 @@ function useHomeShowcase(
       }
 
       // Procedural flourish on top of idle (hop / lean / nod / celebrate)
-      const move = pickRandom(PROCEDURAL_MOVES);
+      const move = pickRandom(
+        isAthlete ? (['hop', 'celebrate', 'doubleHop', 'spin'] as ProceduralMove[]) : PROCEDURAL_MOVES,
+      );
       onProcedural(move);
       endTimerRef.current = setTimeout(() => {
         if (!cancelled) scheduleNextFlourish();
@@ -436,9 +469,12 @@ function useHomeShowcase(
       idleAction.timeScale = (onlyGenericClip ? 0.9 : 1) * timeScale;
       idleAction.fadeIn(0.25).play();
     }
+    // Athlete kicks off flourishes sooner so Jump/Punch show up quickly
+    const firstMin = isAthlete ? Math.max(restMin, 2200) : Math.max(restMin, 6000);
+    const firstMax = isAthlete ? Math.max(restMax, 4200) : restMax;
     restTimerRef.current = setTimeout(() => {
       if (!cancelled) playFlourish();
-    }, randBetween(Math.max(restMin, 6000), restMax));
+    }, randBetween(firstMin, firstMax));
 
     return () => {
       cancelled = true;
@@ -448,7 +484,7 @@ function useHomeShowcase(
         a?.stop();
       });
     };
-  }, [actions, names, enabled, onProcedural, timeScale, restMin, restMax, sport, petId]);
+  }, [actions, names, enabled, onProcedural, timeScale, restMin, restMax, sport, petId, characterId, isAthlete]);
 }
 
 /**
@@ -1143,6 +1179,7 @@ function PodiumRig({
       restMs: def.showcaseRestMs ?? (petId ? [10_000, 18_000] : undefined),
       sport,
       petId,
+      characterId,
     },
   );
   useSimpleIdle(
