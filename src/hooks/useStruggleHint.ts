@@ -4,10 +4,10 @@ import type { Feedback, GamePhase } from './useRoundGame';
 import { getValidCellIndices } from '../lib/roundEngine';
 import type { PlayerUnion } from '../data/categories';
 
-/** Real-time cooldown after a hint so players can't farm by waiting. */
-const HINT_COOLDOWN_MS = 55_000;
-/** How long you must sit on a player before a hint can arm. */
-const SIT_DELAY_MS = 5_500;
+/** Real-time cooldown after a hint so waiting can’t farm answers. */
+const HINT_COOLDOWN_MS = 60_000;
+/** Sit on a player this long before a hint can appear. */
+const SIT_DELAY_MS = 6_000;
 
 function isStruggling(opts: {
   wrongStreak: number;
@@ -16,7 +16,6 @@ function isStruggling(opts: {
   wrong: number;
 }): boolean {
   const { wrongStreak, score, correct, wrong } = opts;
-  // Stricter than before — only clearly stuck runs get help.
   return (
     wrongStreak >= 3 ||
     (wrong >= 5 && score < 25) ||
@@ -25,8 +24,7 @@ function isStruggling(opts: {
 }
 
 /**
- * Candy Crush–style struggle hint — at most one pulse, then a long cooldown
- * so waiting never farms free answers.
+ * Candy Crush–style struggle hint — rare, one at a time, long cooldown.
  */
 export function useStruggleHint({
   sport,
@@ -35,7 +33,6 @@ export function useStruggleHint({
   phase,
   feedback,
   boardKey,
-  roundTime,
   score,
   correct,
   wrong,
@@ -57,37 +54,43 @@ export function useStruggleHint({
 }): number | null {
   const [hintCell, setHintCell] = useState<number | null>(null);
   const lastHintAtRef = useRef(0);
-  const hintedThisPlayerRef = useRef<string | null>(null);
+  const hintedPlayerRef = useRef<string | null>(null);
+  const boardRef = useRef(board);
+  boardRef.current = board;
   const playerId = player?.id ?? null;
 
-  // New player → clear on-screen pulse (cooldown still applies).
   useEffect(() => {
     setHintCell(null);
-    hintedThisPlayerRef.current = null;
-  }, [playerId, boardKey]);
 
-  useEffect(() => {
-    if (!enabled || phase !== 'playing' || !player || feedback) return;
-    if (hintedThisPlayerRef.current === player.id) return;
+    if (!enabled || phase !== 'playing' || !player) return;
+    if (feedback) return;
+    if (hintedPlayerRef.current === player.id) return;
     if (Date.now() - lastHintAtRef.current < HINT_COOLDOWN_MS) return;
     if (!isStruggling({ wrongStreak, score, correct, wrong })) return;
 
-    // Only arm late in the player clock — never instantly.
-    if (roundTime > 5) return;
-
     const timer = window.setTimeout(() => {
       if (Date.now() - lastHintAtRef.current < HINT_COOLDOWN_MS) return;
-      const indices = getValidCellIndices(sport, board, player);
+      const indices = getValidCellIndices(sport, boardRef.current, player);
       if (!indices.length) return;
-      const pick = indices[Math.floor(Math.random() * indices.length)]!;
-      hintedThisPlayerRef.current = player.id;
+      hintedPlayerRef.current = player.id;
       lastHintAtRef.current = Date.now();
-      setHintCell(pick);
+      setHintCell(indices[Math.floor(Math.random() * indices.length)]!);
     }, SIT_DELAY_MS);
 
     return () => window.clearTimeout(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, phase, playerId, boardKey, feedback, wrongStreak, score, correct, wrong, roundTime, sport]);
+  }, [
+    enabled,
+    phase,
+    playerId,
+    boardKey,
+    feedback,
+    wrongStreak,
+    score,
+    correct,
+    wrong,
+    sport,
+    player,
+  ]);
 
   if (feedback) return null;
   return hintCell;
