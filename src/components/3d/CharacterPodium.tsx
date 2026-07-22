@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, useAnimations, useFBX, useGLTF } from '@react-three/drei';
-import { Box3, Color, Float32BufferAttribute, LoopOnce, LoopRepeat, Vector3 } from 'three';
+import { Box3, Color, Float32BufferAttribute, LoopOnce, LoopRepeat, MeshPhysicalMaterial, Vector3 } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 import type { AnimationAction, AnimationClip, Bone, Group, Mesh, MeshStandardMaterial, Object3D, SkinnedMesh } from 'three';
 import type {
@@ -47,6 +47,7 @@ import type { BobLoadout } from '../../types/bobCharacter';
 import {
   bobLoadoutKey,
   DEFAULT_BOB_LOADOUT,
+  getBobFinish,
   isBobLockedMaterial,
 } from '../../types/bobCharacter';
 import type { Sport } from '../../types';
@@ -1449,9 +1450,10 @@ function applyAthleteLoadout(scene: Object3D, loadout: AthleteLoadout) {
 }
 
 function applyBobLoadout(scene: Object3D, loadout: BobLoadout) {
-  const tint = new Color(loadout.color);
-  // Slightly darker shade for secondary pink material ("Material")
+  const finish = getBobFinish(loadout);
+  const tint = new Color(finish.hex);
   const shade = tint.clone().multiplyScalar(0.88);
+  const shift = new Color(finish.shift ?? finish.hex);
 
   scene.traverse(child => {
     const mesh = child as Mesh;
@@ -1459,8 +1461,76 @@ function applyBobLoadout(scene: Object3D, loadout: BobLoadout) {
 
     const paint = (mat: MeshStandardMaterial, darker: boolean) => {
       if (isBobLockedMaterial(mat.name)) return mat;
+      const base = darker ? shade : tint;
+
+      if (finish.kind === 'chameleon') {
+        const next = new MeshPhysicalMaterial({
+          name: mat.name,
+          color: base,
+          metalness: 0.55,
+          roughness: 0.22,
+          iridescence: 1,
+          iridescenceIOR: 1.35,
+          iridescenceThicknessRange: [120, 480],
+          sheen: 0.55,
+          sheenColor: shift,
+          sheenRoughness: 0.35,
+          clearcoat: 0.55,
+          clearcoatRoughness: 0.2,
+        });
+        // Angle blend like GTA chameleon paint
+        next.onBeforeCompile = shader => {
+          shader.uniforms.bobShift = { value: shift };
+          shader.fragmentShader = shader.fragmentShader
+            .replace(
+              '#include <common>',
+              `#include <common>
+uniform vec3 bobShift;`,
+            )
+            .replace(
+              '#include <color_fragment>',
+              `#include <color_fragment>
+{
+  vec3 viewDir = normalize(vViewPosition);
+  float fresnel = pow(1.0 - abs(dot(normalize(normal), viewDir)), 2.2);
+  diffuseColor.rgb = mix(diffuseColor.rgb, bobShift, fresnel);
+}`,
+            );
+        };
+        next.customProgramCacheKey = () => `bob-cham-${finish.id}-${darker ? 'd' : 'b'}`;
+        next.needsUpdate = true;
+        return next;
+      }
+
+      if (finish.kind === 'metal') {
+        const next = new MeshPhysicalMaterial({
+          name: mat.name,
+          color: base,
+          metalness: 0.92,
+          roughness: 0.18,
+          clearcoat: 0.35,
+          clearcoatRoughness: 0.15,
+        });
+        next.needsUpdate = true;
+        return next;
+      }
+
+      if (finish.kind === 'neon') {
+        const next = mat.clone();
+        next.color.copy(base);
+        next.emissive.copy(base).multiplyScalar(0.85);
+        next.emissiveIntensity = 1.35;
+        next.metalness = 0.05;
+        next.roughness = 0.35;
+        next.vertexColors = false;
+        next.needsUpdate = true;
+        return next;
+      }
+
       const next = mat.clone();
-      next.color.copy(darker ? shade : tint);
+      next.color.copy(base);
+      next.emissive?.set('#000000');
+      if ('emissiveIntensity' in next) next.emissiveIntensity = 0;
       next.vertexColors = false;
       next.metalness = 0.08;
       next.roughness = 0.55;

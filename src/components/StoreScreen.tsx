@@ -30,9 +30,10 @@ import {
   DEFAULT_ATHLETE_LOADOUT,
   normalizeAthleteLoadout,
 } from '../types/athleteCharacter';
-import type { BobLoadout } from '../types/bobCharacter';
+import type { BobLoadout, BobCategoryId } from '../types/bobCharacter';
 import {
-  BOB_COLORS,
+  BOB_CATEGORIES,
+  categoryForFinishId,
   DEFAULT_BOB_LOADOUT,
   normalizeBobLoadout,
 } from '../types/bobCharacter';
@@ -103,6 +104,9 @@ export function StoreScreen({
   const [draftDogVariant, setDraftDogVariant] = useState<DogVariantId>(profile.dogVariant);
   const [slotId, setSlotId] = useState<CreativeSlotId>('face');
   const [athleteSlotId, setAthleteSlotId] = useState<AthleteSlotId>('jersey');
+  const [bobCategoryId, setBobCategoryId] = useState<BobCategoryId>(() =>
+    categoryForFinishId(normalizeBobLoadout(profile.bobLoadout).finishId),
+  );
   const slotBtnRefs = useRef<Record<string, HTMLButtonElement | null>>({});
 
   useEffect(() => {
@@ -127,7 +131,9 @@ export function StoreScreen({
   }, [profile.athleteLoadout]);
 
   useEffect(() => {
-    setDraftBobLoadout(normalizeBobLoadout(profile.bobLoadout));
+    const next = normalizeBobLoadout(profile.bobLoadout);
+    setDraftBobLoadout(next);
+    setBobCategoryId(categoryForFinishId(next.finishId));
   }, [profile.bobLoadout]);
 
   useEffect(() => {
@@ -186,6 +192,13 @@ export function StoreScreen({
   const activeAthleteSlot = ATHLETE_SLOTS.find(s => s.id === athleteSlotId) ?? ATHLETE_SLOTS[0];
   const athleteSlotColors = colorsForSlot(activeAthleteSlot.id);
   const isCompactColorEdit = isAthletePreview || isBobPreview;
+  const bobCategoryIndex = Math.max(
+    0,
+    BOB_CATEGORIES.findIndex(cat => cat.id === bobCategoryId),
+  );
+  const activeBobCategory = BOB_CATEGORIES[bobCategoryIndex] ?? BOB_CATEGORIES[0];
+  const canBobCatPrev = bobCategoryIndex > 0;
+  const canBobCatNext = bobCategoryIndex < BOB_CATEGORIES.length - 1;
 
   const selectItem = (id: string) => {
     if (id === safePreviewId) return;
@@ -245,6 +258,7 @@ export function StoreScreen({
     setDraftDogVariant(profile.dogVariant);
     setSlotId('face');
     setAthleteSlotId('jersey');
+    setBobCategoryId(categoryForFinishId(normalizeBobLoadout(profile.bobLoadout).finishId));
     setCustomizing(true);
   };
 
@@ -263,8 +277,10 @@ export function StoreScreen({
     if (isRabbitPreview) setDraftRabbitVariant('base');
     else if (isDogPreview) setDraftDogVariant('husky');
     else if (isAthletePreview) setDraftAthleteLoadout({ ...DEFAULT_ATHLETE_LOADOUT });
-    else if (isBobPreview) setDraftBobLoadout({ ...DEFAULT_BOB_LOADOUT });
-    else setDraftLoadout({ ...DEFAULT_CREATIVE_LOADOUT });
+    else if (isBobPreview) {
+      setDraftBobLoadout({ ...DEFAULT_BOB_LOADOUT });
+      setBobCategoryId('solids');
+    } else setDraftLoadout({ ...DEFAULT_CREATIVE_LOADOUT });
   };
 
   return (
@@ -282,6 +298,9 @@ export function StoreScreen({
                 setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
                 setDraftAthleteLoadout(normalizeAthleteLoadout(profile.athleteLoadout));
                 setDraftBobLoadout(normalizeBobLoadout(profile.bobLoadout));
+                setBobCategoryId(
+                  categoryForFinishId(normalizeBobLoadout(profile.bobLoadout).finishId),
+                );
                 setDraftRabbitVariant(profile.rabbitVariant);
                 setDraftDogVariant(profile.dogVariant);
                 return;
@@ -640,30 +659,88 @@ export function StoreScreen({
                     </div>
                   </>
                 ) : isBobPreview ? (
-                  <div className="grid grid-cols-5 sm:grid-cols-8 gap-1.5">
-                    {BOB_COLORS.map(opt => {
-                      const active =
-                        draftBobLoadout.color.toLowerCase() === opt.hex.toLowerCase();
-                      return (
-                        <button
-                          key={opt.id}
-                          type="button"
-                          title={opt.label}
-                          aria-label={opt.label}
-                          onClick={() => {
-                            playMenuSelect();
-                            setDraftBobLoadout({ color: opt.hex });
-                          }}
-                          className={`h-9 rounded-lg border-2 transition-all ${
-                            active
-                              ? 'border-white ring-2 ring-[#38bdf8] scale-[1.03]'
-                              : 'border-[#3f4147] hover:border-[#6d6f78]'
-                          }`}
-                          style={{ background: opt.hex }}
-                        />
-                      );
-                    })}
-                  </div>
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        aria-label="Previous color category"
+                        disabled={!canBobCatPrev}
+                        onClick={() => {
+                          if (!canBobCatPrev) return;
+                          playMenuClick();
+                          setBobCategoryId(BOB_CATEGORIES[bobCategoryIndex - 1].id);
+                        }}
+                        className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center border-[2.5px] transition-all ${
+                          canBobCatPrev
+                            ? 'border-[#38bdf8]/80 bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#0e7490] hover:translate-y-[1px] hover:shadow-[0_2px_0_#0e7490]'
+                            : 'border-[#3f4147] bg-[#151618] text-[#5c5e66] cursor-default'
+                        }`}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <div className="flex-1 text-center px-2 py-1.5 rounded-full border-[2.5px] border-[#38bdf8]/50 bg-[#1e1f22]">
+                        <p className="text-xs font-black text-[#f2f3f5] tracking-wide">
+                          {activeBobCategory.label}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Next color category"
+                        disabled={!canBobCatNext}
+                        onClick={() => {
+                          if (!canBobCatNext) return;
+                          playMenuClick();
+                          setBobCategoryId(BOB_CATEGORIES[bobCategoryIndex + 1].id);
+                        }}
+                        className={`shrink-0 w-9 h-9 rounded-full flex items-center justify-center border-[2.5px] transition-all ${
+                          canBobCatNext
+                            ? 'border-[#38bdf8]/80 bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#0e7490] hover:translate-y-[1px] hover:shadow-[0_2px_0_#0e7490]'
+                            : 'border-[#3f4147] bg-[#151618] text-[#5c5e66] cursor-default'
+                        }`}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-5 sm:grid-cols-8 gap-1.5">
+                      {activeBobCategory.options.map(opt => {
+                        const active = draftBobLoadout.finishId === opt.id;
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            title={opt.label}
+                            aria-label={opt.label}
+                            onClick={() => {
+                              playMenuSelect();
+                              setDraftBobLoadout({ finishId: opt.id });
+                            }}
+                            className={`relative h-9 rounded-lg border-2 transition-all overflow-hidden ${
+                              active
+                                ? 'border-white ring-2 ring-[#38bdf8] scale-[1.03]'
+                                : 'border-[#3f4147] hover:border-[#6d6f78]'
+                            }`}
+                            style={
+                              opt.kind === 'chameleon' && opt.shift
+                                ? {
+                                    background: `linear-gradient(135deg, ${opt.hex} 0%, ${opt.shift} 100%)`,
+                                  }
+                                : opt.kind === 'neon'
+                                  ? {
+                                      background: opt.hex,
+                                      boxShadow: `inset 0 0 10px ${opt.hex}`,
+                                    }
+                                  : opt.kind === 'metal'
+                                    ? {
+                                        background: `linear-gradient(145deg, #ffffff55 0%, ${opt.hex} 42%, #00000066 100%)`,
+                                      }
+                                    : { background: opt.hex }
+                            }
+                          />
+                        );
+                      })}
+                    </div>
+                  </>
                 ) : (
                   <>
                 <div className="flex items-center gap-1.5">
