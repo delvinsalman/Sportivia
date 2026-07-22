@@ -81,6 +81,8 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     // Was wrongly resolving to a women's college player named Nene
     nene: 'https://cdn.nba.com/headshots/nba/latest/1040x760/2403.png',
     lou: 'https://cdn.nba.com/headshots/nba/latest/1040x760/101150.png',
+    // Wrong ESPN college hit — use official NBA headshot
+    iguodala: '/faces/basketball/iguodala.png',
     // Owner-review localized portraits (Jul 2026)
     redick: '/faces/basketball/redick.png',
     rubio: '/faces/basketball/rubio.png',

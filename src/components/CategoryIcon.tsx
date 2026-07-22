@@ -333,11 +333,11 @@ function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMet
 function FlagStripes({ colors, size }: { colors: string[]; size: number }) {
   return (
     <div
-      className="rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 flex"
+      className="flex flex-col rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0"
       style={{ width: size, height: size }}
     >
       {colors.map((c, i) => (
-        <div key={i} className="flex-1 h-full" style={{ background: c }} />
+        <div key={i} className="w-full flex-1" style={{ background: c }} />
       ))}
     </div>
   );
@@ -346,44 +346,47 @@ function FlagStripes({ colors, size }: { colors: string[]; size: number }) {
 function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
   const code = meta.flagCode;
   const colors = meta.colors ?? ['#5865f2', '#fff'];
-  const [failed, setFailed] = useState(false);
-
-  if (!code || failed) {
-    return <FlagStripes colors={colors} size={size} />;
-  }
-
-  // Prefer local vendored flags so boards work offline / without CDN.
   const localSrc =
     code === 'ca'
       ? assetUrl('/icons/flags/canada.svg')
-      : assetUrl(`/icons/flags/${code}.png`);
-  const cdnSrc = `https://flagcdn.com/w160/${code}.png`;
+      : code
+        ? assetUrl(`/icons/flags/${code}.png`)
+        : null;
+  const cdnSrc = code ? `https://flagcdn.com/w320/${code}.png` : null;
+  const [src, setSrc] = useState<string | null>(localSrc);
+  const [failed, setFailed] = useState(!code || !localSrc);
+
+  if (failed || !src) {
+    return <FlagStripes colors={colors} size={size} />;
+  }
+
+  // Coat-of-arms flags sit heavy on the hoist (left); nudge crop so the circle reads centered.
+  const position =
+    code === 'rs' || code === 'sk' || code === 'si' || code === 'hr' || code === 'pt'
+      ? '62% 50%'
+      : 'center';
 
   return (
     <div
-      className="relative rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 bg-[#121316]"
-      style={{ width: size, height: size }}
+      className="relative shrink-0 overflow-hidden rounded-full border-2 border-white/20 shadow-md"
+      style={{
+        width: size,
+        height: size,
+        backgroundColor: '#121316',
+        backgroundImage: `url("${src}")`,
+        backgroundSize: 'cover',
+        backgroundPosition: position,
+        backgroundRepeat: 'no-repeat',
+      }}
+      aria-hidden
     >
       <img
-        src={localSrc}
+        src={src}
         alt=""
-        draggable={false}
-        className="absolute left-1/2 top-1/2 max-w-none select-none"
-        style={{
-          width: '112%',
-          height: '112%',
-          transform: 'translate(-50%, -50%)',
-          objectFit: 'cover',
-          objectPosition: '50% 50%',
-        }}
-        loading="lazy"
-        referrerPolicy="no-referrer"
-        onError={event => {
-          const img = event.currentTarget;
-          if (img.dataset.fallback !== 'cdn') {
-            img.dataset.fallback = 'cdn';
-            img.src = cdnSrc;
-            img.srcset = `https://flagcdn.com/w320/${code}.png 2x`;
+        className="pointer-events-none absolute h-0 w-0 opacity-0"
+        onError={() => {
+          if (cdnSrc && src !== cdnSrc) {
+            setSrc(cdnSrc);
             return;
           }
           setFailed(true);
