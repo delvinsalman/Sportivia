@@ -266,12 +266,12 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
         </section>
 
         {/* Guide — everything Sportivia does */}
-        <section className="mx-auto w-full max-w-2xl pb-[max(4rem,env(safe-area-inset-bottom))] pt-4 md:pt-8">
+        <section className="mx-auto w-full max-w-3xl pb-[max(4rem,env(safe-area-inset-bottom))] pt-4 md:pt-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-40px' }}
-            className="mb-8 md:mb-10"
+            className="mb-10 md:mb-14 max-w-xl"
           >
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#949ba4] mb-3">
               The guide
@@ -284,7 +284,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             </p>
           </motion.div>
 
-          <div className="mb-8 md:mb-10 flex flex-wrap gap-2 sm:gap-2.5">
+          <div className="mb-12 md:mb-16 flex flex-wrap gap-2 sm:gap-2.5">
             {MODES.map(mode => (
               <div
                 key={mode.name}
@@ -298,7 +298,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             ))}
           </div>
 
-          <div className="space-y-3 sm:space-y-3.5">
+          <div className="space-y-4 sm:space-y-5">
             {GUIDE.map((item, index) => {
               const Icon = item.Icon;
               return (
@@ -308,31 +308,31 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-24px' }}
                   transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.2) }}
-                  className="relative overflow-hidden rounded-2xl px-4 py-5 sm:px-5 sm:py-6"
+                  className="relative overflow-hidden rounded-3xl px-5 py-7 sm:px-8 sm:py-8"
                   style={{
                     background: `radial-gradient(ellipse 85% 90% at 12% 20%, ${item.glare} 0%, transparent 58%), radial-gradient(ellipse 70% 60% at 92% 80%, ${item.glare} 0%, transparent 50%), rgba(12, 13, 16, 0.28)`,
                   }}
                 >
-                  <div className="relative z-10 grid grid-cols-[auto_1fr] gap-3 sm:gap-4 items-start">
-                    <div className="flex w-[4.5rem] sm:w-[5.25rem] flex-col gap-2.5">
+                  <div className="relative z-10 grid gap-5 sm:grid-cols-[7.5rem_1fr] sm:gap-4 sm:items-start">
+                    <div className="flex flex-col gap-3 sm:gap-4">
                       <p
-                        className="text-[10px] sm:text-[11px] font-bold uppercase tracking-[0.16em] leading-tight"
+                        className="text-[11px] font-bold uppercase tracking-[0.18em]"
                         style={{ color: accent }}
                       >
                         {item.eyebrow}
                       </p>
                       <Icon
-                        className="h-10 w-10 sm:h-12 sm:w-12"
+                        className="h-12 w-12 sm:h-16 sm:w-16"
                         style={{ color: accent }}
                         strokeWidth={1.75}
                         aria-hidden
                       />
                     </div>
-                    <div className="min-w-0 pt-0.5">
-                      <h3 className="text-lg sm:text-xl font-extrabold text-[#f2f3f5] tracking-tight leading-snug">
+                    <div className="min-w-0">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-[#f2f3f5] tracking-tight leading-snug">
                         {item.title}
                       </h3>
-                      <p className="mt-1.5 text-sm text-[#949ba4] leading-relaxed">
+                      <p className="mt-2 text-sm sm:text-[15px] text-[#949ba4] leading-relaxed">
                         {item.body}
                       </p>
                     </div>
