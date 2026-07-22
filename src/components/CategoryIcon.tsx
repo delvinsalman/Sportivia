@@ -590,7 +590,16 @@ function AwardBadge({ initials, size = 36 }: { initials?: string; size?: number 
 }
 
 function RegionIcon({ size = 36 }: { meta?: VisualMeta; size?: number }) {
-  return <AnimatedGlobeIcon size={size} />;
+  return (
+    <img
+      src={assetUrl('/icons/region-globe.png')}
+      alt=""
+      draggable={false}
+      className="shrink-0 select-none object-contain drop-shadow-md"
+      style={{ width: size, height: size }}
+      loading="lazy"
+    />
+  );
 }
 
 interface CategoryIconProps {
