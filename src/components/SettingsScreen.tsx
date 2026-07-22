@@ -218,16 +218,10 @@ export function SettingsScreen({ sport, onBack, onPromoRedeemed }: SettingsScree
       playMenuConfirm();
       setPromoDraft('');
       const coinsGranted = result.coinsGranted ?? 0;
-      const cardsUnlocked = result.cardsUnlocked ?? 0;
-      let text = '';
-      if (cardsUnlocked > 0 && coinsGranted > 0) {
-        text = `Unlocked ${cardsUnlocked.toLocaleString()} cards · +${coinsGranted.toLocaleString()} coins`;
-      } else if (cardsUnlocked > 0) {
-        text = `Unlocked all ${cardsUnlocked.toLocaleString()} catalog cards for review`;
-      } else {
-        text = `+${coinsGranted.toLocaleString()} coins unlocked`;
-      }
-      setPromoMsg({ ok: true, text });
+      setPromoMsg({
+        ok: true,
+        text: `+${coinsGranted.toLocaleString()} coins unlocked`,
+      });
       onPromoRedeemed?.();
     } finally {
       setPromoBusy(false);

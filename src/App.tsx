@@ -10,14 +10,13 @@ import { LobbyScreen } from './components/LobbyScreen';
 import { AboutScreen } from './components/AboutScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { CareerScreen } from './components/CareerScreen';
-import { CardPacksScreen } from './components/CardPacksScreen';
-import { CardWagerScreen } from './components/CardWagerScreen';
 import {
   loadProfile,
   equipCharacter,
   equipPet,
   unequipPet,
   purchaseCharacter,
+  upgradeCharacter,
   purchasePet,
   updatePlayerName,
   saveCreativeLoadout,
@@ -31,8 +30,6 @@ import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from './types/
 import type { CreativeLoadout } from './types/creativeCharacter';
 import type { AthleteLoadout } from './types/athleteCharacter';
 import type { BobLoadout } from './types/bobCharacter';
-import { resolveStake, type CardWagerAgreement } from './lib/cardWager';
-import { botName } from './lib/botOpponent';
 import { useDuel } from './hooks/useDuel';
 import { useAmbientMusic } from './hooks/useAmbientMusic';
 import { useOnlineCount } from './hooks/useOnlineCount';
@@ -44,9 +41,7 @@ type Screen =
   | 'settings'
   | 'store'
   | 'career'
-  | 'cards'
   | 'lobby'
-  | 'wager'
   | 'intro'
   | 'game';
 
@@ -66,7 +61,6 @@ export default function App() {
   const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
   const [gameKey, setGameKey] = useState(0);
   const [duelSeed, setDuelSeed] = useState<string | null>(null);
-  const [cardWager, setCardWager] = useState<CardWagerAgreement | null>(null);
   const startedMatchRef = useRef<string | null>(null);
 
   const duel = useDuel({
@@ -78,7 +72,7 @@ export default function App() {
   const online = useOnlineCount();
   const { settings } = useSettings();
 
-  useAmbientMusic(screen === 'wager' ? 'lobby' : screen);
+  useAmbientMusic(screen);
 
   useEffect(() => {
     if (
@@ -87,8 +81,6 @@ export default function App() {
       screen === 'about' ||
       screen === 'settings' ||
       screen === 'career' ||
-      screen === 'cards' ||
-      screen === 'wager' ||
       screen === 'lobby'
     ) {
       setProfile(loadProfile());
@@ -102,28 +94,10 @@ export default function App() {
     setSport(duel.match.sport);
     setDuelSeed(duel.match.seed);
     setMode('duel');
-
-    const youId = duel.lobby?.youId;
-    const you =
-      duel.match.players.find(p => p.id === youId) ??
-      duel.match.players.find(p => p.name === profile.playerName);
-    const opp = duel.match.players.find(p => p.id !== (you?.id ?? youId));
-    setCardWager({
-      yourCard: resolveStake(you?.wagerCardKey, {
-        name: you?.wagerCardName,
-        rarity: you?.wagerCardRarity,
-        rating: you?.wagerCardRating,
-      }),
-      opponentCard: resolveStake(opp?.wagerCardKey, {
-        name: opp?.wagerCardName,
-        rarity: opp?.wagerCardRarity,
-        rating: opp?.wagerCardRating,
-      }),
-    });
     setScreen('intro');
-  }, [duel.match, duel.lobby?.youId, profile.playerName]);
+  }, [duel.match]);
 
-  // Joiners inherit the host's sport so stakes / boards match the room.
+  // Joiners inherit the host's sport so boards match the room.
   useEffect(() => {
     if (duel.lobby?.sport) setSport(duel.lobby.sport);
   }, [duel.lobby?.sport]);
@@ -135,7 +109,6 @@ export default function App() {
     if (duel.lobby?.status === 'lobby' || (!duel.lobby && duel.status === 'idle')) {
       startedMatchRef.current = null;
       setDuelSeed(null);
-      setCardWager(null);
       setScreen('lobby');
     }
   }, [duel.lobby, duel.lobby?.status, duel.status, duel.duelResult, mode, screen]);
@@ -152,7 +125,6 @@ export default function App() {
     if (m === 'duel') {
       setMode('duel');
       setDuelSeed(null);
-      setCardWager(null);
       startedMatchRef.current = null;
       setScreen('lobby');
       return;
@@ -160,11 +132,6 @@ export default function App() {
     setMode(m);
     if (m === 'bot' && difficulty) setBotDifficulty(difficulty);
     setDuelSeed(null);
-    setCardWager(null);
-    if (m === 'bot') {
-      setScreen('wager');
-      return;
-    }
     setScreen('intro');
   }
 
@@ -178,13 +145,7 @@ export default function App() {
       duel.requestRematch();
       startedMatchRef.current = null;
       setDuelSeed(null);
-      setCardWager(null);
       setScreen('lobby');
-      return;
-    }
-    if (mode === 'bot') {
-      setCardWager(null);
-      setScreen('wager');
       return;
     }
     setScreen('intro');
@@ -194,13 +155,17 @@ export default function App() {
     if (mode === 'duel') duel.leaveLobby();
     startedMatchRef.current = null;
     setDuelSeed(null);
-    setCardWager(null);
     setScreen('home');
     refreshProfile();
   }
 
   function handlePurchase(id: CharacterId) {
     const { ok, profile: next } = purchaseCharacter(id);
+    if (ok) setProfile(next);
+  }
+
+  function handleUpgradeCharacter(id: CharacterId) {
+    const { ok, profile: next } = upgradeCharacter(id);
     if (ok) setProfile(next);
   }
 
@@ -255,7 +220,6 @@ export default function App() {
               onSportChange={setSport}
               onStart={handleStart}
               profile={profile}
-              onOpenCards={() => setScreen('cards')}
               onOpenStore={() => setScreen('store')}
               onOpenCareer={() => setScreen('career')}
               onOpenAbout={() => setScreen('about')}
@@ -294,6 +258,7 @@ export default function App() {
               profile={profile}
               onBack={() => setScreen('home')}
               onPurchaseCharacter={handlePurchase}
+              onUpgradeCharacter={handleUpgradeCharacter}
               onEquipCharacter={handleEquip}
               onPurchasePet={handlePurchasePet}
               onEquipPet={handleEquipPet}
@@ -318,17 +283,6 @@ export default function App() {
           </PageTransition>
         )}
 
-        {screen === 'cards' && (
-          <PageTransition key="cards" variant="menu">
-            <CardPacksScreen
-              profile={profile}
-              initialSport={sport}
-              onBack={() => setScreen('home')}
-              onProfileChange={setProfile}
-            />
-          </PageTransition>
-        )}
-
         {screen === 'lobby' && (
           <PageTransition key="lobby" variant="menu">
             <LobbyScreen
@@ -337,7 +291,6 @@ export default function App() {
               error={duel.error}
               lobby={duel.lobby}
               you={duel.you}
-              profile={profile}
               onBack={() => {
                 duel.leaveLobby();
                 setScreen('home');
@@ -347,29 +300,6 @@ export default function App() {
               onReady={ready => duel.setReady(ready)}
               onLeave={() => duel.leaveLobby()}
               onSetWager={duel.setWager}
-            />
-          </PageTransition>
-        )}
-
-        {screen === 'wager' && (
-          <PageTransition key="wager" variant="play">
-            <CardWagerScreen
-              profile={profile}
-              sport={sport}
-              modeLabel="VS AI"
-              opponentLabel={botName(botDifficulty)}
-              botDifficulty={botDifficulty}
-              onBack={() => setScreen('home')}
-              onSkip={() => {
-                setCardWager(null);
-                setScreen('intro');
-              }}
-              onConfirm={agreement => {
-                setCardWager(
-                  agreement.yourCard && agreement.opponentCard ? agreement : null,
-                );
-                setScreen('intro');
-              }}
             />
           </PageTransition>
         )}
@@ -403,7 +333,6 @@ export default function App() {
               opponentScore={duel.opponentScore}
               opponentFinished={duel.opponentFinished}
               duelResult={duel.duelResult}
-              cardWager={cardWager}
               onScoreChange={mode === 'duel' ? duel.reportScore : undefined}
               onDuelFinished={mode === 'duel' ? duel.reportFinish : undefined}
               onHome={handleHome}

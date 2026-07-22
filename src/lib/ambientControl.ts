@@ -1,4 +1,4 @@
-/** Soft ducking for ambient menu music (e.g. during pack openings). */
+/** Soft ducking for ambient menu music during focused UI moments. */
 
 let duckFactor = 1;
 const listeners = new Set<() => void>();

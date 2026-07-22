@@ -72,16 +72,6 @@ export interface GameResult {
     opponentScore: number;
     outcome: 'win' | 'loss' | 'draw' | 'pending';
   };
-  cardWager?: {
-    active: boolean;
-    outcome: 'win' | 'loss' | 'draw' | 'none';
-    message: string;
-    gainedName?: string;
-    gainedRarity?: string;
-    lostName?: string;
-    lostRarity?: string;
-    keptName?: string;
-  };
 }
 
 export interface PlayerStats {

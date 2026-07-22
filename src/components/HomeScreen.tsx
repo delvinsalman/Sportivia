@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Pencil, Play, ShoppingBag, Check, Info, Settings,
-  Medal, Layers3, ArrowLeft,
+  Medal, ArrowLeft,
 } from 'lucide-react';
 import type { Sport, GameMode, BotDifficulty } from '../types';
 import type { PlayerProfile } from '../types/profile';
@@ -25,7 +25,6 @@ interface HomeScreenProps {
   onSportChange: (sport: Sport) => void;
   onStart: (mode: GameMode, botDifficulty?: BotDifficulty) => void;
   profile: PlayerProfile;
-  onOpenCards: () => void;
   onOpenStore: () => void;
   onOpenCareer: () => void;
   onOpenAbout: () => void;
@@ -46,8 +45,8 @@ const MODE_META: Record<GameMode, { tone: string; icon: string; detail: string }
   training: { tone: '#949ba4', icon: '/icons/modes/training.png', detail: '1 min · practice · no rewards' },
   daily: { tone: '#23a559', icon: '/icons/modes/daily.png', detail: '2 min · first finish pays' },
   timed: { tone: '#5865f2', icon: '/icons/modes/ranked.png', detail: '2 min · ranked bonus' },
-  bot: { tone: '#a855f7', icon: '/icons/modes/bot.png', detail: 'Race a bot · optional card stake' },
-  duel: { tone: '#ed4245', icon: '/icons/modes/duel.png', detail: 'Lobby code · stake a card · highest wins' },
+  bot: { tone: '#a855f7', icon: '/icons/modes/bot.png', detail: 'Race a bot · highest score wins' },
+  duel: { tone: '#ed4245', icon: '/icons/modes/duel.png', detail: 'Lobby code · highest score wins' },
 };
 
 function EditableName({
@@ -117,7 +116,6 @@ export function HomeScreen({
   onSportChange,
   onStart,
   profile,
-  onOpenCards,
   onOpenStore,
   onOpenCareer,
   onOpenAbout,
@@ -220,18 +218,6 @@ export function HomeScreen({
         className="fixed top-0 right-0 z-30 flex max-w-[min(100vw-7.5rem,100%)] items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-none pt-[max(0.5rem,env(safe-area-inset-top))] pr-[max(0.5rem,env(safe-area-inset-right))] pb-2 pl-1 sm:max-w-none sm:gap-2.5 sm:overflow-visible sm:p-4"
       >
         <HeaderStats profile={profile} online={showOnline} coinStyle="home" />
-        <button
-          type="button"
-          onClick={() => {
-            playMenuClick();
-            onOpenCards();
-          }}
-          className="game-nav-tab game-nav-tab-active"
-          aria-label="Card Packs"
-        >
-          <Layers3 className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
-          <span className="hidden sm:inline">Packs</span>
-        </button>
         <button
           type="button"
           onClick={() => {

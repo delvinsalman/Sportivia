@@ -16,39 +16,8 @@ import type { DuelMatchResult } from '../lib/duelTypes';
 import { Bot, Swords } from 'lucide-react';
 import { getSettings } from '../lib/settings';
 import { BOT_DIFFICULTIES, botName, nextBotDelay, rollBotPoints } from '../lib/botOpponent';
-import {
-  isWagerActive,
-  mergeWagerAgreement,
-  resolveStake,
-  type CardWagerAgreement,
-} from '../lib/cardWager';
-import { settleCardWager, addCardToCollection, removeCardFromCollection, grantDuelWin } from '../lib/profileStorage';
+import { grantDuelWin } from '../lib/profileStorage';
 import type { PlayerProfile } from '../types/profile';
-
-const DUEL_WAGER_KEY = 'sportivia-duel-active-wager-v1';
-
-function saveDuelWager(agreement: CardWagerAgreement | null) {
-  try {
-    if (!agreement || !isWagerActive(agreement)) {
-      sessionStorage.removeItem(DUEL_WAGER_KEY);
-      return;
-    }
-    sessionStorage.setItem(DUEL_WAGER_KEY, JSON.stringify(agreement));
-  } catch {
-    /* ignore */
-  }
-}
-
-function loadDuelWager(): CardWagerAgreement | null {
-  try {
-    const raw = sessionStorage.getItem(DUEL_WAGER_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as CardWagerAgreement;
-    return isWagerActive(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
 
 interface GameScreenProps {
   sport: Sport;
@@ -66,7 +35,6 @@ interface GameScreenProps {
   opponentScore?: number;
   opponentFinished?: boolean;
   duelResult?: DuelMatchResult | null;
-  cardWager?: CardWagerAgreement | null;
   onScoreChange?: (score: number) => void;
   onDuelFinished?: (payload: {
     score: number;
@@ -103,7 +71,6 @@ export function GameScreen({
   opponentScore = 0,
   opponentFinished = false,
   duelResult = null,
-  cardWager = null,
   onScoreChange,
   onDuelFinished,
   onHome,
@@ -117,51 +84,6 @@ export function GameScreen({
   });
   const [botScore, setBotScore] = useState(0);
   const botScoreRef = useRef(0);
-  const wagerSettledRef = useRef(false);
-  const escrowRef = useRef(false);
-  const agreementRef = useRef<CardWagerAgreement | null>(null);
-  const [wagerInfo, setWagerInfo] = useState<GameResult['cardWager']>();
-
-  // Keep a durable copy of the live stake (survives remounts / empty server wager fields).
-  useEffect(() => {
-    if (!cardWager || !isWagerActive(cardWager)) return;
-    agreementRef.current = cardWager;
-    saveDuelWager(cardWager);
-  }, [cardWager]);
-
-  useEffect(() => {
-    if (escrowRef.current) return;
-    const live =
-      (cardWager && isWagerActive(cardWager) ? cardWager : null) ??
-      (agreementRef.current && isWagerActive(agreementRef.current)
-        ? agreementRef.current
-        : null) ??
-      loadDuelWager();
-    const stake = live?.yourCard;
-    if (!stake || !isWagerActive(live)) return;
-    const { ok, profile } = removeCardFromCollection(stake.cardKey);
-    // Already missing is fine — still mark escrowed so mid-match quit doesn't double-restore.
-    escrowRef.current = true;
-    if (ok) onProfileChange?.(profile);
-  }, [cardWager, onProfileChange]);
-
-  // If we leave the match mid-escrow (disconnect kick, rematch, etc.), restore the card.
-  const stakeKeyRef = useRef<string | null>(null);
-  useEffect(() => {
-    stakeKeyRef.current =
-      cardWager?.yourCard?.cardKey ??
-      agreementRef.current?.yourCard?.cardKey ??
-      loadDuelWager()?.yourCard?.cardKey ??
-      null;
-  }, [cardWager]);
-  useEffect(() => {
-    return () => {
-      if (escrowRef.current && !wagerSettledRef.current && stakeKeyRef.current) {
-        addCardToCollection(stakeKeyRef.current);
-        escrowRef.current = false;
-      }
-    };
-  }, []);
 
   useEffect(() => {
     if (mode !== 'bot' || game.phase !== 'playing') return;
@@ -189,84 +111,6 @@ export function GameScreen({
     };
   }, [mode, botDifficulty, game.phase]);
 
-  useEffect(() => {
-    if (wagerSettledRef.current) return;
-    if (!game.result?.completed) return;
-
-    let outcome: 'win' | 'loss' | 'draw' | null = null;
-    if (mode === 'bot') {
-      outcome =
-        game.result.score > botScore
-          ? 'win'
-          : game.result.score < botScore
-            ? 'loss'
-            : 'draw';
-    } else if (mode === 'duel') {
-      if (!duelResult) return;
-      if (duelResult.winnerId === 'draw') outcome = 'draw';
-      else if (duelResult.winnerId === duelResult.you.id) outcome = 'win';
-      else outcome = 'loss';
-    }
-
-    if (!outcome) return;
-
-    const fromServer =
-      mode === 'duel' && duelResult?.wager
-        ? {
-            yourCard: resolveStake(duelResult.wager.yourCardKey, {
-              name: duelResult.wager.yourCardName,
-              rarity: duelResult.wager.yourCardRarity,
-              rating: duelResult.wager.yourCardRating,
-            }),
-            opponentCard: resolveStake(duelResult.wager.opponentCardKey, {
-              name: duelResult.wager.opponentCardName,
-              rarity: duelResult.wager.opponentCardRarity,
-              rating: duelResult.wager.opponentCardRating,
-            }),
-          }
-        : null;
-
-    // Prefer local stakes first — server wager is always an object and may have null keys.
-    const agreement = mergeWagerAgreement(
-      cardWager,
-      agreementRef.current,
-      loadDuelWager(),
-      fromServer,
-    );
-
-    if (!isWagerActive(agreement)) {
-      wagerSettledRef.current = true;
-      saveDuelWager(null);
-      setWagerInfo({
-        active: false,
-        outcome: 'none',
-        message: 'No card stake this match',
-      });
-      return;
-    }
-
-    wagerSettledRef.current = true;
-    const { profile: nextProfile, settlement } = settleCardWager(outcome, agreement!);
-    escrowRef.current = false;
-    saveDuelWager(null);
-    agreementRef.current = null;
-
-    setWagerInfo({
-      active: true,
-      outcome: settlement.outcome,
-      message: settlement.message,
-      gainedName: settlement.gained?.name ?? agreement!.opponentCard?.name,
-      gainedRarity: settlement.gained?.rarity ?? agreement!.opponentCard?.rarity,
-      lostName: settlement.lost?.name ?? agreement!.yourCard?.name,
-      lostRarity: settlement.lost?.rarity ?? agreement!.yourCard?.rarity,
-      keptName:
-        settlement.outcome === 'win' || settlement.outcome === 'draw'
-          ? agreement!.yourCard?.name
-          : undefined,
-    });
-    onProfileChange?.(nextProfile);
-  }, [botScore, cardWager, duelResult, game.result, mode, onProfileChange]);
-
   // Unlock duelist achievement once the match result confirms a win.
   useEffect(() => {
     if (mode !== 'duel' || !duelResult) return;
@@ -291,7 +135,6 @@ export function GameScreen({
           opponentScore: botScore,
           outcome,
         },
-        cardWager: wagerInfo,
       };
     }
     if (mode !== 'duel') return game.result;
@@ -310,7 +153,6 @@ export function GameScreen({
         opponentScore: duelResult?.opponent.score ?? opponentScore,
         outcome,
       },
-      cardWager: wagerInfo,
     };
   }, [
     game.result,
@@ -320,24 +162,9 @@ export function GameScreen({
     opponentScore,
     botScore,
     botDifficulty,
-    wagerInfo,
   ]);
 
   function handleQuit() {
-    // Quitting mid-match with an active stake forfeits your escrowed card.
-    const live =
-      (cardWager && isWagerActive(cardWager) ? cardWager : null) ??
-      agreementRef.current ??
-      loadDuelWager();
-    if (escrowRef.current && !wagerSettledRef.current && live?.yourCard && isWagerActive(live)) {
-      wagerSettledRef.current = true;
-      escrowRef.current = false;
-      saveDuelWager(null);
-    } else if (escrowRef.current && !wagerSettledRef.current && stakeKeyRef.current) {
-      const { profile } = addCardToCollection(stakeKeyRef.current);
-      onProfileChange?.(profile);
-      escrowRef.current = false;
-    }
     game.abandonRun();
     onHome();
   }

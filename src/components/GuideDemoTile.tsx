@@ -15,10 +15,14 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
   const [ready, setReady] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState(!src.trim());
 
   // Bust Safari’s sticky cache of older HTML/404 responses for these paths.
-  const mediaSrc = src.includes('?') ? src : `${src}?v=2`;
+  const mediaSrc = !src.trim()
+    ? ''
+    : src.includes('?')
+      ? src
+      : `${src}?v=2`;
 
   const startPreview = useCallback(() => {
     const video = previewRef.current;
@@ -39,8 +43,8 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
 
   useEffect(() => {
     setReady(false);
-    setFailed(false);
-  }, [mediaSrc]);
+    setFailed(!src.trim());
+  }, [mediaSrc, src]);
 
   useEffect(() => {
     if (hovered && !open) startPreview();
@@ -125,38 +129,24 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
               background: `radial-gradient(ellipse 80% 70% at 30% 20%, ${accent}33 0%, transparent 55%), linear-gradient(145deg, #16181d 0%, #0c0d10 100%)`,
             }}
           >
-            <div
-              className={`absolute inset-3 grid grid-cols-3 gap-1.5 rounded-xl border border-white/5 bg-black/25 p-2 transition-opacity ${
-                hovered ? 'opacity-100' : 'opacity-70'
-              }`}
-            >
-              {Array.from({ length: 9 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="rounded-md bg-white/5"
-                  style={{
-                    animation: hovered ? `guide-demo-pulse 1.2s ease-in-out ${i * 0.08}s infinite` : undefined,
-                    background: hovered && i % 3 === 0 ? `${accent}55` : undefined,
-                  }}
-                />
-              ))}
-            </div>
-            <div
-              className={`absolute left-1/2 top-1/2 flex h-11 w-11 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[2.5px] border-white/25 transition-transform duration-300 ${
-                hovered ? 'scale-110' : 'scale-100'
-              }`}
-              style={{ background: accent, color: '#fff', boxShadow: `0 3px 0 ${accent}88` }}
-            >
-              <Play className="h-4 w-4 fill-current translate-x-px" />
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 px-4 text-center">
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-white/85">
+                Demo coming soon
+              </p>
+              <p className="text-[10px] font-semibold text-white/45 leading-snug">
+                Short clips for each guide section
+              </p>
             </div>
           </div>
         )}
 
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex items-end justify-between gap-2 bg-gradient-to-t from-black/70 via-black/25 to-transparent px-2.5 pb-2 pt-8">
           <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-white/80">
-            Demo
+            {failed ? 'Coming soon' : 'Demo'}
           </span>
-          <Maximize2 className="h-3.5 w-3.5 text-white/70 opacity-0 transition-opacity group-hover:opacity-100" />
+          {!failed && (
+            <Maximize2 className="h-3.5 w-3.5 text-white/70 opacity-0 transition-opacity group-hover:opacity-100" />
+          )}
         </div>
       </div>
 
@@ -208,9 +198,9 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
                     >
                       <Play className="h-5 w-5 fill-white text-white translate-x-px" />
                     </div>
-                    <p className="text-sm font-bold text-[#f2f3f5]">Demo unavailable</p>
+                    <p className="text-sm font-bold text-[#f2f3f5]">Demo coming soon</p>
                     <p className="max-w-sm text-xs text-[#949ba4] leading-relaxed">
-                      Try a private window, or clear Safari cache for this site, then reload.
+                      We’re recording short clips for each guide section.
                     </p>
                   </div>
                 )}

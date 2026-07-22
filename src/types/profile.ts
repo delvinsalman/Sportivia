@@ -2,7 +2,6 @@ import type { PlayerStats } from '../types';
 import type { CreativeLoadout } from './creativeCharacter';
 import type { AthleteLoadout } from './athleteCharacter';
 import type { BobLoadout } from './bobCharacter';
-import type { CardCollectionState } from './cards';
 import { DEFAULT_CREATIVE_LOADOUT } from './creativeCharacter';
 import { DEFAULT_ATHLETE_LOADOUT } from './athleteCharacter';
 import { DEFAULT_BOB_LOADOUT } from './bobCharacter';
@@ -117,7 +116,8 @@ export interface PlayerProfile {
   rabbitVariant: RabbitVariantId;
   /** Selected breed included with the Dog pet */
   dogVariant: DogVariantId;
-  cardCollection: CardCollectionState;
+  /** Per-skin upgrade level (1–15). Missing keys mean level 1 when unlocked. */
+  characterLevels: Partial<Record<CharacterId, number>>;
   stats: PlayerStats;
 }
 

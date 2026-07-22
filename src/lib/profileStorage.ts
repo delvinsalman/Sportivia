@@ -23,15 +23,8 @@ import { normalizeBobLoadout, type BobLoadout } from '../types/bobCharacter';
 import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult, grantDuelWinAchievement } from './seasonMeta';
-import type { CardPackTier, CardRarity, CollectibleCard, OpenedCard } from '../types/cards';
-import { CARD_BY_KEY, CARD_CATALOG, CARDS_BY_SPORT, getPackDefinition } from './cardCatalog';
-import {
-  describeWagerSettlement,
-  isWagerActive,
-  type CardWagerAgreement,
-  type CardWagerSettlement,
-} from './cardWager';
 import { pickRandomPlayerName } from './playerNames';
+import { canUpgradeCharacter } from './characterCards';
 
 const PROFILE_KEY = 'gridiq-profile-v4';
 const PAID_SKINS_MIGRATION_KEY = 'gridiq-paid-skins-v1';
@@ -82,11 +75,7 @@ function defaultProfile(): PlayerProfile {
     bobLoadout: { ...DEFAULT_BOB_LOADOUT },
     rabbitVariant: DEFAULT_RABBIT_VARIANT,
     dogVariant: DEFAULT_DOG_VARIANT,
-    cardCollection: {
-      owned: {},
-      packsOpened: 0,
-      legendaryPity: 0,
-    },
+    characterLevels: {},
     stats: loadStats(),
   };
 }
@@ -128,31 +117,18 @@ export function loadProfile(): PlayerProfile {
     const dogVariant = DOG_VARIANTS.some(variant => variant.id === parsed.dogVariant)
       ? (parsed.dogVariant as DogVariantId)
       : DEFAULT_DOG_VARIANT;
-    const rawCollection = parsed.cardCollection;
-    const cardCollection = {
-      owned:
-        rawCollection?.owned && typeof rawCollection.owned === 'object'
-          ? Object.fromEntries(
-              Object.entries(rawCollection.owned)
-                .filter(
-                  ([key, count]) =>
-                    /^(soccer|basketball|baseball|football|hockey):/.test(key) &&
-                    typeof count === 'number' &&
-                    Number.isFinite(count) &&
-                    count > 0,
-                )
-                .map(([key]) => [key, 1]),
-            )
-          : {},
-      packsOpened:
-        typeof rawCollection?.packsOpened === 'number'
-          ? Math.max(0, Math.floor(rawCollection.packsOpened))
-          : 0,
-      legendaryPity:
-        typeof rawCollection?.legendaryPity === 'number'
-          ? Math.max(0, Math.floor(rawCollection.legendaryPity))
-          : 0,
-    };
+
+    const characterLevels: Partial<Record<CharacterId, number>> = {};
+    if (parsed.characterLevels && typeof parsed.characterLevels === 'object') {
+      for (const [key, value] of Object.entries(parsed.characterLevels)) {
+        const id = migrateCharacterId(key);
+        if (!id || typeof value !== 'number') continue;
+        characterLevels[id] = Math.max(1, Math.min(15, Math.floor(value)));
+      }
+    }
+    for (const id of unlocked) {
+      if (characterLevels[id] == null) characterLevels[id] = 1;
+    }
 
     const profile: PlayerProfile = {
       ...base,
@@ -169,7 +145,7 @@ export function loadProfile(): PlayerProfile {
       bobLoadout,
       rabbitVariant,
       dogVariant,
-      cardCollection,
+      characterLevels,
       stats: loadStats(),
     };
 
@@ -186,14 +162,18 @@ export function loadProfile(): PlayerProfile {
       parsed.equippedPet === undefined ||
       safePet !== parsed.equippedPet ||
       unlockedPets.length !== (parsed.unlockedPets?.length ?? 0);
-    const hadMultiCopies = Object.values(rawCollection?.owned ?? {}).some(
-      count => typeof count === 'number' && count > 1,
-    );
-    const cardsChanged = !parsed.cardCollection || hadMultiCopies;
     const rabbitChanged = parsed.rabbitVariant !== rabbitVariant;
     const dogChanged = parsed.dogVariant !== dogVariant;
+    const hadLegacyCards = 'cardCollection' in parsed;
 
-    if (equippedMigrated || unlockedChanged || petsChanged || cardsChanged || rabbitChanged || dogChanged) {
+    if (
+      equippedMigrated ||
+      unlockedChanged ||
+      petsChanged ||
+      rabbitChanged ||
+      dogChanged ||
+      hadLegacyCards
+    ) {
       saveProfile(profile);
     }
 
@@ -335,7 +315,20 @@ export function purchaseCharacter(id: CharacterId): { ok: boolean; profile: Play
 
   if (def.price > 0) profile.coins -= def.price;
   profile.unlockedCharacters = [...profile.unlockedCharacters, id];
+  profile.characterLevels = { ...profile.characterLevels, [id]: 1 };
   profile.equippedCharacter = id;
+  saveProfile(profile);
+  return { ok: true, profile };
+}
+
+export function upgradeCharacter(id: CharacterId): { ok: boolean; profile: PlayerProfile; error?: string } {
+  const profile = loadProfile();
+  const check = canUpgradeCharacter(profile, id);
+  if (!check.ok) {
+    return { ok: false, profile, error: check.reason ?? 'Cannot upgrade' };
+  }
+  profile.coins -= check.cost;
+  profile.characterLevels = { ...profile.characterLevels, [id]: check.level + 1 };
   saveProfile(profile);
   return { ok: true, profile };
 }
@@ -401,232 +394,11 @@ export function saveDogVariant(variant: DogVariantId): PlayerProfile {
   return profile;
 }
 
-const RARITY_ORDER: Record<CardRarity, number> = {
-  common: 0,
-  rare: 1,
-  epic: 2,
-  legendary: 3,
-};
-
-function rollRarity(
-  odds: Record<CardRarity, number>,
-  minimum: CardRarity = 'common',
-  random: () => number,
-): CardRarity {
-  const allowed = (Object.keys(odds) as CardRarity[]).filter(
-    rarity => RARITY_ORDER[rarity] >= RARITY_ORDER[minimum],
-  );
-  const total = allowed.reduce((sum, rarity) => sum + odds[rarity], 0);
-  let roll = random() * total;
-  for (const rarity of allowed) {
-    roll -= odds[rarity];
-    if (roll <= 0) return rarity;
-  }
-  return allowed.at(-1) ?? minimum;
-}
-
-function pickCard(
-  pool: CollectibleCard[],
-  rarity: CardRarity,
-  random: () => number,
-  excludeKeys: Set<string> = new Set(),
-): CollectibleCard | null {
-  const available = pool.filter(card => !excludeKeys.has(card.key));
-  const source = available.length ? available : pool;
-  const rarityPool = source.filter(card => card.rarity === rarity);
-  const choices = rarityPool.length ? rarityPool : source;
-  if (!choices.length) return null;
-  return choices[Math.floor(random() * choices.length)]!;
-}
-
-export function openCardPack(
-  sport: Sport,
-  tier: CardPackTier,
-  random: () => number = Math.random,
-): {
-  ok: boolean;
-  profile: PlayerProfile;
-  cards: OpenedCard[];
-  duplicateCoins: number;
-  error?: string;
-} {
-  const profile = loadProfile();
-  const pack = getPackDefinition(tier);
-  if (profile.coins < pack.cost) {
-    return {
-      ok: false,
-      profile,
-      cards: [],
-      duplicateCoins: 0,
-      error: `Need ${pack.cost - profile.coins} more coins`,
-    };
-  }
-
-  const pool = CARDS_BY_SPORT[sport];
-  if (!pool.length) {
-    return { ok: false, profile, cards: [], duplicateCoins: 0, error: 'No cards available' };
-  }
-
-  const rolled: CollectibleCard[] = [];
-  const pulledKeys = new Set<string>();
-  for (let index = 0; index < pack.cardCount; index++) {
-    const isGuaranteedSlot = index === pack.cardCount - 1 && pack.guaranteedRarity;
-    const rarity = rollRarity(
-      pack.odds,
-      isGuaranteedSlot ? pack.guaranteedRarity : 'common',
-      random,
-    );
-    const card = pickCard(pool, rarity, random, pulledKeys);
-    if (!card) break;
-    rolled.push(card);
-    pulledKeys.add(card.key);
-  }
-
-  const pityTriggered =
-    profile.cardCollection.legendaryPity >= 34 &&
-    !rolled.some(card => card.rarity === 'legendary');
-  if (pityTriggered && rolled.length > 0) {
-    // Prefer a legend not already in this pack so uniqueness holds.
-    const legend =
-      pickCard(pool, 'legendary', random, pulledKeys) ??
-      pickCard(pool, 'legendary', random, new Set());
-    if (legend) {
-      const previous = rolled[0]!;
-      if (previous.key !== legend.key) {
-        pulledKeys.delete(previous.key);
-        const alreadyInPack = rolled.findIndex((card, i) => i > 0 && card.key === legend.key);
-        rolled[0] = legend;
-        pulledKeys.add(legend.key);
-        if (alreadyInPack >= 0) {
-          const refill = pickCard(pool, previous.rarity, random, pulledKeys);
-          if (refill) {
-            rolled[alreadyInPack] = refill;
-            pulledKeys.add(refill.key);
-          }
-        }
-      }
-    }
-  }
-
-  profile.coins -= pack.cost;
-  let duplicateCoins = 0;
-  const cards = rolled.map(card => {
-    const alreadyOwned = (profile.cardCollection.owned[card.key] ?? 0) > 0;
-    const duplicate = alreadyOwned;
-    const refund = duplicate ? pack.duplicateRefund[card.rarity] : 0;
-    if (!alreadyOwned) {
-      profile.cardCollection.owned[card.key] = 1;
-    }
-    profile.coins += refund;
-    duplicateCoins += refund;
-    return { card, duplicate, duplicateCoins: refund };
-  });
-
-  const pulledLegendary = rolled.some(card => card.rarity === 'legendary');
-  profile.cardCollection.packsOpened += 1;
-  profile.cardCollection.legendaryPity = pulledLegendary
-    ? 0
-    : profile.cardCollection.legendaryPity + 1;
-  saveProfile(profile);
-
-  return { ok: true, profile, cards, duplicateCoins };
-}
-
-export function addCardToCollection(cardKey: string): {
-  ok: boolean;
-  profile: PlayerProfile;
-  duplicate: boolean;
-  error?: string;
-} {
-  const profile = loadProfile();
-  const card = CARD_BY_KEY.get(cardKey);
-  // Allow sport:id keys even if catalog lookup fails so duel transfers still land.
-  if (!card && !/^[a-z]+:.+/.test(cardKey)) {
-    return { ok: false, profile, duplicate: false, error: 'Unknown card' };
-  }
-  const alreadyOwned = (profile.cardCollection.owned[cardKey] ?? 0) > 0;
-  if (!alreadyOwned) {
-    profile.cardCollection.owned[cardKey] = 1;
-    saveProfile(profile);
-  }
-  return { ok: true, profile, duplicate: alreadyOwned };
-}
-
-export function removeCardFromCollection(cardKey: string): {
-  ok: boolean;
-  profile: PlayerProfile;
-  error?: string;
-} {
-  const profile = loadProfile();
-  if ((profile.cardCollection.owned[cardKey] ?? 0) <= 0) {
-    return { ok: false, profile, error: 'Card not owned' };
-  }
-  delete profile.cardCollection.owned[cardKey];
-  saveProfile(profile);
-  return { ok: true, profile };
-}
-
-/** Apply win/loss card stake. Escrow may already have removed your card at match start. */
-export function settleCardWager(
-  outcome: 'win' | 'loss' | 'draw',
-  agreement: CardWagerAgreement,
-): {
-  profile: PlayerProfile;
-  settlement: CardWagerSettlement;
-} {
-  const settlement = describeWagerSettlement(outcome, agreement);
-  let profile = loadProfile();
-
-  if (!isWagerActive(agreement)) {
-    return { profile, settlement };
-  }
-
-  if (outcome === 'win') {
-    // Keep yours + take theirs
-    if (agreement.yourCard) {
-      profile = addCardToCollection(agreement.yourCard.cardKey).profile;
-    }
-    if (agreement.opponentCard) {
-      const added = addCardToCollection(agreement.opponentCard.cardKey);
-      profile = added.profile;
-      if (added.duplicate && settlement.gained) {
-        settlement.message = `You won ${settlement.gained.name} (already owned)`;
-      } else if (settlement.gained) {
-        settlement.message = `You won ${settlement.gained.name}`;
-      }
-    }
-  } else if (outcome === 'draw') {
-    // Return yours if escrowed
-    if (agreement.yourCard) {
-      profile = addCardToCollection(agreement.yourCard.cardKey).profile;
-    }
-  } else if (outcome === 'loss') {
-    // Drop yours (no-op if escrow already removed it)
-    if (agreement.yourCard) {
-      const removed = removeCardFromCollection(agreement.yourCard.cardKey);
-      profile = removed.ok ? removed.profile : profile;
-    }
-  }
-
-  return { profile, settlement };
-}
-
-export function unlockAllCatalogCards(profile: PlayerProfile): number {
-  let added = 0;
-  for (const card of CARD_CATALOG) {
-    if ((profile.cardCollection.owned[card.key] ?? 0) > 0) continue;
-    profile.cardCollection.owned[card.key] = 1;
-    added += 1;
-  }
-  return added;
-}
-
 export async function redeemPromoCode(raw: string): Promise<{
   ok: boolean;
   profile: PlayerProfile;
   error?: string;
   coinsGranted?: number;
-  cardsUnlocked?: number;
   rewardLabel?: string;
 }> {
   const { lookupPromo, markPromoRedeemed } = await import('./promoCodes');
@@ -639,11 +411,6 @@ export async function redeemPromoCode(raw: string): Promise<{
     return { ok: false, profile, error: 'Invalid code' };
   }
 
-  let cardsUnlocked = 0;
-  if (result.reward.unlockAllCards) {
-    cardsUnlocked = unlockAllCatalogCards(profile);
-  }
-
   profile.coins += result.reward.coins;
   markPromoRedeemed(result.reward.id);
   saveProfile(profile);
@@ -651,7 +418,6 @@ export async function redeemPromoCode(raw: string): Promise<{
     ok: true,
     profile,
     coinsGranted: result.reward.coins,
-    cardsUnlocked,
     rewardLabel: result.reward.label,
   };
 }

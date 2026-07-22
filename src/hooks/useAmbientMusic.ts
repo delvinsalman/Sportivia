@@ -7,10 +7,10 @@ const TRACK = assetUrl('/audio/starlight-strut.mp3');
 const PLAYBACK_RATE = 0.82;
 const FADE_MS = 1100;
 
-type AmbientScreen = 'home' | 'about' | 'store' | 'settings' | 'career' | 'cards' | 'lobby' | 'intro' | 'game';
+type AmbientScreen = 'home' | 'about' | 'store' | 'settings' | 'career' | 'lobby' | 'intro' | 'game';
 
 function isMenuScreen(screen: AmbientScreen) {
-  return screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings' || screen === 'career' || screen === 'cards';
+  return screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings' || screen === 'career';
 }
 
 function fadeVolume(

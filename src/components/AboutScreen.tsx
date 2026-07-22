@@ -7,8 +7,6 @@ import {
   Globe2,
   Gamepad2,
   Swords,
-  Layers3,
-  PackageOpen,
   ShoppingBag,
   Trophy,
   Wifi,
@@ -55,7 +53,7 @@ const GUIDE: Array<{
     body: 'A player drops in. Tap the cell that fits — club, country, award, era, and more — before the clock runs out. Streaks multiply your score. Fill the board, then it refreshes.',
     Icon: LayoutGrid,
     glare: 'rgba(88, 101, 242, 0.16)',
-    demo: '/demos/board.mp4',
+    demo: '',
   },
   {
     eyebrow: 'Five sports',
@@ -63,7 +61,7 @@ const GUIDE: Array<{
     body: 'Soccer, Basketball, Baseball, Football, and Hockey each have their own pool, look, and record. Switch sports from the home rail anytime.',
     Icon: Globe2,
     glare: 'rgba(35, 165, 89, 0.15)',
-    demo: '/demos/sports.mp4',
+    demo: '',
   },
   {
     eyebrow: 'Modes',
@@ -71,7 +69,7 @@ const GUIDE: Array<{
     body: 'Training is practice with no rewards. Daily is a shared board with a first-finish payday. Ranked is timed and competitive. Vs AI races a bot. 1v1 Duel is a live lobby with a code.',
     Icon: Gamepad2,
     glare: 'rgba(240, 178, 50, 0.14)',
-    demo: '/demos/modes.mp4',
+    demo: '',
   },
   {
     eyebrow: 'Vs AI & Duels',
@@ -79,31 +77,15 @@ const GUIDE: Array<{
     body: 'Pick Beginner, Pro, or Expert against the bot. Online, create or join a room, ready up together, and the highest score wins the match.',
     Icon: Swords,
     glare: 'rgba(237, 66, 69, 0.14)',
-    demo: '/demos/duels.mp4',
-  },
-  {
-    eyebrow: 'Card stakes',
-    title: 'Put a player on the line',
-    body: 'Optionally stake a card from your collection. Win and you keep yours and take theirs. Lose and that card is gone. Draw returns both stakes.',
-    Icon: Layers3,
-    glare: 'rgba(168, 85, 247, 0.15)',
-    demo: '/demos/stakes.mp4',
-  },
-  {
-    eyebrow: 'Packs & collection',
-    title: 'Open packs. Build your set',
-    body: 'Spend coins on Prospect, Elite, or Icon packs. Cards go Common to Legendary. Duplicates refund coins. Browse your collection by sport anytime.',
-    Icon: PackageOpen,
-    glare: 'rgba(249, 115, 22, 0.14)',
-    demo: '/demos/packs.mp4',
+    demo: '',
   },
   {
     eyebrow: 'Store',
-    title: 'Skins, pets, and style',
-    body: 'Unlock characters and companions with coins. Equip them on home, About, and results. Some skins have loadouts and breed variants.',
+    title: 'Skin cards you can upgrade',
+    body: 'Each character is a collectible skin card with overall rating and six attributes. Unlock skins with coins, then upgrade them to raise stats. Equip on home, About, and results — in-game perks come later. Pets and loadouts live here too.',
     Icon: ShoppingBag,
     glare: 'rgba(56, 189, 248, 0.14)',
-    demo: '/demos/store.mp4',
+    demo: '',
   },
   {
     eyebrow: 'Progress',
@@ -111,7 +93,7 @@ const GUIDE: Array<{
     body: 'Finishing scoring runs earns coins and XP. Level up for milestones. Career tracks best scores, streaks, and perfect boards per sport.',
     Icon: Trophy,
     glare: 'rgba(253, 224, 71, 0.13)',
-    demo: '/demos/progress.mp4',
+    demo: '',
   },
   {
     eyebrow: 'Live & identity',
@@ -119,7 +101,7 @@ const GUIDE: Array<{
     body: 'Edit your display name on home. See who’s online. Host or join a duel with a short code — same board, fair race.',
     Icon: Wifi,
     glare: 'rgba(74, 222, 128, 0.13)',
-    demo: '/demos/live.mp4',
+    demo: '',
   },
   {
     eyebrow: 'Settings',
@@ -127,7 +109,7 @@ const GUIDE: Array<{
     body: 'Mute audio, tune music and SFX, reduce motion, or turn off match tips. Promo codes redeem from Settings when you have one.',
     Icon: Settings,
     glare: 'rgba(148, 163, 184, 0.16)',
-    demo: '/demos/settings.mp4',
+    demo: '',
   },
 ];
 
@@ -135,7 +117,7 @@ const MODES = [
   { name: 'Training', detail: '1 min · practice' },
   { name: 'Daily', detail: '2 min · first finish' },
   { name: 'Ranked', detail: '2 min · climb' },
-  { name: 'Vs AI', detail: 'Bot race · stake' },
+  { name: 'Vs AI', detail: 'Bot race' },
   { name: '1v1 Duel', detail: 'Lobby · highest wins' },
 ] as const;
 
@@ -292,7 +274,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
               Everything in Sportivia
             </h2>
             <p className="mt-3 text-sm sm:text-base text-[#949ba4] leading-relaxed">
-              From the board to packs, duels, and your career — here’s how the whole app fits together.
+              From the board to duels and your career — here’s how the whole app fits together.
             </p>
           </motion.div>
 
@@ -366,7 +348,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             className="mt-12 md:mt-16 text-center"
           >
             <p className="text-xs font-semibold text-[#5c5e66] leading-relaxed max-w-lg mx-auto">
-              Coins, packs, and cards are virtual entertainment only — no real-world value.
+              Coins are virtual entertainment only — no real-world value.
               Athlete names are for fun and don’t imply endorsement.
             </p>
             <motion.button

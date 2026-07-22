@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Share2, RotateCcw, Home, Sparkles, Zap, Swords } from 'lucide-react';
+import { Share2, RotateCcw, Home, Sparkles, Zap } from 'lucide-react';
 import { CoinIcon } from './CoinIcon';
 import type { GameResult } from '../types';
 import { generateShareText } from '../lib/roundEngine';
@@ -35,13 +35,6 @@ const modeLabels: Record<GameResult['mode'], string> = {
   duel: '1v1 Duel',
 };
 
-const RARITY_TINT: Record<string, string> = {
-  common: '#94a3b8',
-  rare: '#60a5fa',
-  epic: '#c084fc',
-  legendary: '#f0b232',
-};
-
 export function ResultModal({
   result,
   characterId,
@@ -61,7 +54,6 @@ export function ResultModal({
   const pet = petId ? getPetDef(petId) : null;
   const accent = SPORT_PODIUM_ACCENT[result.sport];
   const duel = result.duel;
-  const stake = result.cardWager;
 
   const shareText = generateShareText(
     result.sport, result.mode, result.score, result.correct, result.boardFilled, result.date,
@@ -95,9 +87,6 @@ export function ResultModal({
     }
     setTimeout(() => setCopied(false), 2000);
   }
-
-  const showStake =
-    !!stake?.active && stake.outcome !== 'none' && !waitingForOpponent;
 
   return (
     <motion.div
@@ -198,64 +187,6 @@ export function ResultModal({
                 </p>
               )}
             </div>
-
-            {showStake && (
-              <div
-                className={`mb-4 flex items-center gap-2.5 rounded-xl border-2 px-3 py-2.5 ${
-                  stake.outcome === 'win'
-                    ? 'border-[#23a559]/55 bg-[#142d1e]/85'
-                    : stake.outcome === 'loss'
-                      ? 'border-[#ed4245]/55 bg-[#3d1a1a]/85'
-                      : 'border-[#3f4147] bg-[#1a1b1f]/90'
-                }`}
-              >
-                <Swords
-                  className={`h-4 w-4 shrink-0 ${
-                    stake.outcome === 'win'
-                      ? 'text-[#23a559]'
-                      : stake.outcome === 'loss'
-                        ? 'text-[#ed4245]'
-                        : 'text-[#949ba4]'
-                  }`}
-                />
-                <div className="min-w-0 flex-1">
-                  <p
-                    className={`truncate text-sm font-black ${
-                      stake.outcome === 'win'
-                        ? 'text-[#4ade80]'
-                        : stake.outcome === 'loss'
-                          ? 'text-[#f98998]'
-                          : 'text-[#f2f3f5]'
-                    }`}
-                  >
-                    {stake.outcome === 'win' && stake.gainedName && stake.keptName
-                      ? `Won ${stake.gainedName} · kept ${stake.keptName}`
-                      : stake.outcome === 'win' && stake.gainedName
-                        ? `Won ${stake.gainedName}`
-                        : stake.outcome === 'win' && stake.keptName
-                          ? `Kept ${stake.keptName}`
-                          : stake.outcome === 'loss' && stake.lostName
-                            ? `Lost ${stake.lostName}`
-                            : stake.outcome === 'draw' && stake.keptName
-                              ? `Draw · kept ${stake.keptName}`
-                              : stake.message}
-                  </p>
-                </div>
-                {(stake.outcome === 'win' ? stake.gainedRarity : stake.outcome === 'loss' ? stake.lostRarity : null) && (
-                  <span
-                    className="shrink-0 text-[10px] font-black uppercase tracking-wide"
-                    style={{
-                      color:
-                        RARITY_TINT[
-                          (stake.outcome === 'win' ? stake.gainedRarity : stake.lostRarity) ?? ''
-                        ] ?? '#949ba4',
-                    }}
-                  >
-                    {stake.outcome === 'win' ? stake.gainedRarity : stake.lostRarity}
-                  </span>
-                )}
-              </div>
-            )}
 
             <div className="mb-6">
               <p className="text-5xl sm:text-7xl font-black text-[#f0b232] font-mono leading-none drop-shadow-[0_4px_0_#8a6814]">
