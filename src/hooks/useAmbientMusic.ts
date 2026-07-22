@@ -3,14 +3,43 @@ import { effectiveMusicVolume, subscribeSettings } from '../lib/settings';
 import { getAmbientDuck, subscribeAmbientDuck } from '../lib/ambientControl';
 import { assetUrl } from '../lib/assetUrl';
 
-const TRACK = assetUrl('/audio/starlight-strut.mp3');
-const PLAYBACK_RATE = 0.82;
+const MENU_TRACK = assetUrl('/audio/starlight-strut.mp3');
+const GAME_TRACK = assetUrl('/audio/efr-gameplay.mp3');
+
+/** Menu bed — slightly under tempo. */
+const MENU_RATE = 0.82;
+/** Quiz bed — slower / more formal. */
+const GAME_RATE = 0.72;
+/** Gameplay sits quieter than menu under the same settings slider. */
+const GAME_GAIN = 0.45;
 const FADE_MS = 1100;
 
-type AmbientScreen = 'home' | 'about' | 'store' | 'settings' | 'career' | 'cards' | 'lobby' | 'intro' | 'game';
+type AmbientScreen =
+  | 'home'
+  | 'about'
+  | 'store'
+  | 'settings'
+  | 'career'
+  | 'cards'
+  | 'lobby'
+  | 'intro'
+  | 'game';
 
-function isMenuScreen(screen: AmbientScreen) {
-  return screen === 'home' || screen === 'store' || screen === 'about' || screen === 'settings' || screen === 'career' || screen === 'cards';
+type AmbientMode = 'menu' | 'game' | 'off';
+
+function modeForScreen(screen: AmbientScreen): AmbientMode {
+  if (screen === 'game') return 'game';
+  if (
+    screen === 'home' ||
+    screen === 'store' ||
+    screen === 'about' ||
+    screen === 'settings' ||
+    screen === 'career' ||
+    screen === 'cards'
+  ) {
+    return 'menu';
+  }
+  return 'off';
 }
 
 function fadeVolume(
@@ -52,86 +81,122 @@ function fadeVolume(
   };
 }
 
-/** Loops menu music on home/store/settings; fades out in lobby/intro/game. */
+function makeLayer(src: string, rate: number) {
+  const audio = new Audio(src);
+  audio.loop = true;
+  audio.preload = 'auto';
+  audio.volume = 0;
+  audio.playbackRate = rate;
+  // Keep pitch from sounding chipmunk/chip when slowed (where supported).
+  try {
+    (audio as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
+  } catch {
+    /* ignore */
+  }
+  return audio;
+}
+
+/** Menu bed on home/store/… ; light slowed quiz bed during gameplay. */
 export function useAmbientMusic(screen: AmbientScreen) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const cancelFadeRef = useRef<(() => void) | null>(null);
-  const wantsMusicRef = useRef(isMenuScreen(screen));
-  const playMenuRef = useRef<() => void>(() => {});
-  const fadeOutRef = useRef<() => void>(() => {});
+  const menuRef = useRef<HTMLAudioElement | null>(null);
+  const gameRef = useRef<HTMLAudioElement | null>(null);
+  const cancelMenuFade = useRef<(() => void) | null>(null);
+  const cancelGameFade = useRef<(() => void) | null>(null);
+  const modeRef = useRef<AmbientMode>(modeForScreen(screen));
+  const applyModeRef = useRef<(mode: AmbientMode) => void>(() => {});
   const syncVolumeRef = useRef<() => void>(() => {});
 
-  wantsMusicRef.current = isMenuScreen(screen);
+  modeRef.current = modeForScreen(screen);
 
   useEffect(() => {
-    const audio = new Audio(TRACK);
-    audio.loop = true;
-    audio.preload = 'auto';
-    audio.volume = 0;
-    audio.playbackRate = PLAYBACK_RATE;
-    audioRef.current = audio;
+    const menu = makeLayer(MENU_TRACK, MENU_RATE);
+    const game = makeLayer(GAME_TRACK, GAME_RATE);
+    menuRef.current = menu;
+    gameRef.current = game;
 
-    const stopFade = () => {
-      cancelFadeRef.current?.();
-      cancelFadeRef.current = null;
+    const stopFade = (which: 'menu' | 'game') => {
+      if (which === 'menu') {
+        cancelMenuFade.current?.();
+        cancelMenuFade.current = null;
+      } else {
+        cancelGameFade.current?.();
+        cancelGameFade.current = null;
+      }
     };
 
-    const fadeTo = (to: number, onDone?: () => void) => {
-      stopFade();
-      cancelFadeRef.current = fadeVolume(audio, to, FADE_MS, onDone);
+    const fadeLayer = (
+      audio: HTMLAudioElement,
+      which: 'menu' | 'game',
+      to: number,
+      onDone?: () => void,
+    ) => {
+      stopFade(which);
+      const cancel = fadeVolume(audio, to, FADE_MS, onDone);
+      if (which === 'menu') cancelMenuFade.current = cancel;
+      else cancelGameFade.current = cancel;
     };
 
-    const targetVol = () => effectiveMusicVolume() * getAmbientDuck();
+    const menuTarget = () => effectiveMusicVolume() * getAmbientDuck();
+    const gameTarget = () => effectiveMusicVolume() * getAmbientDuck() * GAME_GAIN;
 
-    const playMenu = () => {
-      if (!wantsMusicRef.current) return;
-      const to = targetVol();
+    const playLayer = (audio: HTMLAudioElement, which: 'menu' | 'game', to: number) => {
       if (to <= 0) {
-        fadeTo(0, () => audio.pause());
+        fadeLayer(audio, which, 0, () => audio.pause());
         return;
       }
-
-      const startFade = () => fadeTo(to);
-
+      const startFade = () => fadeLayer(audio, which, to);
       if (audio.paused) {
         audio.volume = 0;
-        void audio.play().then(startFade).catch(() => {
-          // Autoplay blocked — gesture listener will retry
-        });
+        void audio
+          .play()
+          .then(startFade)
+          .catch(() => {
+            /* gesture retry */
+          });
       } else {
         startFade();
       }
     };
 
-    const fadeOut = () => {
-      fadeTo(0, () => audio.pause());
+    const hushLayer = (audio: HTMLAudioElement, which: 'menu' | 'game') => {
+      fadeLayer(audio, which, 0, () => audio.pause());
+    };
+
+    const applyMode = (mode: AmbientMode) => {
+      if (mode === 'menu') {
+        hushLayer(game, 'game');
+        playLayer(menu, 'menu', menuTarget());
+      } else if (mode === 'game') {
+        hushLayer(menu, 'menu');
+        playLayer(game, 'game', gameTarget());
+      } else {
+        hushLayer(menu, 'menu');
+        hushLayer(game, 'game');
+      }
     };
 
     const syncVolume = () => {
-      if (!wantsMusicRef.current) return;
-      const to = targetVol();
-      if (to <= 0) {
-        // Duck / mute: keep playing quietly, or pause only if music is off
-        if (effectiveMusicVolume() <= 0) {
-          fadeTo(0, () => audio.pause());
+      const mode = modeRef.current;
+      if (mode === 'menu') {
+        const to = menuTarget();
+        if (to <= 0 && effectiveMusicVolume() <= 0) {
+          fadeLayer(menu, 'menu', 0, () => menu.pause());
           return;
         }
-        if (audio.paused) {
-          void audio.play().then(() => fadeTo(to)).catch(() => {});
-        } else {
-          fadeTo(to);
+        if (menu.paused && to > 0) playLayer(menu, 'menu', to);
+        else fadeLayer(menu, 'menu', to, to <= 0 ? () => menu.pause() : undefined);
+      } else if (mode === 'game') {
+        const to = gameTarget();
+        if (to <= 0 && effectiveMusicVolume() <= 0) {
+          fadeLayer(game, 'game', 0, () => game.pause());
+          return;
         }
-        return;
-      }
-      if (audio.paused) {
-        playMenu();
-      } else {
-        fadeTo(to);
+        if (game.paused && to > 0) playLayer(game, 'game', to);
+        else fadeLayer(game, 'game', to, to <= 0 ? () => game.pause() : undefined);
       }
     };
 
-    playMenuRef.current = playMenu;
-    fadeOutRef.current = fadeOut;
+    applyModeRef.current = applyMode;
     syncVolumeRef.current = syncVolume;
 
     const detachGestures = () => {
@@ -141,15 +206,22 @@ export function useAmbientMusic(screen: AmbientScreen) {
     };
 
     const onGesture = () => {
-      if (!wantsMusicRef.current) return;
-      if (targetVol() <= 0 && effectiveMusicVolume() <= 0) return;
+      const mode = modeRef.current;
+      if (mode === 'off') return;
+      if (effectiveMusicVolume() <= 0) return;
+      const audio = mode === 'game' ? game : menu;
+      const to = mode === 'game' ? gameTarget() : menuTarget();
+      if (to <= 0) return;
       audio.volume = 0;
-      void audio.play().then(() => {
-        fadeTo(targetVol());
-        detachGestures();
-      }).catch(() => {
-        // Keep listening until a gesture succeeds
-      });
+      void audio
+        .play()
+        .then(() => {
+          fadeLayer(audio, mode === 'game' ? 'game' : 'menu', to);
+          detachGestures();
+        })
+        .catch(() => {
+          /* keep listening */
+        });
     };
 
     document.addEventListener('pointerdown', onGesture);
@@ -159,24 +231,24 @@ export function useAmbientMusic(screen: AmbientScreen) {
     const unsub = subscribeSettings(() => syncVolumeRef.current());
     const unsubDuck = subscribeAmbientDuck(() => syncVolumeRef.current());
 
-    playMenu();
+    applyMode(modeRef.current);
 
     return () => {
-      stopFade();
+      stopFade('menu');
+      stopFade('game');
       detachGestures();
       unsub();
       unsubDuck();
-      audio.pause();
-      audio.src = '';
-      audioRef.current = null;
+      menu.pause();
+      game.pause();
+      menu.src = '';
+      game.src = '';
+      menuRef.current = null;
+      gameRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    if (isMenuScreen(screen)) {
-      playMenuRef.current();
-    } else {
-      fadeOutRef.current();
-    }
+    applyModeRef.current(modeForScreen(screen));
   }, [screen]);
 }
