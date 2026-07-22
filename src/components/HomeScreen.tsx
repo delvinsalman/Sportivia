@@ -153,57 +153,11 @@ export function HomeScreen({
         </h1>
       </motion.div>
 
-      {/* Profile headshot — under logo */}
-      <motion.div
-        initial={{ opacity: 0, x: -12 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="fixed left-0 top-[3.55rem] sm:top-[4.35rem] z-30 pl-2 sm:pl-5 max-sm:scale-[0.92] max-sm:origin-top-left"
-      >
-        <div className="game-home-profile">
-          <div className="game-home-profile-avatar" aria-hidden>
-            <div className="game-home-profile-zoom">
-              <CharacterPodium
-                characterId={profile.equippedCharacter}
-                accent={character.accent}
-                height={160}
-                bare
-                hidePodium
-                frozen
-                className="pointer-events-none"
-                {...(profile.equippedCharacter === 'creative'
-                  ? { creativeLoadout: profile.creativeLoadout }
-                  : {})}
-                {...(profile.equippedCharacter === 'athlete'
-                  ? { athleteLoadout: profile.athleteLoadout }
-                  : {})}
-                {...(profile.equippedCharacter === 'bob'
-                  ? { bobLoadout: profile.bobLoadout }
-                  : {})}
-                {...(profile.equippedCharacter === 'bunny'
-                  ? { rabbitVariant: profile.rabbitVariant }
-                  : {})}
-              />
-            </div>
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#949ba4] leading-none mb-1">
-              Profile
-            </p>
-            <p className="text-sm sm:text-[0.95rem] font-black text-[#f2f3f5] leading-tight truncate">
-              {profile.playerName}
-            </p>
-            <p className="text-[10px] font-bold text-[#6d6f78] leading-tight truncate mt-0.5">
-              {character.name}
-            </p>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Sports + record — mid-left like before, nudged slightly down */}
+      {/* Left-center sport rail + record */}
       <motion.aside
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed left-0 top-[calc(50%+3.25rem)] sm:top-[calc(50%+3.75rem)] -translate-y-1/2 z-30 pl-2 sm:pl-5 flex flex-col items-stretch gap-3 sm:gap-4 max-sm:scale-[0.92] max-sm:origin-left"
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 pl-2 sm:pl-5 flex flex-col items-stretch gap-3 sm:gap-4 max-sm:scale-[0.92] max-sm:origin-left"
       >
         <SportPicker sport={sport} onSportChange={onSportChange} layout="rail" />
 
