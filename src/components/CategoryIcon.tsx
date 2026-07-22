@@ -118,7 +118,7 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'nat-bulgaria': { type: 'flag', flagCode: 'bg', colors: ['#fff', '#00966e', '#d62612'] },
   'nat-northern-ireland': { type: 'flag', flagCode: 'gb-nir', colors: ['#fff', '#c8102e', '#00247d'] },
   'trophy-europa': { type: 'trophy', logoUrl: '/icons/trophies/europa.png' },
-  'trophy-fa-cup': { type: 'trophy', logoUrl: '/icons/trophies/fa-cup.svg' },
+  'trophy-fa-cup': { type: 'trophy', logoUrl: '/icons/trophies/fa-cup.png', logoScale: 1.15 },
   'trophy-copa-america': { type: 'trophy', logoUrl: '/icons/trophies/copa-america-2024.png', logoScale: 1.2 },
   'trophy-afcon': { type: 'trophy', logoUrl: '/icons/trophies/caf-afcon.svg' },
   'cont-north-america': { type: 'region' },
@@ -361,14 +361,21 @@ function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
 
   return (
     <div
-      className="rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 bg-[#121316]"
+      className="relative rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 bg-[#121316]"
       style={{ width: size, height: size }}
     >
       <img
         src={localSrc}
         alt=""
         draggable={false}
-        className="w-full h-full object-cover select-none"
+        className="absolute left-1/2 top-1/2 max-w-none select-none"
+        style={{
+          width: '112%',
+          height: '112%',
+          transform: 'translate(-50%, -50%)',
+          objectFit: 'cover',
+          objectPosition: '50% 50%',
+        }}
         loading="lazy"
         referrerPolicy="no-referrer"
         onError={event => {
@@ -481,7 +488,7 @@ function PositionIcon({ color, size = 36, role, sport }: { color: string; size?:
   const isFootball = ['QB', 'RB', 'WR', 'TE', 'DL', 'LB', 'DB', 'K'].includes(label);
   const isHockey = sport === 'hockey';
 
-  const fontSize = label.length > 2 ? 8.5 : label.length > 1 ? 11 : 13;
+  const fontSize = label.length > 2 ? 6.5 : label.length > 1 ? 8 : 9.5;
 
   const marker = (() => {
     if (label === 'FW') return { cx: 24, cy: 12 };
@@ -555,16 +562,17 @@ function PositionIcon({ color, size = 36, role, sport }: { color: string; size?:
 
       <circle cx={marker.cx} cy={marker.cy} r="3.5" fill={color} stroke="#fff" strokeWidth="1.2" />
 
-      <rect x="8" y="32" width="32" height="11" rx="5.5" fill={color} />
+      <rect x="8" y="33" width="32" height="10" rx="5" fill={color} />
       <text
         x="24"
-        y="40"
+        y="38"
         textAnchor="middle"
+        dominantBaseline="central"
         fill="#fff"
         fontSize={fontSize}
-        fontWeight="900"
+        fontWeight="800"
         fontFamily="system-ui, sans-serif"
-        letterSpacing="-0.3"
+        letterSpacing={label.length > 2 ? '-0.4' : '0'}
       >
         {label}
       </text>

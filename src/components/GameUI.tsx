@@ -65,7 +65,7 @@ export function CategoryGrid({
                   ease: [0.22, 1, 0.36, 1],
                 }}
                 className={`
-                  relative aspect-square rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-0.5 p-1.5 sm:p-2
+                  relative aspect-square rounded-xl sm:rounded-2xl flex flex-col items-center justify-center gap-1 sm:gap-1.5 p-1.5 sm:p-2
                   transition-colors duration-150 select-none
                   ${isFilled
                     ? 'bg-[#142d1e]/95 border-[2.5px] border-[#23a559] shadow-[0_3px_0_#14532d] cursor-default'
@@ -99,7 +99,9 @@ export function CategoryGrid({
                   </>
                 ) : (
                   <>
-                    <CategoryIcon categoryId={cell.category.id} tag={cell.category.tag} size={30} sport={sport} />
+                    <div className="mb-0.5 flex shrink-0 items-center justify-center leading-none">
+                      <CategoryIcon categoryId={cell.category.id} tag={cell.category.tag} size={28} sport={sport} />
+                    </div>
                     <span className="text-[9px] sm:text-[8px] font-semibold text-[#949ba4] uppercase tracking-wider leading-none">
                       {cell.category.tag}
                     </span>
