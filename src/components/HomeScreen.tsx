@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Pencil, Play, ShoppingBag, Check, Info, Settings,
-  Medal, ArrowLeft,
+  Medal, ArrowLeft, LayoutGrid,
 } from 'lucide-react';
 import type { Sport, GameMode, BotDifficulty } from '../types';
 import type { PlayerProfile } from '../types/profile';
@@ -26,6 +26,7 @@ interface HomeScreenProps {
   onStart: (mode: GameMode, botDifficulty?: BotDifficulty) => void;
   profile: PlayerProfile;
   onOpenStore: () => void;
+  onOpenCards: () => void;
   onOpenCareer: () => void;
   onOpenAbout: () => void;
   onOpenSettings: () => void;
@@ -117,6 +118,7 @@ export function HomeScreen({
   onStart,
   profile,
   onOpenStore,
+  onOpenCards,
   onOpenCareer,
   onOpenAbout,
   onOpenSettings,
@@ -253,6 +255,18 @@ export function HomeScreen({
         >
           <Medal className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
           <span className="hidden sm:inline">Career</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            playMenuClick();
+            onOpenCards();
+          }}
+          className="game-nav-tab"
+          aria-label="Cards"
+        >
+          <LayoutGrid className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
+          <span className="hidden sm:inline">Cards</span>
         </button>
         <button
           type="button"

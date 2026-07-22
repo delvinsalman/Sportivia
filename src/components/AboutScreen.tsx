@@ -81,10 +81,18 @@ const GUIDE: Array<{
   },
   {
     eyebrow: 'Store',
-    title: 'Skin cards you can upgrade',
-    body: 'Each character is a collectible skin card with overall rating and six attributes. Unlock skins with coins, then upgrade them to raise stats. Equip on home, About, and results — in-game perks come later. Pets and loadouts live here too.',
+    title: 'Skins, pets, and style',
+    body: 'Unlock characters and companions with coins. Equip them on home, About, and results. Some skins have loadouts and breed variants.',
     Icon: ShoppingBag,
     glare: 'rgba(56, 189, 248, 0.14)',
+    demo: '',
+  },
+  {
+    eyebrow: 'Cards',
+    title: 'Upgrade your skin cards',
+    body: 'Every skin has a collectible card with overall rating and six attributes. Spend coins to level them up. In-game perks come later — unlock looks in the Store.',
+    Icon: LayoutGrid,
+    glare: 'rgba(168, 85, 247, 0.14)',
     demo: '',
   },
   {

@@ -3,6 +3,7 @@ import type { CharacterDef, CharacterId, PlayerProfile } from '../types/profile'
 import { CharacterPodium } from './3d/CharacterPodium';
 import {
   cardTierColors,
+  cardTierLabel,
   characterCardStats,
   characterOverall,
   getCharacterLevel,
@@ -16,6 +17,8 @@ interface CharacterFutCardProps {
   character: CharacterDef;
   profile: PlayerProfile;
   selected?: boolean;
+  /** Mount a live 3D model — only use on one card at a time (WebGL limit). */
+  liveModel?: boolean;
   accent?: string;
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
@@ -37,6 +40,7 @@ export function CharacterFutCard({
   character,
   profile,
   selected = false,
+  liveModel = false,
   accent,
   creativeLoadout,
   athleteLoadout,
@@ -50,6 +54,7 @@ export function CharacterFutCard({
   const stats = characterCardStats(character, Math.max(1, level));
   const tier = cardTierColors(ovr);
   const ring = accent ?? character.accent;
+  const label = owned ? cardTierLabel(ovr) : 'Locked';
 
   return (
     <button
@@ -88,33 +93,49 @@ export function CharacterFutCard({
               className="rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider text-[#0c0d10]"
               style={{ background: tier.badge }}
             >
-              {owned ? (ovr >= 90 ? 'Icon' : ovr >= 82 ? 'Epic' : ovr >= 74 ? 'Rare' : 'Common') : 'Locked'}
+              {label}
             </div>
           </div>
 
-          <div className="relative mx-auto mt-1 h-[7.5rem] w-full">
-            <div className={`h-full w-full ${owned ? '' : 'opacity-35 grayscale'}`}>
-              <CharacterPodium
-                characterId={character.id}
-                accent={character.accent}
-                height={150}
-                bare
-                hidePodium
-                className="h-full w-full"
-                {...(character.id === 'creative' && creativeLoadout
-                  ? { creativeLoadout }
-                  : {})}
-                {...(character.id === 'athlete' && athleteLoadout
-                  ? { athleteLoadout }
-                  : {})}
-                {...(character.id === 'bob' && bobLoadout ? { bobLoadout } : {})}
-                {...(character.id === 'bunny' && rabbitVariant
-                  ? { rabbitVariant }
-                  : {})}
-              />
-            </div>
+          <div className="relative mx-auto mt-1 h-[7.5rem] w-full overflow-hidden rounded-xl">
+            {liveModel && owned ? (
+              <div className="h-full w-full">
+                <CharacterPodium
+                  characterId={character.id}
+                  accent={character.accent}
+                  height={150}
+                  bare
+                  hidePodium
+                  className="h-full w-full"
+                  {...(character.id === 'creative' && creativeLoadout
+                    ? { creativeLoadout }
+                    : {})}
+                  {...(character.id === 'athlete' && athleteLoadout
+                    ? { athleteLoadout }
+                    : {})}
+                  {...(character.id === 'bob' && bobLoadout ? { bobLoadout } : {})}
+                  {...(character.id === 'bunny' && rabbitVariant
+                    ? { rabbitVariant }
+                    : {})}
+                />
+              </div>
+            ) : (
+              <div
+                className={`absolute inset-0 flex items-center justify-center ${owned ? '' : 'opacity-50 grayscale'}`}
+                style={{
+                  background: `radial-gradient(ellipse 70% 65% at 50% 40%, ${character.accent}55 0%, transparent 70%), linear-gradient(180deg, #1a1c22 0%, #0c0d10 100%)`,
+                }}
+              >
+                <span
+                  className="text-4xl font-black tracking-tight"
+                  style={{ color: character.accent, textShadow: '0 2px 0 rgba(0,0,0,0.45)' }}
+                >
+                  {character.name.slice(0, 1)}
+                </span>
+              </div>
+            )}
             {!owned && (
-              <div className="absolute inset-0 flex items-center justify-center">
+              <div className="absolute inset-0 flex items-center justify-center bg-black/35">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full border-2 border-white/25 bg-black/55">
                   <Lock className="h-4 w-4 text-white/80" />
                 </div>

@@ -6,6 +6,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
 import { BallRainIntro } from './components/BallRainIntro';
 import { StoreScreen } from './components/StoreScreen';
+import { CharacterCardsScreen } from './components/CharacterCardsScreen';
 import { LobbyScreen } from './components/LobbyScreen';
 import { AboutScreen } from './components/AboutScreen';
 import { SettingsScreen } from './components/SettingsScreen';
@@ -40,6 +41,7 @@ type Screen =
   | 'about'
   | 'settings'
   | 'store'
+  | 'cards'
   | 'career'
   | 'lobby'
   | 'intro'
@@ -78,6 +80,7 @@ export default function App() {
     if (
       screen === 'home' ||
       screen === 'store' ||
+      screen === 'cards' ||
       screen === 'about' ||
       screen === 'settings' ||
       screen === 'career' ||
@@ -221,6 +224,7 @@ export default function App() {
               onStart={handleStart}
               profile={profile}
               onOpenStore={() => setScreen('store')}
+              onOpenCards={() => setScreen('cards')}
               onOpenCareer={() => setScreen('career')}
               onOpenAbout={() => setScreen('about')}
               onOpenSettings={() => setScreen('settings')}
@@ -258,7 +262,6 @@ export default function App() {
               profile={profile}
               onBack={() => setScreen('home')}
               onPurchaseCharacter={handlePurchase}
-              onUpgradeCharacter={handleUpgradeCharacter}
               onEquipCharacter={handleEquip}
               onPurchasePet={handlePurchasePet}
               onEquipPet={handleEquipPet}
@@ -268,6 +271,19 @@ export default function App() {
               onSaveBobLoadout={handleSaveBobLoadout}
               onSaveRabbitVariant={handleSaveRabbitVariant}
               onSaveDogVariant={handleSaveDogVariant}
+            />
+          </PageTransition>
+        )}
+
+        {screen === 'cards' && (
+          <PageTransition key="cards" variant="menu">
+            <CharacterCardsScreen
+              sport={sport}
+              profile={profile}
+              onBack={() => setScreen('home')}
+              onPurchaseCharacter={handlePurchase}
+              onUpgradeCharacter={handleUpgradeCharacter}
+              onEquipCharacter={handleEquip}
             />
           </PageTransition>
         )}

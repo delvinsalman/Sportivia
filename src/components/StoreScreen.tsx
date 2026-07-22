@@ -39,11 +39,9 @@ import {
   normalizeBobLoadout,
 } from '../types/bobCharacter';
 import { CharacterPodium } from './3d/CharacterPodium';
-import { CharacterFutCard } from './CharacterFutCard';
 import { SportBackground } from './SportBackground';
 import type { Sport } from '../types';
 import { playMenuBack, playMenuClick, playMenuConfirm, playMenuSelect } from '../lib/menuAudio';
-import { canUpgradeCharacter, getCharacterLevel, MAX_CHARACTER_LEVEL } from '../lib/characterCards';
 
 type StoreTab = 'skins' | 'pets';
 
@@ -52,7 +50,6 @@ interface StoreScreenProps {
   profile: PlayerProfile;
   onBack: () => void;
   onPurchaseCharacter: (id: CharacterId) => void;
-  onUpgradeCharacter: (id: CharacterId) => void;
   onEquipCharacter: (id: CharacterId) => void;
   onPurchasePet: (id: PetId) => void;
   onEquipPet: (id: PetId) => void;
@@ -71,7 +68,6 @@ export function StoreScreen({
   profile,
   onBack,
   onPurchaseCharacter,
-  onUpgradeCharacter,
   onEquipCharacter,
   onPurchasePet,
   onEquipPet,
@@ -908,35 +904,6 @@ export function StoreScreen({
                     >
                       {equipped ? (isPets ? 'Unequip' : 'Equipped') : 'Equip'}
                     </button>
-                    {!isPets && (() => {
-                      const upgrade = canUpgradeCharacter(profile, safePreviewId as CharacterId);
-                      const level = getCharacterLevel(profile, safePreviewId as CharacterId);
-                      return (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (!upgrade.ok) {
-                              playMenuClick();
-                              return;
-                            }
-                            playMenuConfirm();
-                            onUpgradeCharacter(safePreviewId as CharacterId);
-                          }}
-                          disabled={!upgrade.ok}
-                          className={`w-full py-3 rounded-2xl text-sm font-black border-[3px] transition-all flex items-center justify-center gap-2 ${
-                            upgrade.ok
-                              ? 'bg-[#23a559] hover:bg-[#1e8f4c] text-white border-white/25 shadow-[0_5px_0_#14532d] hover:translate-y-[1px] hover:shadow-[0_4px_0_#14532d]'
-                              : 'bg-[#2b2d31] text-[#5c5e66] cursor-not-allowed border-[#3f4147] shadow-[0_4px_0_#1a1b1f]'
-                          }`}
-                        >
-                          {level >= MAX_CHARACTER_LEVEL
-                            ? 'Max Level'
-                            : upgrade.ok
-                              ? `Upgrade · ${upgrade.cost.toLocaleString()} coins`
-                              : upgrade.reason ?? 'Upgrade'}
-                        </button>
-                      );
-                    })()}
                   </>
                 ) : (
                   <button
@@ -975,29 +942,6 @@ export function StoreScreen({
               </div>
             )}
 
-            {!customizing && !isPets && (
-              <div className="w-full max-w-3xl px-2 sm:px-3 mt-2 mb-4">
-                <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-[#949ba4]">
-                  Skin cards · unlock & upgrade
-                </p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                  {CHARACTERS.map(character => (
-                    <CharacterFutCard
-                      key={character.id}
-                      character={character}
-                      profile={profile}
-                      selected={safePreviewId === character.id}
-                      accent={character.accent}
-                      creativeLoadout={profile.creativeLoadout}
-                      athleteLoadout={profile.athleteLoadout}
-                      bobLoadout={profile.bobLoadout}
-                      rabbitVariant={profile.rabbitVariant}
-                      onSelect={id => selectItem(id)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
