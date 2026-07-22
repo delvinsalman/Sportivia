@@ -18,6 +18,7 @@ import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 import { PAGE_TRANSITION } from '../lib/pageTransitions';
 import { useSettings } from '../hooks/useSettings';
 import { pickRandomPlayerName } from '../lib/playerNames';
+import { BOT_DIFFICULTIES } from '../lib/botOpponent';
 
 interface HomeScreenProps {
   sport: Sport;
