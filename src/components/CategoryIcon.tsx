@@ -346,13 +346,8 @@ function FlagStripes({ colors, size }: { colors: string[]; size: number }) {
 function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
   const code = meta.flagCode;
   const colors = meta.colors ?? ['#5865f2', '#fff'];
-  const localSrc =
-    code === 'ca'
-      ? assetUrl('/icons/flags/canada.svg')
-      : code
-        ? assetUrl(`/icons/flags/${code}.png`)
-        : null;
-  const cdnSrc = code ? `https://flagcdn.com/w320/${code}.png` : null;
+  const localSrc = code ? assetUrl(`/icons/flags/${code}.png`) : null;
+  const cdnSrc = code ? `https://flagcdn.com/w640/${code}.png` : null;
   const [src, setSrc] = useState<string | null>(localSrc);
   const [failed, setFailed] = useState(!code || !localSrc);
 
@@ -360,30 +355,36 @@ function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
     return <FlagStripes colors={colors} size={size} />;
   }
 
-  // Coat-of-arms flags sit heavy on the hoist (left); nudge crop so the circle reads centered.
+  // Coat-of-arms flags sit heavy on the hoist; nudge crop so the circle reads balanced.
   const position =
     code === 'rs' || code === 'sk' || code === 'si' || code === 'hr' || code === 'pt'
       ? '62% 50%'
-      : 'center';
+      : '50% 50%';
 
   return (
     <div
-      className="relative shrink-0 overflow-hidden rounded-full border-2 border-white/20 shadow-md"
-      style={{
-        width: size,
-        height: size,
-        backgroundColor: '#121316',
-        backgroundImage: `url("${src}")`,
-        backgroundSize: 'cover',
-        backgroundPosition: position,
-        backgroundRepeat: 'no-repeat',
-      }}
+      className="relative shrink-0 overflow-hidden rounded-full border-2 border-white/20 shadow-md bg-[#121316]"
+      style={{ width: size, height: size }}
       aria-hidden
     >
       <img
         src={src}
         alt=""
-        className="pointer-events-none absolute h-0 w-0 opacity-0"
+        draggable={false}
+        className="pointer-events-none absolute select-none"
+        style={{
+          // Oversize + cover so landscape flags fully fill the circle (no letterbox bars).
+          left: '50%',
+          top: '50%',
+          width: '140%',
+          height: '140%',
+          maxWidth: 'none',
+          transform: 'translate(-50%, -50%)',
+          objectFit: 'cover',
+          objectPosition: position,
+        }}
+        loading="lazy"
+        referrerPolicy="no-referrer"
         onError={() => {
           if (cdnSrc && src !== cdnSrc) {
             setSrc(cdnSrc);
