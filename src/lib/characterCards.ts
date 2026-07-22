@@ -11,6 +11,18 @@ export interface CharacterCardStats {
   phy: number;
 }
 
+/** Primary four stats shown on the featured skin card. */
+export const FEATURED_STAT_KEYS = ['pac', 'sho', 'dri', 'phy'] as const;
+
+export type FeaturedStatKey = (typeof FEATURED_STAT_KEYS)[number];
+
+export const FEATURED_STAT_LABELS: Record<FeaturedStatKey, string> = {
+  pac: 'PAC',
+  sho: 'SHO',
+  dri: 'DRI',
+  phy: 'PHY',
+};
+
 /** Six-stat block for a skin card (pace / shoot / pass / dribble / defend / physical). */
 export function baseTierOvr(character: CharacterDef): number {
   if (character.price <= 0) return 64;
