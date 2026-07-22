@@ -284,8 +284,8 @@ export function SettingsScreen({ sport, onBack, onPromoRedeemed }: SettingsScree
 
                 <SettingRow
                   icon={Music2}
-                  title="Music"
-                  detail="Menu bed + light quiz track"
+                  title="Menu music"
+                  detail="Background track on home"
                   onClick={() => update({ musicEnabled: !settings.musicEnabled })}
                   dimmed={audioLocked}
                 >
