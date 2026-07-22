@@ -3,7 +3,6 @@ import type { CategoryTag, Sport } from '../types';
 import { assetUrl } from '../lib/assetUrl';
 import { TeamJerseyIcon } from './TeamJerseyIcon';
 import type { JerseyPattern } from './TeamJerseyIcon';
-import { AnimatedGlobeIcon } from './AnimatedGlobeIcon';
 import { AllStarIcon } from './AllStarIcon';
 import { BasketballAwardIcon } from './BasketballAwardIcon';
 import { HockeyAwardIcon } from './HockeyAwardIcon';
