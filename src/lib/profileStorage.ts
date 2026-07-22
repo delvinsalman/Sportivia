@@ -23,7 +23,7 @@ import {
 import { normalizeBobLoadout, type BobLoadout } from '../types/bobCharacter';
 import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
-import { applySeasonFromResult } from './seasonMeta';
+import { applySeasonFromResult, grantDuelWinAchievement } from './seasonMeta';
 import type { CardPackTier, CardRarity, CollectibleCard, OpenedCard } from '../types/cards';
 import { CARD_BY_KEY, CARD_CATALOG, CARDS_BY_SPORT, getPackDefinition } from './cardCatalog';
 import {
@@ -204,9 +204,30 @@ export function loadProfile(): PlayerProfile {
 }
 
 export function saveProfile(profile: PlayerProfile): void {
-  const next = { ...profile, level: levelFromXp(profile.xp) };
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
-  saveStats(next.stats);
+  const next = {
+    ...profile,
+    coins: Math.max(0, Math.floor(profile.coins)),
+    xp: Math.max(0, Math.floor(profile.xp)),
+    level: levelFromXp(profile.xp),
+  };
+  try {
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(next));
+    saveStats(next.stats);
+  } catch {
+    /* quota / private mode — keep in-memory play going */
+  }
+}
+
+/** Apply duelist achievement + coin bonus after a confirmed online win. */
+export function grantDuelWin(): { profile: PlayerProfile; granted: boolean } {
+  const profile = loadProfile();
+  const { newlyUnlocked, bonusCoins } = grantDuelWinAchievement();
+  if (!newlyUnlocked && bonusCoins <= 0) {
+    return { profile, granted: false };
+  }
+  if (bonusCoins > 0) profile.coins += bonusCoins;
+  saveProfile(profile);
+  return { profile, granted: true };
 }
 
 export function recordGameWithRewards(

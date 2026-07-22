@@ -20,7 +20,7 @@ import {
   stakeFromKey,
   type CardWagerAgreement,
 } from '../lib/cardWager';
-import { settleCardWager, addCardToCollection, removeCardFromCollection } from '../lib/profileStorage';
+import { settleCardWager, addCardToCollection, removeCardFromCollection, grantDuelWin } from '../lib/profileStorage';
 import type { PlayerProfile } from '../types/profile';
 
 interface GameScreenProps {
@@ -97,10 +97,25 @@ export function GameScreen({
   useEffect(() => {
     if (escrowRef.current) return;
     if (!cardWager || !isWagerActive(cardWager) || !cardWager.yourCard) return;
-    const { profile } = removeCardFromCollection(cardWager.yourCard.cardKey);
+    const { ok, profile } = removeCardFromCollection(cardWager.yourCard.cardKey);
+    if (!ok) return;
     escrowRef.current = true;
     onProfileChange?.(profile);
   }, [cardWager, onProfileChange]);
+
+  // If we leave the match mid-escrow (disconnect kick, rematch, etc.), restore the card.
+  const stakeKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    stakeKeyRef.current = cardWager?.yourCard?.cardKey ?? null;
+  }, [cardWager]);
+  useEffect(() => {
+    return () => {
+      if (escrowRef.current && !wagerSettledRef.current && stakeKeyRef.current) {
+        addCardToCollection(stakeKeyRef.current);
+        escrowRef.current = false;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (mode !== 'bot' || game.phase !== 'playing') return;
@@ -196,6 +211,14 @@ export function GameScreen({
     onProfileChange,
   ]);
 
+  // Unlock duelist achievement once the match result confirms a win.
+  useEffect(() => {
+    if (mode !== 'duel' || !duelResult) return;
+    if (duelResult.winnerId !== duelResult.you.id) return;
+    const { profile, granted } = grantDuelWin();
+    if (granted) onProfileChange?.(profile);
+  }, [duelResult, mode, onProfileChange]);
+
   const resultWithDuel: GameResult | null = useMemo(() => {
     if (!game.result) return null;
     if (mode === 'bot') {
@@ -268,7 +291,7 @@ export function GameScreen({
   return (
     <div className="h-svh flex flex-col bg-[#0a0a0b] relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center select-none">
-        <span className="text-[200px] font-black text-white/[0.025] tracking-tighter">GIQ</span>
+        <span className="text-[200px] font-black text-white/[0.025] tracking-tighter">S</span>
       </div>
 
       <TopBar

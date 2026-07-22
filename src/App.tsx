@@ -112,13 +112,20 @@ export default function App() {
     setScreen('intro');
   }, [duel.match, duel.lobby?.youId]);
 
+  // Joiners inherit the host's sport so stakes / boards match the room.
   useEffect(() => {
-    if (mode !== 'duel' || screen !== 'game' || duel.lobby?.status !== 'lobby') return;
-    startedMatchRef.current = null;
-    setDuelSeed(null);
-    setCardWager(null);
-    setScreen('lobby');
-  }, [duel.lobby?.status, mode, screen]);
+    if (duel.lobby?.sport) setSport(duel.lobby.sport);
+  }, [duel.lobby?.sport]);
+
+  useEffect(() => {
+    if (mode !== 'duel' || screen !== 'game') return;
+    if (duel.lobby?.status === 'lobby' || (!duel.lobby && duel.status === 'idle')) {
+      startedMatchRef.current = null;
+      setDuelSeed(null);
+      setCardWager(null);
+      setScreen('lobby');
+    }
+  }, [duel.lobby, duel.lobby?.status, duel.status, mode, screen]);
 
   function refreshProfile() {
     setProfile(loadProfile());

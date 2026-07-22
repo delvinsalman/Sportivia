@@ -240,6 +240,32 @@ export function applySeasonFromResult(
   return { meta, bonusCoins, bonusXp, newlyUnlocked, dailyAlreadyClaimed };
 }
 
+/** Unlock the duelist achievement after a confirmed duel win (idempotent). */
+export function grantDuelWinAchievement(): {
+  newlyUnlocked: boolean;
+  bonusCoins: number;
+} {
+  let meta = loadSeasonMeta();
+  if (meta.unlockedAchievements.includes('duelist')) {
+    return { newlyUnlocked: false, bonusCoins: 0 };
+  }
+  meta = {
+    ...meta,
+    unlockedAchievements: [...meta.unlockedAchievements, 'duelist'],
+  };
+  let bonusCoins = 0;
+  if (!meta.claimedAchievementBonuses.includes('duelist')) {
+    const def = ACHIEVEMENTS.find(a => a.id === 'duelist');
+    bonusCoins = def?.coinBonus ?? 0;
+    meta = {
+      ...meta,
+      claimedAchievementBonuses: [...meta.claimedAchievementBonuses, 'duelist'],
+    };
+  }
+  saveSeasonMeta(meta);
+  return { newlyUnlocked: true, bonusCoins };
+}
+
 export function collectionForSport(sport: Sport, meta = loadSeasonMeta()): CollectedPlayer[] {
   return meta.collection.filter(c => c.sport === sport);
 }

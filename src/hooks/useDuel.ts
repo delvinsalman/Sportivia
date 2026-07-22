@@ -20,6 +20,7 @@ interface UseDuelOptions {
 export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const youIdRef = useRef<string>('');
+  const intentionalCloseRef = useRef(false);
   const [status, setStatus] = useState<DuelConnectionStatus>('idle');
   const [error, setError] = useState<string | null>(null);
   const [lobby, setLobby] = useState<DuelLobbyState | null>(null);
@@ -144,6 +145,7 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
   }, []);
 
   const connect = useCallback((): Promise<WebSocket> => {
+    intentionalCloseRef.current = true;
     cleanupSocket();
     setStatus('connecting');
     setError(null);
@@ -153,10 +155,12 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
       wsRef.current = ws;
 
       const onOpen = () => {
+        intentionalCloseRef.current = false;
         setStatus('connected');
         resolve(ws);
       };
       const onError = () => {
+        intentionalCloseRef.current = false;
         setStatus('error');
         setError('Could not reach the live duel server. Check your connection and try again.');
         reject(new Error('connect failed'));
@@ -166,8 +170,20 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
       ws.addEventListener('error', onError, { once: true });
       ws.addEventListener('message', handleMessage);
       ws.addEventListener('close', () => {
-        setStatus(s => (s === 'connecting' ? 'error' : 'idle'));
         wsRef.current = null;
+        if (intentionalCloseRef.current) {
+          intentionalCloseRef.current = false;
+          setStatus('idle');
+          return;
+        }
+        setStatus(s => (s === 'connecting' ? 'error' : 'idle'));
+        setLobby(null);
+        setMatch(null);
+        setDuelResult(null);
+        setOpponentScore(0);
+        setOpponentFinished(false);
+        youIdRef.current = '';
+        setError(prev => prev ?? 'Disconnected from the duel server');
       });
     });
   }, [cleanupSocket, handleMessage]);
@@ -255,6 +271,7 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
   }, [send]);
 
   const leaveLobby = useCallback(() => {
+    intentionalCloseRef.current = true;
     send({ type: 'leave' });
     cleanupSocket();
     setLobby(null);
@@ -266,7 +283,12 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
     setError(null);
   }, [send, cleanupSocket]);
 
-  useEffect(() => () => cleanupSocket(), [cleanupSocket]);
+  useEffect(() => {
+    return () => {
+      intentionalCloseRef.current = true;
+      cleanupSocket();
+    };
+  }, [cleanupSocket]);
 
   const you = lobby?.players.find(p => p.id === lobby.youId) ?? null;
   const opponent = lobby?.players.find(p => p.id !== lobby.youId) ?? null;
