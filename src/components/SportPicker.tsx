@@ -23,7 +23,7 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
   if (rail) {
     return (
       <div className="flex flex-col items-stretch gap-2 sm:gap-2.5" role="tablist" aria-label="Choose sport">
-        <p className="game-sport-rail-label">Sports</p>
+      <p className="game-sport-rail-label hidden sm:block">Sports</p>
         {SPORTS.map(sp => {
           const active = sport === sp;
           const label = SPORT_LABEL[sp];
@@ -51,7 +51,7 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
               <span className="shrink-0 w-[28px] h-[28px] flex items-center justify-center">
                 <SportBall sport={sp} size={28} />
               </span>
-              <span className="leading-none">{label}</span>
+              <span className="leading-none hidden sm:inline">{label}</span>
             </button>
           );
         })}

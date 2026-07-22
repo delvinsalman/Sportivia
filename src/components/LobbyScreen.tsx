@@ -115,11 +115,11 @@ export function LobbyScreen({
       <SportBackground sport={sport} />
 
       <div className="relative z-10 h-svh flex flex-col">
-        <header className="shrink-0 flex items-center justify-between px-5 py-4 bg-transparent">
+        <header className="shrink-0 flex items-center justify-between gap-2 px-4 py-4 pt-[max(1rem,env(safe-area-inset-top))] sm:px-5 bg-transparent">
           <button
             type="button"
             onClick={handleBack}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5] bg-[#1e1f22] border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all"
+            className="flex min-h-11 items-center gap-2 px-3 py-2 rounded-full text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5] bg-[#1e1f22] border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
             Back
@@ -190,15 +190,20 @@ export function LobbyScreen({
                   <input
                     value={joinCode}
                     onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                    onFocus={e => {
+                      requestAnimationFrame(() => {
+                        e.target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                      });
+                    }}
                     placeholder="CODE"
                     maxLength={6}
-                    className="flex-1 rounded-2xl border-[3px] border-[#3f4147] bg-[#1e1f22] px-4 py-3 text-center text-sm font-black tracking-[0.2em] text-[#f2f3f5] uppercase outline-none focus:border-[#ed4245]"
+                    className="flex-1 min-h-12 rounded-2xl border-[3px] border-[#3f4147] bg-[#1e1f22] px-4 py-3 text-center text-sm font-black tracking-[0.2em] text-[#f2f3f5] uppercase outline-none focus:border-[#ed4245]"
                   />
                   <button
                     type="button"
                     onClick={() => onJoin(joinCode)}
                     disabled={joinCode.trim().length < 4 || status === 'connecting'}
-                    className="rounded-2xl border-[3px] border-[#3f4147] bg-[#1e1f22] px-4 py-3 text-sm font-black text-[#f2f3f5] disabled:opacity-40"
+                    className="min-h-12 rounded-2xl border-[3px] border-[#3f4147] bg-[#1e1f22] px-4 py-3 text-sm font-black text-[#f2f3f5] disabled:opacity-40"
                   >
                     Join
                   </button>

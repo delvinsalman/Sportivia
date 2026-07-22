@@ -145,10 +145,11 @@ export function HomeScreen({
       <motion.div
         initial={{ opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed top-0 left-0 z-30 p-3 sm:p-4 flex items-center gap-2"
+        className="fixed top-0 left-0 z-30 flex items-center gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-2 pb-2 sm:p-4"
       >
-        <SportBall sport={sport} size={32} className="shrink-0 drop-shadow-sm" />
-        <h1 className="text-2xl sm:text-4xl font-black tracking-tight text-[#f2f3f5] leading-none">
+        <SportBall sport={sport} size={28} className="shrink-0 drop-shadow-sm sm:hidden" />
+        <SportBall sport={sport} size={32} className="shrink-0 drop-shadow-sm hidden sm:block" />
+        <h1 className="text-xl sm:text-4xl font-black tracking-tight text-[#f2f3f5] leading-none">
           Sportivia
         </h1>
       </motion.div>
@@ -157,7 +158,7 @@ export function HomeScreen({
       <motion.aside
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 pl-2 sm:pl-5 flex flex-col items-stretch gap-3 sm:gap-4 max-sm:scale-[0.92] max-sm:origin-left"
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 flex flex-col items-stretch gap-2.5 sm:gap-4 pl-[max(0.5rem,env(safe-area-inset-left))] sm:pl-5 max-sm:scale-[0.92] max-sm:origin-left"
       >
         <SportPicker sport={sport} onSportChange={onSportChange} layout="rail" />
 
@@ -172,7 +173,7 @@ export function HomeScreen({
           <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg border-2 border-[#f0b232]/55 bg-[#f0b232]/18 shrink-0">
             <Trophy className="w-4 h-4 text-[#f0b232]" />
           </div>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 hidden sm:block">
             <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#949ba4] leading-none mb-1">
               Record
             </p>
@@ -194,6 +195,14 @@ export function HomeScreen({
               </p>
             )}
           </div>
+          <div className="min-w-0 flex-1 sm:hidden text-center">
+            <p className="text-[8px] font-black uppercase tracking-wide text-[#949ba4] leading-none mb-0.5">
+              Best
+            </p>
+            <p className="text-xs font-black text-[#f2f3f5] font-mono leading-none">
+              {s.bestScore > 0 ? s.bestScore : '—'}
+            </p>
+          </div>
         </div>
       </motion.aside>
 
@@ -201,7 +210,7 @@ export function HomeScreen({
       <motion.div
         initial={{ opacity: 0, x: 12 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed top-0 right-0 z-30 p-2 sm:p-4 flex items-center gap-1.5 sm:gap-2.5"
+        className="fixed top-0 right-0 z-30 flex max-w-[min(100vw-7.5rem,100%)] items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-none pt-[max(0.5rem,env(safe-area-inset-top))] pr-[max(0.5rem,env(safe-area-inset-right))] pb-2 pl-1 sm:max-w-none sm:gap-2.5 sm:overflow-visible sm:p-4"
       >
         <HeaderStats profile={profile} online={showOnline} />
         <button
@@ -270,13 +279,13 @@ export function HomeScreen({
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-0 right-0 z-30 p-2 sm:p-4 max-sm:scale-90 max-sm:origin-bottom-right"
+        className="fixed bottom-0 right-0 z-30 pb-[max(0.5rem,env(safe-area-inset-bottom))] pr-[max(0.5rem,env(safe-area-inset-right))] pl-2 pt-2 sm:p-4 max-sm:scale-90 max-sm:origin-bottom-right"
       >
         <LevelCorner profile={profile} accent={accent} />
       </motion.div>
 
       {/* Hero — character center stage */}
-      <div className="relative z-10 h-svh flex flex-col items-center justify-center pl-14 sm:pl-4 pr-3 sm:px-4 pt-16 sm:pt-14 pb-16 sm:pb-10 max-sm:translate-y-0 sm:-translate-y-4">
+      <div className="relative z-10 h-svh flex flex-col items-center justify-center pl-[4.75rem] sm:pl-4 pr-3 sm:px-4 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] sm:pt-14 pb-[max(4rem,calc(env(safe-area-inset-bottom)+3.5rem))] sm:pb-10 max-sm:translate-y-0 sm:-translate-y-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -291,8 +300,8 @@ export function HomeScreen({
             </p>
           </div>
 
-          <div className="relative w-full max-w-[min(100%,320px)] sm:max-w-[520px] shrink min-h-0">
-            <div className="max-sm:scale-[0.88] max-sm:origin-top">
+          <div className="relative w-full max-w-[min(100%,280px)] sm:max-w-[520px] shrink min-h-0">
+            <div className="max-sm:scale-[0.82] max-sm:origin-top">
             <CharacterPodium
               characterId={profile.equippedCharacter}
               accent={SPORT_PODIUM_ACCENT[sport]}
@@ -377,7 +386,7 @@ export function HomeScreen({
                 playMenuBack();
                 setShowModes(false);
               }}
-              className="fixed top-0 left-0 z-50 m-3 flex items-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-2.5 py-1.5 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] sm:m-4"
+              className="fixed top-0 left-0 z-50 m-3 flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-2 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] sm:m-4"
             >
               <ArrowLeft className="w-4 h-4" />
               Back
@@ -388,7 +397,7 @@ export function HomeScreen({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 28, scale: 0.97 }}
               transition={PAGE_TRANSITION}
-              className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-8 sm:px-8"
+              className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-8 pt-[max(4.5rem,calc(env(safe-area-inset-top)+3.5rem))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-8"
               onClick={e => e.stopPropagation()}
             >
               <div className="mx-auto mb-5 flex w-full max-w-lg items-center gap-3 sm:mb-6">

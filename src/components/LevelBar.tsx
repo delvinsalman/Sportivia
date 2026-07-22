@@ -93,9 +93,9 @@ export function HeaderStats({
   const showOnline = settings.showOnlineCount;
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-1.5 shrink-0">
       {showOnline && (
-        <div className="game-chip" title="Players online right now">
+        <div className="game-chip hidden min-[380px]:flex" title="Players online right now">
           <span className="relative flex h-2 w-2">
             <span
               className={`absolute inline-flex h-full w-full rounded-full bg-[#23a559] opacity-60 ${

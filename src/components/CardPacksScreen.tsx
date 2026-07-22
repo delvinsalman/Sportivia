@@ -729,24 +729,26 @@ function PackArt({
   // Straight row: center crisp, sides fade out — stays put on hover
   const poses = large
     ? [
-        { rotate: 0, x: -132, y: 2, z: 1, scale: 0.78, dimmed: true, fade: 0.28 },
-        { rotate: 0, x: -66, y: 0, z: 2, scale: 0.88, dimmed: true, fade: 0.55 },
+        { rotate: 0, x: -96, y: 2, z: 1, scale: 0.78, dimmed: true, fade: 0.28 },
+        { rotate: 0, x: -48, y: 0, z: 2, scale: 0.88, dimmed: true, fade: 0.55 },
         { rotate: 0, x: 0, y: 0, z: 3, scale: 0.98, dimmed: false, fade: 1 },
-        { rotate: 0, x: 66, y: 0, z: 2, scale: 0.88, dimmed: true, fade: 0.55 },
-        { rotate: 0, x: 132, y: 2, z: 1, scale: 0.78, dimmed: true, fade: 0.28 },
+        { rotate: 0, x: 48, y: 0, z: 2, scale: 0.88, dimmed: true, fade: 0.55 },
+        { rotate: 0, x: 96, y: 2, z: 1, scale: 0.78, dimmed: true, fade: 0.28 },
       ]
     : [
-        { rotate: 0, x: -108, y: 2, z: 1, scale: 0.76, dimmed: true, fade: 0.26 },
-        { rotate: 0, x: -54, y: 0, z: 2, scale: 0.86, dimmed: true, fade: 0.52 },
+        { rotate: 0, x: -88, y: 2, z: 1, scale: 0.76, dimmed: true, fade: 0.26 },
+        { rotate: 0, x: -44, y: 0, z: 2, scale: 0.86, dimmed: true, fade: 0.52 },
         { rotate: 0, x: 0, y: 0, z: 3, scale: 0.96, dimmed: false, fade: 1 },
-        { rotate: 0, x: 54, y: 0, z: 2, scale: 0.86, dimmed: true, fade: 0.52 },
-        { rotate: 0, x: 108, y: 2, z: 1, scale: 0.76, dimmed: true, fade: 0.26 },
+        { rotate: 0, x: 44, y: 0, z: 2, scale: 0.86, dimmed: true, fade: 0.52 },
+        { rotate: 0, x: 88, y: 2, z: 1, scale: 0.76, dimmed: true, fade: 0.26 },
       ];
 
   return (
     <motion.div
       className={`relative mx-auto flex shrink-0 flex-col items-center ${
-        large ? 'h-[400px] w-[400px]' : 'h-[250px] w-full max-w-[320px]'
+        large
+          ? 'h-[min(360px,70vw)] w-full max-w-[min(400px,92vw)] sm:h-[400px]'
+          : 'h-[250px] w-full max-w-[320px]'
       }`}
       onMouseEnter={() => interactive && setHovered(true)}
       onMouseLeave={() => setHovered(false)}
@@ -867,7 +869,7 @@ const PACKS_DISCLAIMER =
   'Coins, packs, and cards are virtual entertainment items with no real-world or cash value. They cannot be bought, sold, traded, or redeemed for money or prizes. Pack openings use in-game coins only and are not gambling. Athlete names and likenesses are for entertainment purposes only and do not imply endorsement.';
 
 const MENU_BACK_CLASS =
-  'flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5] bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5c5e66] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all shrink-0';
+  'flex min-h-11 items-center gap-1.5 sm:gap-2 px-3 py-2 rounded-full text-xs sm:text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5] bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5c5e66] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all shrink-0';
 
 export function CardPacksScreen({
   profile,
@@ -1023,11 +1025,11 @@ export function CardPacksScreen({
 
       {/* Left sport rail — overlay so layout stays put */}
       <aside
-        className="pointer-events-none fixed left-0 top-1/2 z-30 -translate-y-1/2 pl-2 sm:pl-4"
+        className="pointer-events-none fixed left-0 top-1/2 z-30 -translate-y-1/2 pl-[max(0.5rem,env(safe-area-inset-left))] sm:pl-4"
         aria-label="Choose sport"
       >
         <div
-          className="pointer-events-auto flex flex-col gap-2 rounded-2xl border border-white/10 bg-[#16171b]/92 p-2 backdrop-blur-md"
+          className="pointer-events-auto flex flex-col gap-1.5 rounded-2xl border border-white/10 bg-[#16171b]/92 p-1.5 backdrop-blur-md sm:gap-2 sm:p-2"
           role="tablist"
         >
           {(Object.keys(SPORT_META) as Sport[]).map(item => {
@@ -1045,7 +1047,7 @@ export function CardPacksScreen({
                   setSport(item);
                   setVisibleCount(48);
                 }}
-                className={`flex h-14 w-14 items-center justify-center rounded-xl transition-opacity sm:h-16 sm:w-16 ${
+                className={`flex h-11 w-11 items-center justify-center rounded-xl transition-opacity sm:h-16 sm:w-16 ${
                   active ? '' : 'opacity-45 hover:opacity-80'
                 }`}
                 style={
@@ -1058,7 +1060,8 @@ export function CardPacksScreen({
                     : { border: '2px solid transparent' }
                 }
               >
-                <SportBall sport={item} size={40} />
+                <SportBall sport={item} size={32} className="sm:hidden" />
+                <SportBall sport={item} size={40} className="hidden sm:block" />
               </button>
             );
           })}
@@ -1066,7 +1069,7 @@ export function CardPacksScreen({
       </aside>
 
       <div className="relative z-10 flex h-svh flex-col">
-        <header className="flex shrink-0 items-center justify-between gap-2 px-3 pt-4 sm:px-6">
+        <header className="flex shrink-0 items-center justify-between gap-2 pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] pt-[max(1rem,env(safe-area-inset-top))] sm:px-6">
           <button
             type="button"
             onClick={() => {
@@ -1147,7 +1150,7 @@ export function CardPacksScreen({
         </header>
 
         <main
-          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8 ${
+          className={`min-h-0 flex-1 overflow-y-auto overscroll-contain pl-[4.25rem] pr-4 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8 ${
             tab === 'packs' ? 'pt-3 sm:pt-4' : 'pt-8 sm:pt-10'
           }`}
         >
@@ -1225,7 +1228,7 @@ export function CardPacksScreen({
                   </h2>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <label className="game-chip min-w-[180px] flex-1 !rounded-2xl">
+                  <label className="game-chip min-w-0 w-full flex-1 !rounded-2xl sm:min-w-[180px]">
                     <Search className="h-4 w-4 text-[#6d6f78]" />
                     <input
                       value={search}
@@ -1391,7 +1394,7 @@ export function CardPacksScreen({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 overflow-y-auto bg-[#050608]/96 px-3 py-6 backdrop-blur-xl"
+            className="fixed inset-0 z-50 overflow-y-auto bg-[#050608]/96 px-3 py-6 pt-[max(1.5rem,env(safe-area-inset-top))] pb-[max(1.5rem,env(safe-area-inset-bottom))] backdrop-blur-xl"
           >
             {!openingStarted ? (
               <motion.div
@@ -1402,7 +1405,7 @@ export function CardPacksScreen({
                 <button
                   type="button"
                   onClick={closeOpening}
-                  className="fixed left-3 top-4 z-20 flex items-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-2.5 py-1.5 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] transition-all hover:translate-y-[1px] hover:border-[#5c5e66] hover:text-[#f2f3f5] hover:shadow-[0_2px_0_#1a1b1f] sm:left-6 sm:top-6 sm:gap-2 sm:px-3 sm:text-sm"
+                  className="fixed left-3 top-[max(1rem,env(safe-area-inset-top))] z-20 flex min-h-11 items-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-2 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] transition-all hover:translate-y-[1px] hover:border-[#5c5e66] hover:text-[#f2f3f5] hover:shadow-[0_2px_0_#1a1b1f] sm:left-6 sm:top-6 sm:gap-2 sm:px-3 sm:text-sm"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   Back

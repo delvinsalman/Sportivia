@@ -94,10 +94,10 @@ export function CategoryGrid({
                 ) : (
                   <>
                     <CategoryIcon categoryId={cell.category.id} tag={cell.category.tag} size={30} sport={sport} />
-                    <span className="text-[7px] sm:text-[8px] font-semibold text-[#949ba4] uppercase tracking-widest leading-none">
+                    <span className="text-[9px] sm:text-[8px] font-semibold text-[#949ba4] uppercase tracking-wider leading-none">
                       {cell.category.tag}
                     </span>
-                    <span className="text-[9px] sm:text-[10px] font-extrabold text-[#f2f3f5] leading-tight text-center line-clamp-2">
+                    <span className="text-[10px] sm:text-[10px] font-extrabold text-[#f2f3f5] leading-tight text-center line-clamp-2">
                       {cell.category.label}
                     </span>
                   </>
@@ -257,7 +257,7 @@ export function TopBar({ gameTimeLeft, totalGameTime, mode, sport, onClose, corr
         </div>
       )}
 
-      <div className="flex items-center justify-between px-4 sm:px-5 py-2 sm:py-2.5">
+      <div className="flex items-center justify-between px-4 sm:px-5 py-2 sm:py-2.5 pt-[max(0.5rem,env(safe-area-inset-top))]">
         <div className="flex items-center gap-2.5">
           {totalGameTime > 0 && (
             <span className="font-mono text-sm font-medium text-[#b5bac1]">{formatTime(gameTimeLeft)}</span>
@@ -275,7 +275,12 @@ export function TopBar({ gameTimeLeft, totalGameTime, mode, sport, onClose, corr
           </div>
           <span className="text-[11px] font-black text-[#b5bac1] uppercase tracking-widest">{mode}</span>
           <SportBall sport={sport} size={18} />
-          <button onClick={onClose} className="p-1.5 rounded-xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] hover:bg-[#2b2d31] text-[#949ba4] hover:text-[#f2f3f5] shadow-[0_3px_0_#0c0d0f] transition-all">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Quit"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded-xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] text-[#949ba4] shadow-[0_3px_0_#0c0d0f] transition-all hover:bg-[#2b2d31] hover:text-[#f2f3f5]"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>

@@ -286,7 +286,7 @@ export function GameScreen({
   const versusScore = mode === 'bot' ? botScore : opponentScore;
   const versusName = mode === 'bot' ? botName(botDifficulty) : opponentName ?? 'Opponent';
   const boardChromeRem =
-    versusMode && showHints ? 12.5 : versusMode ? 11 : showHints ? 10.5 : 9.75;
+    versusMode && showHints ? 13.25 : versusMode ? 11.75 : showHints ? 11.25 : 10.5;
 
   return (
     <div className="h-svh flex flex-col bg-[#0a0a0b] relative overflow-hidden">
@@ -320,11 +320,11 @@ export function GameScreen({
         </div>
       )}
 
-      <main className="flex-1 min-h-0 flex flex-col items-center justify-center px-3 py-2 relative z-10 overflow-hidden">
+      <main className="flex-1 min-h-0 flex flex-col items-center justify-center px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] relative z-10 overflow-hidden">
         {/* Width capped by viewport height so the 3×3 square grid never forces scroll */}
         <div
           className="relative w-full"
-          style={{ maxWidth: `min(520px, calc(100svh - ${boardChromeRem}rem))` }}
+          style={{ maxWidth: `min(520px, calc(100dvh - ${boardChromeRem}rem), calc(100svh - ${boardChromeRem}rem))` }}
         >
           <GamePanel>
             <PlayerBar

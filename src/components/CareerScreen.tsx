@@ -42,7 +42,7 @@ export function CareerScreen({
     <div className="relative h-svh overflow-hidden">
       <SportBackground sport={sport} />
       <div className="relative z-10 h-svh flex flex-col overflow-hidden">
-        <header className="shrink-0 flex items-center justify-between gap-2 px-3 sm:px-6 pt-3 pb-1">
+        <header className="shrink-0 flex items-center justify-between gap-2 px-3 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1">
           <button
             type="button"
             onClick={() => {

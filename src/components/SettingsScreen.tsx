@@ -46,17 +46,17 @@ function Toggle({
         playMenuClick();
         onToggle();
       }}
-      className="relative w-11 rounded-full border-2 transition-colors shrink-0"
+      className="relative w-12 rounded-full border-2 transition-colors shrink-0 min-h-8"
       style={{
-        height: '1.625rem',
+        height: '2rem',
         background: on ? accent : '#2b2d31',
         borderColor: on ? `${accent}cc` : '#3f4147',
         boxShadow: on ? `0 2px 0 ${accent}44` : '0 2px 0 #0c0d0f',
       }}
     >
       <span
-        className="absolute top-[2px] left-[2px] w-[1.125rem] h-[1.125rem] rounded-full bg-[#f2f3f5] transition-transform"
-        style={{ transform: on ? 'translateX(1.125rem)' : 'translateX(0)' }}
+        className="absolute top-[3px] left-[3px] w-[1.35rem] h-[1.35rem] rounded-full bg-[#f2f3f5] transition-transform"
+        style={{ transform: on ? 'translateX(1.35rem)' : 'translateX(0)' }}
       />
     </button>
   );
@@ -158,7 +158,7 @@ function VolumeSlider({
           <span className="text-sm font-black text-[#f2f3f5] leading-none">{label}</span>
           <span className="text-[10px] font-black font-mono text-[#b5bac1] tabular-nums">{pct}%</span>
         </div>
-        <div className="relative h-1.5 rounded-full bg-[#2b2d31] border border-[#3f4147] overflow-hidden">
+        <div className="relative h-3 rounded-full bg-[#2b2d31] border border-[#3f4147] overflow-hidden">
           <div
             className="absolute inset-y-0 left-0 rounded-full transition-[width]"
             style={{ width: `${pct}%`, background: accent }}
@@ -238,7 +238,7 @@ export function SettingsScreen({ sport, onBack, onPromoRedeemed }: SettingsScree
     <div className="relative h-svh overflow-hidden">
       <SportBackground sport={sport} />
       <div className="relative z-10 h-svh flex flex-col overflow-hidden">
-        <header className="shrink-0 flex items-center px-3 sm:px-6 pt-3 pb-1">
+        <header className="shrink-0 flex items-center px-3 sm:px-6 pt-[max(0.75rem,env(safe-area-inset-top))] pb-1">
           <button
             type="button"
             onClick={back}
@@ -421,17 +421,23 @@ export function SettingsScreen({ sport, onBack, onPromoRedeemed }: SettingsScree
                       onKeyDown={e => {
                         if (e.key === 'Enter') void submitPromo();
                       }}
+                      onFocus={e => {
+                        // Keep promo field above the mobile keyboard
+                        requestAnimationFrame(() => {
+                          e.target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                        });
+                      }}
                       placeholder="Enter code"
                       autoCapitalize="characters"
                       autoCorrect="off"
                       spellCheck={false}
-                      className="flex-1 min-w-0 px-3 py-2.5 rounded-xl bg-[#0c0d0f] border-[2.5px] border-[#3f4147] text-sm font-black text-[#f2f3f5] placeholder:text-[#5c5e66] outline-none focus:border-[#5c5e66] font-mono tracking-wide"
+                      className="flex-1 min-w-0 min-h-11 px-3 py-2.5 rounded-xl bg-[#0c0d0f] border-[2.5px] border-[#3f4147] text-sm font-black text-[#f2f3f5] placeholder:text-[#5c5e66] outline-none focus:border-[#5c5e66] font-mono tracking-wide"
                     />
                     <button
                       type="button"
                       disabled={promoBusy || !promoDraft.trim()}
                       onClick={() => void submitPromo()}
-                      className="shrink-0 px-3.5 py-2.5 rounded-xl text-xs font-black border-[2.5px] border-white/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                      className="shrink-0 min-h-11 px-3.5 py-2.5 rounded-xl text-xs font-black border-[2.5px] border-white/25 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
                       style={{
                         background: accent,
                         color: accent === '#f4f4f5' || accent === '#949ba4' ? '#18191c' : '#fff',

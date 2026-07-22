@@ -45,11 +45,11 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
     <div className="relative min-h-svh overflow-x-hidden">
       <SportBackground sport={sport} />
 
-      <div className="relative z-30 sticky top-0 flex items-center justify-between px-4 sm:px-6 py-3 bg-transparent">
+      <div className="relative z-30 sticky top-0 flex items-center justify-between gap-2 px-4 sm:px-6 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-transparent">
         <button
           type="button"
           onClick={back}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5c5e66] text-[#b5bac1] hover:text-[#f2f3f5] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all"
+          className="flex min-h-11 items-center gap-2 px-3 py-2 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] hover:border-[#5c5e66] text-[#b5bac1] hover:text-[#f2f3f5] shadow-[0_3px_0_#1a1b1f] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] transition-all"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span className="text-xs font-black">Back</span>
@@ -62,7 +62,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
           type="button"
           whileTap={{ scale: 0.96, y: 2 }}
           onClick={play}
-          className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black border-[2.5px] border-white/30"
+          className="flex min-h-11 items-center gap-1.5 px-4 py-2 rounded-full text-xs font-black border-[2.5px] border-white/30"
           style={{
             background: accent,
             color: onAccentFg(accent),

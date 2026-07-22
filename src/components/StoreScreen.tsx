@@ -288,7 +288,7 @@ export function StoreScreen({
       <SportBackground sport={sport} />
 
       <div className="relative z-10 h-svh flex flex-col">
-        <header className="shrink-0 flex items-center justify-between gap-2 px-3 sm:px-6 pt-4 pb-0">
+        <header className="shrink-0 flex items-center justify-between gap-2 px-3 sm:px-6 pt-[max(1rem,env(safe-area-inset-top))] pb-0">
           <button
             type="button"
             onClick={() => {
