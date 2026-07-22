@@ -479,7 +479,7 @@ button,
 
 /* Shared scooped-top mask (concave TL/TR, solid below) */
 .game-pack-scoop {
-  --pack-scoop: 2.35rem;
+  --pack-scoop: 2.75rem;
   border-radius: 0 0 1rem 1rem;
   -webkit-mask-image:
     radial-gradient(circle var(--pack-scoop) at 0 0, transparent 98%, #000 100%),
@@ -505,22 +505,30 @@ button,
 
 @media (min-width: 640px) {
   .game-pack-scoop {
-    --pack-scoop: 2.75rem;
+    --pack-scoop: 3.25rem;
   }
 }
 
-/* Outer stroke that follows the scoop — fill peeks as the border line */
+/*
+  Stroke that follows the scooped silhouette (incl. curves).
+  drop-shadow tracks alpha, unlike box-border which stays rectangular.
+*/
 .game-pack-frame {
+  --pack-line: rgba(255, 255, 255, 0.28);
   width: 100%;
   margin-inline: 0;
-  padding: 2px;
-  background: var(--pack-line, rgba(255, 255, 255, 0.22));
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
   transition:
-    background 0.2s ease,
     filter 0.2s ease,
-    box-shadow 0.2s ease,
     transform 0.2s ease;
+  filter:
+    drop-shadow(0 1px 0 var(--pack-line))
+    drop-shadow(0 -1px 0 var(--pack-line))
+    drop-shadow(1px 0 0 var(--pack-line))
+    drop-shadow(-1px 0 0 var(--pack-line))
+    drop-shadow(1px 1px 0 var(--pack-line))
+    drop-shadow(-1px 1px 0 var(--pack-line))
+    drop-shadow(1px -1px 0 var(--pack-line))
+    drop-shadow(-1px -1px 0 var(--pack-line));
 }
 
 @media (min-width: 640px) {
@@ -531,35 +539,38 @@ button,
 }
 
 .game-pack-frame:hover {
-  background: var(--pack-line-hot, rgba(255, 255, 255, 0.4));
-  filter: brightness(1.03);
-  box-shadow:
-    0 10px 28px rgba(0, 0, 0, 0.34),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+  --pack-line: var(--pack-line-hot, rgba(255, 255, 255, 0.45));
   transform: translateY(-2px);
+  filter:
+    drop-shadow(0 1px 0 var(--pack-line))
+    drop-shadow(0 -1px 0 var(--pack-line))
+    drop-shadow(1px 0 0 var(--pack-line))
+    drop-shadow(-1px 0 0 var(--pack-line))
+    drop-shadow(1px 1px 0 var(--pack-line))
+    drop-shadow(-1px 1px 0 var(--pack-line))
+    drop-shadow(1px -1px 0 var(--pack-line))
+    drop-shadow(-1px -1px 0 var(--pack-line))
+    drop-shadow(0 10px 18px rgba(0, 0, 0, 0.35));
 }
 
-/* Inner fill — slightly tighter scoop so the outer rim reads as a continuous border */
 .game-pack-panel {
-  --pack-scoop: calc(2.35rem - 2px);
   display: flex;
   flex-direction: column;
   width: 100%;
   height: 100%;
   border: none;
-  border-radius: 0 0 calc(1rem - 2px) calc(1rem - 2px);
+  overflow: hidden;
   background: linear-gradient(
     180deg,
     rgba(28, 30, 36, 0.55) 0%,
     rgba(16, 17, 20, 0.4) 100%
   );
-  overflow: hidden;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transition: filter 0.2s ease;
 }
 
-@media (min-width: 640px) {
-  .game-pack-panel {
-    --pack-scoop: calc(2.75rem - 2px);
-  }
+.game-pack-frame:hover .game-pack-panel {
+  filter: brightness(1.04);
 }
 
 /* Home sports rail tabs — same slanted game-tab look, no panel wrapper */
