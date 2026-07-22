@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import type { CategoryTag, Sport } from '../types';
 import { assetUrl } from '../lib/assetUrl';
 import { TeamJerseyIcon } from './TeamJerseyIcon';
@@ -329,45 +330,7 @@ function getMeta(categoryId: string, tag: CategoryTag, sport?: Sport): VisualMet
   };
 }
 
-function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
-  const code = meta.flagCode;
-
-  if (code === 'ca') {
-    return (
-      <div
-        className="rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 bg-[#121316]"
-        style={{ width: size, height: size }}
-      >
-        <img
-          src={assetUrl('/icons/flags/canada.svg')}
-          alt=""
-          draggable={false}
-          className="w-full h-full object-cover select-none"
-          loading="lazy"
-        />
-      </div>
-    );
-  }
-
-  if (code) {
-    return (
-      <div
-        className="rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 bg-[#121316]"
-        style={{ width: size, height: size }}
-      >
-        <img
-          src={`https://flagcdn.com/w160/${code}.png`}
-          srcSet={`https://flagcdn.com/w320/${code}.png 2x`}
-          alt=""
-          draggable={false}
-          className="w-full h-full object-cover select-none"
-          loading="lazy"
-        />
-      </div>
-    );
-  }
-
-  const colors = meta.colors ?? ['#5865f2', '#fff'];
+function FlagStripes({ colors, size }: { colors: string[]; size: number }) {
   return (
     <div
       className="rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 flex"
@@ -376,6 +339,49 @@ function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
       {colors.map((c, i) => (
         <div key={i} className="flex-1 h-full" style={{ background: c }} />
       ))}
+    </div>
+  );
+}
+
+function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
+  const code = meta.flagCode;
+  const colors = meta.colors ?? ['#5865f2', '#fff'];
+  const [failed, setFailed] = useState(false);
+
+  if (!code || failed) {
+    return <FlagStripes colors={colors} size={size} />;
+  }
+
+  // Prefer local vendored flags so boards work offline / without CDN.
+  const localSrc =
+    code === 'ca'
+      ? assetUrl('/icons/flags/canada.svg')
+      : assetUrl(`/icons/flags/${code}.png`);
+  const cdnSrc = `https://flagcdn.com/w160/${code}.png`;
+
+  return (
+    <div
+      className="rounded-full overflow-hidden border-2 border-white/20 shadow-md shrink-0 bg-[#121316]"
+      style={{ width: size, height: size }}
+    >
+      <img
+        src={localSrc}
+        alt=""
+        draggable={false}
+        className="w-full h-full object-cover select-none"
+        loading="lazy"
+        referrerPolicy="no-referrer"
+        onError={event => {
+          const img = event.currentTarget;
+          if (img.dataset.fallback !== 'cdn') {
+            img.dataset.fallback = 'cdn';
+            img.src = cdnSrc;
+            img.srcset = `https://flagcdn.com/w320/${code}.png 2x`;
+            return;
+          }
+          setFailed(true);
+        }}
+      />
     </div>
   );
 }
