@@ -568,22 +568,27 @@ body {
 }
 
 .game-home-profile-avatar {
-  width: 3.6rem;
-  height: 3.6rem;
+  width: 3.75rem;
+  height: 3.75rem;
   border-radius: 9999px;
   overflow: hidden;
   flex-shrink: 0;
   border: 2px solid rgba(255, 255, 255, 0.18);
-  background: radial-gradient(circle at 50% 28%, #3a3d46 0%, #121316 75%);
+  background: #16171a;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
   position: relative;
 }
 
-.game-home-profile-avatar > * {
-  position: absolute !important;
-  inset: 0;
-  width: 100% !important;
-  height: 100% !important;
+/* Crop a full-body podium render into a headshot (same camera that works on home). */
+.game-home-profile-zoom {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 160px;
+  height: 160px;
+  transform: translate(-50%, -58%) scale(1.9);
+  transform-origin: center center;
+  pointer-events: none;
 }
 
 @media (min-width: 640px) {

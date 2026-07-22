@@ -1749,6 +1749,7 @@ function Scene({
   showcase = false,
   hidePodium = false,
   portrait = false,
+  portraitHeadY = STAND_Y + TARGET_HEIGHT * 0.72,
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
@@ -1764,6 +1765,7 @@ function Scene({
   showcase?: boolean;
   hidePodium?: boolean;
   portrait?: boolean;
+  portraitHeadY?: number;
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
@@ -1774,10 +1776,17 @@ function Scene({
 }) {
   return (
     <>
-      {portrait && <PortraitCamera />}
-      <ambientLight intensity={hero || portrait ? 1.25 : 1.1} />
-      <hemisphereLight args={['#ffffff', '#3a3a48', hero || portrait ? 1.05 : 0.75]} />
-      {hero || portrait ? (
+      {portrait && <PortraitCamera headY={portraitHeadY} />}
+      <ambientLight intensity={portrait ? 1.45 : hero ? 1.15 : 1.1} />
+      <hemisphereLight args={['#ffffff', '#3a3a48', portrait ? 1.15 : hero ? 0.95 : 0.75]} />
+      {portrait ? (
+        <>
+          <directionalLight position={[1.2, 2.2, 2.8]} intensity={2.6} color="#ffffff" />
+          <directionalLight position={[-1.4, 1.6, 1.2]} intensity={1.2} color="#e8e8ff" />
+          <pointLight position={[0, portraitHeadY + 0.15, 1.8]} intensity={2.2} color="#ffffff" />
+          <pointLight position={[0.4, portraitHeadY, 0.8]} intensity={1.1} color={accent} />
+        </>
+      ) : hero ? (
         <HeroSpotlights accent={accent} />
       ) : (
         <>
@@ -1785,12 +1794,6 @@ function Scene({
           <spotLight position={[2.5, 5, 3]} angle={0.4} penumbra={0.5} intensity={2.5} />
           <pointLight position={[-2, 2, -1]} intensity={0.9} color={accent} />
           <pointLight position={[2, 1.5, 2]} intensity={0.6} color="#ffffff" />
-        </>
-      )}
-      {portrait && (
-        <>
-          <directionalLight position={[0.6, 1.4, 2.2]} intensity={2.4} color="#ffffff" />
-          <pointLight position={[0, 1.1, 1.6]} intensity={1.8} color="#ffffff" />
         </>
       )}
 
@@ -1834,41 +1837,13 @@ function LoadingFallback() {
   );
 }
 
-/** Frame the upper body / head for the home profile avatar. */
-function PortraitCamera() {
-  const { camera, scene } = useThree();
-  const framed = useRef(false);
+/** Fixed head camera — avoids skinned-mesh bbox (often wrong → empty avatar). */
+function PortraitCamera({ headY }: { headY: number }) {
+  const { camera } = useThree();
 
   useFrame(() => {
-    if (framed.current) return;
-
-    const box = new Box3();
-    let hasMesh = false;
-    scene.traverse(obj => {
-      const mesh = obj as Mesh;
-      if (!mesh.isMesh || !mesh.visible) return;
-      // Ignore shadow planes / tiny helpers
-      const geom = mesh.geometry;
-      if (!geom) return;
-      box.expandByObject(mesh);
-      hasMesh = true;
-    });
-    if (!hasMesh || box.isEmpty()) return;
-
-    const size = box.getSize(new Vector3());
-    if (size.y < 0.05) return;
-
-    const center = box.getCenter(new Vector3());
-    // Aim at face band (upper ~22% of the fitted body)
-    const headY = box.min.y + size.y * 0.78;
-    const focus = new Vector3(center.x, headY, center.z);
-    const dist = Math.max(size.y * 0.4, size.x * 0.9, size.z * 0.9, 0.9);
-    camera.position.set(focus.x, headY + size.y * 0.015, focus.z + dist);
-    camera.near = 0.05;
-    camera.far = 40;
-    camera.lookAt(focus);
-    camera.updateProjectionMatrix();
-    framed.current = true;
+    camera.position.set(0, headY, 1.55);
+    camera.lookAt(0, headY - 0.04, 0);
   });
 
   return null;
@@ -1929,6 +1904,8 @@ export function CharacterPodium({
   const isPortrait = portrait;
   const isFrozen = frozen || isPortrait;
   const noPodium = hidePodium || isPortrait;
+  const bodyH = ('targetHeight' in def ? def.targetHeight : undefined) ?? TARGET_HEIGHT;
+  const portraitHeadY = STAND_Y + bodyH * 0.72;
   const loadoutKey =
     characterId === 'creative' && creativeLoadout
       ? creativeLoadoutKey(creativeLoadout)
@@ -1947,7 +1924,7 @@ export function CharacterPodium({
 
   return (
     <div
-      className={`relative ${framed || bare || isPortrait ? 'overflow-hidden' : 'overflow-hidden'} ${bare ? className : `rounded-2xl border border-[#2b2d31]/80 ${className}`}`}
+      className={`relative overflow-hidden ${bare ? className : `rounded-2xl border border-[#2b2d31]/80 ${className}`}`}
       style={{
         height,
         paddingBottom: framed || bare ? (isPortrait ? 0 : 20) : 0,
@@ -1979,20 +1956,21 @@ export function CharacterPodium({
       <Canvas
         camera={{
           position: isPortrait
-            ? [0, 0.35, 1.55]
+            ? [0, portraitHeadY, 1.55]
             : framed
               ? petId
                 ? [0, 0.35, 5.8]
                 : [0, 0.05, 4.4]
               : [0, 0.55, 3.1],
-          fov: isPortrait ? 32 : framed ? (petId ? 38 : 34) : 42,
+          fov: isPortrait ? 30 : framed ? (petId ? 38 : 34) : 42,
         }}
+        dpr={[1, 1.75]}
         gl={{ alpha: true, antialias: true }}
         style={{ background: 'transparent', height: '100%', width: '100%' }}
         onCreated={({ gl, camera }) => {
           gl.setClearColor(0x000000, 0);
-          gl.toneMappingExposure = framed || isPortrait ? 1.2 : 1;
-          if (isPortrait) camera.lookAt(0, 0.25, 0);
+          gl.toneMappingExposure = isPortrait ? 1.35 : framed ? 1.15 : 1;
+          if (isPortrait) camera.lookAt(0, portraitHeadY - 0.04, 0);
           else if (framed) camera.lookAt(0, petId ? 0.15 : -0.15, 0);
         }}
       >
@@ -2002,10 +1980,11 @@ export function CharacterPodium({
             characterId={characterId}
             petId={petId}
             accent={glow}
-            hero={framed || isPortrait}
+            hero={framed}
             showcase={hero && !isFrozen}
             hidePodium={noPodium}
             portrait={isPortrait}
+            portraitHeadY={portraitHeadY}
             creativeLoadout={creativeLoadout}
             athleteLoadout={athleteLoadout}
             bobLoadout={bobLoadout}
