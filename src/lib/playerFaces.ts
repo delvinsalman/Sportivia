@@ -13,7 +13,7 @@ import type { Sport } from '../types';
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
 /** Bump to force a full face-cache refresh after portrait pipeline changes. */
-const REFETCH_MARK = 'sportivia.playerFaces.refetch.v52';
+const REFETCH_MARK = 'sportivia.playerFaces.refetch.v53';
 const LEGACY_SOCCER_KEY = 'sportivia.soccerFaces.v1';
 const SPORTSDB = 'https://www.thesportsdb.com/api/v1/json/123/searchplayers.php';
 const WIKI = 'https://en.wikipedia.org/api/rest_v1/page/summary';
@@ -183,6 +183,7 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     "cubarsi": "/faces/soccer/cubarsi.png",
     "cunha": "/faces/soccer/cunha.png",
     "depay": "/faces/soccer/depay.png",
+    "dest": "/faces/soccer/dest.png",
     "despodov": "/faces/soccer/despodov.png",
     "dia": "/faces/soccer/dia.png",
     "dosantos": "/faces/soccer/dosantos.png",
