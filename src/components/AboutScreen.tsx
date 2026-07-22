@@ -26,6 +26,71 @@ function onAccentFg(color: string) {
   return isLightAccent(color) ? '#18191c' : '#ffffff';
 }
 
+const GUIDE: Array<{
+  eyebrow: string;
+  title: string;
+  body: string;
+}> = [
+  {
+    eyebrow: 'The board',
+    title: 'Match stars to categories',
+    body: 'A player drops in. Tap the cell that fits — club, country, award, era, and more — before the clock runs out. Streaks multiply your score. Fill the board, then it refreshes.',
+  },
+  {
+    eyebrow: 'Five sports',
+    title: 'One game, five worlds',
+    body: 'Soccer, NBA, MLB, NFL, and NHL each have their own pool, look, and record. Switch sports from the home rail anytime.',
+  },
+  {
+    eyebrow: 'Modes',
+    title: 'Play how you want',
+    body: 'Training is practice with no rewards. Daily is a shared board with a first-finish payday. Ranked is timed and competitive. Vs AI races a bot. 1v1 Duel is a live lobby with a code.',
+  },
+  {
+    eyebrow: 'Vs AI & Duels',
+    title: 'Race someone — or something',
+    body: 'Pick Beginner, Pro, or Expert against the bot. Online, create or join a room, ready up together, and the highest score wins the match.',
+  },
+  {
+    eyebrow: 'Card stakes',
+    title: 'Put a player on the line',
+    body: 'Optionally stake a card from your collection. Win and you keep yours and take theirs. Lose and that card is gone. Draw returns both stakes.',
+  },
+  {
+    eyebrow: 'Packs & collection',
+    title: 'Open packs. Build your set',
+    body: 'Spend coins on Prospect, Elite, or Icon packs. Cards go Common to Legendary. Duplicates refund coins. Browse your collection by sport anytime.',
+  },
+  {
+    eyebrow: 'Store',
+    title: 'Skins, pets, and style',
+    body: 'Unlock characters and companions with coins. Equip them on home, About, and results. Some skins have loadouts and breed variants.',
+  },
+  {
+    eyebrow: 'Progress',
+    title: 'Coins, XP, and career',
+    body: 'Finishing scoring runs earns coins and XP. Level up for milestones. Career tracks best scores, streaks, and perfect boards per sport.',
+  },
+  {
+    eyebrow: 'Live & identity',
+    title: 'Your name. Your lobby',
+    body: 'Edit your display name on home. See who’s online. Host or join a duel with a short code — same board, fair race.',
+  },
+  {
+    eyebrow: 'Settings',
+    title: 'Sound, motion, tips',
+    body: 'Mute audio, tune music and SFX, reduce motion, or turn off match tips. Promo codes redeem from Settings when you have one.',
+  },
+];
+
+const MODES = [
+  { name: 'Training', detail: '1 min · practice' },
+  { name: 'Daily', detail: '2 min · first finish' },
+  { name: 'Ranked', detail: '2 min · climb' },
+  { name: 'Vs AI', detail: 'Bot race · stake' },
+  { name: '1v1 Duel', detail: 'Lobby · highest wins' },
+] as const;
+
 export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps) {
   const accent = SPORT_ACCENT[sport];
   const character = getCharacterDef(profile.equippedCharacter);
@@ -75,7 +140,6 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6">
-        {/* Full-page hero — fixed character frame so scroll/scrollbar never rescales the 3D view */}
         <section className="flex min-h-[calc(100svh-3.75rem)] flex-col justify-center py-10 md:py-12">
           <div className="grid items-center gap-10 md:grid-cols-2 md:gap-12">
             <motion.div
@@ -121,7 +185,6 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                 className="absolute inset-8 rounded-full blur-3xl opacity-40"
                 style={{ background: accent }}
               />
-              {/* Locked box size — prevents Canvas aspect from jumping when the scrollbar appears */}
               <div className="relative h-[420px] w-full max-w-[460px] shrink-0">
                 <CharacterPodium
                   characterId={profile.equippedCharacter}
@@ -166,19 +229,91 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
           </div>
         </section>
 
-        {/* Coming soon */}
-        <section className="pb-16 pt-2 text-center">
+        {/* Guide — everything Sportivia does */}
+        <section className="pb-[max(4rem,env(safe-area-inset-bottom))] pt-4 md:pt-8">
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
+            initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, margin: '-40px' }}
+            className="mb-10 md:mb-14 max-w-xl"
           >
-            <h2 className="text-xl sm:text-2xl font-extrabold text-[#f2f3f5] mb-2">
-              Coming soon
-            </h2>
-            <p className="mx-auto max-w-md text-sm text-[#949ba4] leading-relaxed">
-              Full guide to the board, duels, modes, and packs — for now, jump in and play.
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#949ba4] mb-3">
+              The guide
             </p>
+            <h2 className="text-3xl sm:text-4xl font-black text-[#f2f3f5] tracking-tight leading-[1.05]">
+              Everything in Sportivia
+            </h2>
+            <p className="mt-3 text-sm sm:text-base text-[#949ba4] leading-relaxed">
+              From the board to packs, duels, and your career — here’s how the whole app fits together.
+            </p>
+          </motion.div>
+
+          <div className="mb-12 md:mb-16 flex flex-wrap gap-2 sm:gap-2.5">
+            {MODES.map(mode => (
+              <div
+                key={mode.name}
+                className="rounded-2xl border-[2.5px] border-[#3f4147] bg-[#121316]/75 px-3.5 py-2.5 shadow-[0_3px_0_#0a0a0b]"
+              >
+                <p className="text-xs font-black text-[#f2f3f5] leading-none">{mode.name}</p>
+                <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-[#6d6f78]">
+                  {mode.detail}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-0 border-t border-white/10">
+            {GUIDE.map((item, index) => (
+              <motion.article
+                key={item.title}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: '-24px' }}
+                transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.2) }}
+                className="grid gap-3 border-b border-white/10 py-7 sm:grid-cols-[9rem_1fr] sm:gap-8 sm:py-8"
+              >
+                <p
+                  className="text-[11px] font-bold uppercase tracking-[0.18em] sm:pt-1"
+                  style={{ color: accent }}
+                >
+                  {item.eyebrow}
+                </p>
+                <div className="min-w-0">
+                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#f2f3f5] tracking-tight leading-snug">
+                    {item.title}
+                  </h3>
+                  <p className="mt-2 max-w-2xl text-sm sm:text-[15px] text-[#949ba4] leading-relaxed">
+                    {item.body}
+                  </p>
+                </div>
+              </motion.article>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            className="mt-12 md:mt-16 text-center"
+          >
+            <p className="text-xs font-semibold text-[#5c5e66] leading-relaxed max-w-lg mx-auto">
+              Coins, packs, and cards are virtual entertainment only — no real-world value.
+              Athlete names are for fun and don’t imply endorsement.
+            </p>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97, y: 2 }}
+              onClick={play}
+              className="mt-6 inline-flex min-h-12 items-center gap-2 rounded-full px-7 py-3 text-sm font-black border-[2.5px] border-white/30"
+              style={{
+                background: accent,
+                color: onAccentFg(accent),
+                boxShadow: `0 4px 0 ${accent}99`,
+              }}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              Jump in
+            </motion.button>
           </motion.div>
         </section>
       </div>
