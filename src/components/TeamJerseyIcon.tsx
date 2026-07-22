@@ -1,5 +1,3 @@
-import { assetUrl } from '../lib/assetUrl';
-
 export type JerseySport = 'soccer' | 'basketball' | 'baseball' | 'football' | 'hockey';
 export type JerseyPattern = 'solid' | 'vertical' | 'horizontal' | 'pinstripes' | 'hoops' | 'split';
 
@@ -11,12 +9,6 @@ export interface TeamJerseyMeta {
   logoUrl?: string;
   jerseyPattern?: JerseyPattern;
 }
-
-const LOGO_SIZE_RATIO = 0.3;
-const SOCCER_LOGO_SIZE_RATIO = 0.28;
-const BASKETBALL_LOGO_SIZE_RATIO = 0.28;
-const FOOTBALL_LOGO_SIZE_RATIO = 0.3;
-const HOCKEY_LOGO_SIZE_RATIO = 0.34;
 
 /** Detailed basketball tank — viewBox 0 0 200 250 */
 const BASKETBALL_KIT_BODY = `M 70 40 L 85 40 Q 100 68 115 40 L 130 40 Q 122 75 145 95 L 140 220 L 60 220 L 55 95 Q 78 75 70 40 Z`;
@@ -51,9 +43,6 @@ const BASEBALL_KIT = {
 
 const BASEBALL_VIEW_W = 200;
 const BASEBALL_VIEW_H = 250;
-const BASEBALL_LOGO_SIZE_RATIO = 0.26;
-
-/** Detailed soccer kit — viewBox 0 0 200 220 */
 const SOCCER_KIT = {
   body: `M 60 35 C 60 35, 55 40, 52 48 L 40 130 C 38 142, 42 155, 50 162 L 70 175 C 78 180, 85 182, 100 182 C 115 182, 122 180, 130 175 L 150 162 C 158 155, 162 142, 160 130 L 148 48 C 145 40, 140 35, 140 35 Z`,
   leftSleeve: `M 52 48 C 42 50, 28 58, 24 72 C 20 86, 26 100, 36 108 L 50 100 C 44 90, 42 78, 48 68 Z`,
@@ -271,31 +260,6 @@ function jerseyHeight(sport: JerseySport, size: number) {
   if (sport === 'football') return size * (NFL_VIEW_H / NFL_VIEW_W);
   if (sport === 'hockey') return size * (HOCKEY_VIEW_H / HOCKEY_VIEW_W);
   return size * 1.12;
-}
-
-function logoPlacement(sport: JerseySport, size: number, height: number) {
-  if (sport === 'soccer') {
-    const badgeSize = size * SOCCER_LOGO_SIZE_RATIO;
-    return { badgeSize, top: height * 0.36 };
-  }
-  if (sport === 'basketball') {
-    const badgeSize = size * BASKETBALL_LOGO_SIZE_RATIO;
-    return { badgeSize, top: height * 0.38 };
-  }
-  if (sport === 'baseball') {
-    const badgeSize = size * BASEBALL_LOGO_SIZE_RATIO;
-    return { badgeSize, top: height * 0.34 };
-  }
-  if (sport === 'football') {
-    const badgeSize = size * FOOTBALL_LOGO_SIZE_RATIO;
-    return { badgeSize, top: height * 0.36 };
-  }
-  if (sport === 'hockey') {
-    const badgeSize = size * HOCKEY_LOGO_SIZE_RATIO;
-    return { badgeSize, top: height * 0.36 };
-  }
-  const badgeSize = size * LOGO_SIZE_RATIO;
-  return { badgeSize, top: size * 0.28 };
 }
 
 function SoccerJerseyGraphic({
@@ -832,9 +796,8 @@ export function TeamJerseyIcon({
   const body = bodyPath(sport);
   const colors = patternColors(meta);
   const accent = meta.accent ?? colors[1] ?? '#ffffff';
-  const uid = `tj-${sport}-${meta.logoUrl?.replace(/\W/g, '') ?? colors[0].replace('#', '')}`;
+  const uid = `tj-${sport}-${colors[0].replace('#', '')}`;
   const height = jerseyHeight(sport, size);
-  const { badgeSize, top: badgeTop } = logoPlacement(sport, size, height);
 
   return (
     <div className="relative shrink-0 drop-shadow-lg" style={{ width: size, height }}>
@@ -867,37 +830,6 @@ export function TeamJerseyIcon({
           <path d={body} fill={`url(#${uid}-sh)`} pointerEvents="none" />
         </svg>
       )}
-
-      {meta.logoUrl ? (
-        <img
-          src={assetUrl(meta.logoUrl)}
-          alt=""
-          className={`absolute object-contain drop-shadow-md pointer-events-none ${sport === 'baseball' ? '' : 'left-1/2 -translate-x-1/2'}`}
-          style={{
-            top: badgeTop,
-            ...(sport === 'baseball' ? { left: '36%' } : {}),
-            width: badgeSize,
-            height: badgeSize,
-            maxWidth: badgeSize,
-            maxHeight: badgeSize,
-            filter: 'drop-shadow(0 0 1px rgba(255,255,255,0.95)) drop-shadow(0 1px 2px rgba(0,0,0,0.45))',
-          }}
-          loading="lazy"
-        />
-      ) : meta.initials ? (
-        <div
-          className={`absolute rounded-md bg-black/25 border border-white/20 flex items-center justify-center font-black text-white ${sport === 'baseball' ? '' : 'left-1/2 -translate-x-1/2'}`}
-          style={{
-            top: badgeTop + badgeSize * 0.05,
-            ...(sport === 'baseball' ? { left: '36%' } : {}),
-            width: badgeSize * 0.95,
-            height: badgeSize * 0.55,
-            fontSize: badgeSize * 0.28,
-          }}
-        >
-          {meta.initials}
-        </div>
-      ) : null}
     </div>
   );
 }
