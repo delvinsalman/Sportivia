@@ -1,8 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { BoardCell, Sport } from '../types';
 import type { Feedback, GamePhase } from './useRoundGame';
 import { getValidCellIndices } from '../lib/roundEngine';
 import type { PlayerUnion } from '../data/categories';
+
+/** Real-time cooldown after a hint so players can't farm by waiting. */
+const HINT_COOLDOWN_MS = 55_000;
+/** How long you must sit on a player before a hint can arm. */
+const SIT_DELAY_MS = 5_500;
 
 function isStruggling(opts: {
   wrongStreak: number;
@@ -11,17 +16,17 @@ function isStruggling(opts: {
   wrong: number;
 }): boolean {
   const { wrongStreak, score, correct, wrong } = opts;
+  // Stricter than before — only clearly stuck runs get help.
   return (
-    wrongStreak >= 2 ||
-    (wrong >= 3 && score < 35) ||
-    (correct === 0 && wrong >= 1) ||
-    (score < 15 && wrong + correct >= 3)
+    wrongStreak >= 3 ||
+    (wrong >= 5 && score < 25) ||
+    (correct === 0 && wrong >= 3)
   );
 }
 
 /**
- * Candy Crush–style struggle hint: after a natural delay, pulse one correct
- * cell when the player is stuck (slow + low score / consecutive misses).
+ * Candy Crush–style struggle hint — at most one pulse, then a long cooldown
+ * so waiting never farms free answers.
  */
 export function useStruggleHint({
   sport,
@@ -51,51 +56,38 @@ export function useStruggleHint({
   enabled?: boolean;
 }): number | null {
   const [hintCell, setHintCell] = useState<number | null>(null);
+  const lastHintAtRef = useRef(0);
+  const hintedThisPlayerRef = useRef<string | null>(null);
   const playerId = player?.id ?? null;
 
-  // Arm a delayed hint once per player when they're struggling.
+  // New player → clear on-screen pulse (cooldown still applies).
   useEffect(() => {
     setHintCell(null);
+    hintedThisPlayerRef.current = null;
+  }, [playerId, boardKey]);
+
+  useEffect(() => {
     if (!enabled || phase !== 'playing' || !player || feedback) return;
+    if (hintedThisPlayerRef.current === player.id) return;
+    if (Date.now() - lastHintAtRef.current < HINT_COOLDOWN_MS) return;
     if (!isStruggling({ wrongStreak, score, correct, wrong })) return;
 
-    // Quicker nudge after a bad miss streak; otherwise wait a beat.
-    const delayMs = wrongStreak >= 3 ? 1_600 : 3_600;
+    // Only arm late in the player clock — never instantly.
+    if (roundTime > 5) return;
 
     const timer = window.setTimeout(() => {
+      if (Date.now() - lastHintAtRef.current < HINT_COOLDOWN_MS) return;
       const indices = getValidCellIndices(sport, board, player);
       if (!indices.length) return;
-      setHintCell(indices[Math.floor(Math.random() * indices.length)]!);
-    }, delayMs);
+      const pick = indices[Math.floor(Math.random() * indices.length)]!;
+      hintedThisPlayerRef.current = player.id;
+      lastHintAtRef.current = Date.now();
+      setHintCell(pick);
+    }, SIT_DELAY_MS);
 
     return () => window.clearTimeout(timer);
-    // Intentionally omit board/roundTime — restart only when the player / board cycle changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, phase, playerId, boardKey, feedback, wrongStreak, score, correct, wrong, sport]);
-
-  // Clock almost out while struggling — show the hint right away.
-  useEffect(() => {
-    if (!enabled || phase !== 'playing' || !player || feedback || hintCell != null) return;
-    if (roundTime > 3) return;
-    if (!isStruggling({ wrongStreak, score, correct, wrong })) return;
-
-    const indices = getValidCellIndices(sport, board, player);
-    if (!indices.length) return;
-    setHintCell(indices[Math.floor(Math.random() * indices.length)]!);
-  }, [
-    enabled,
-    phase,
-    player,
-    feedback,
-    hintCell,
-    roundTime,
-    wrongStreak,
-    score,
-    correct,
-    wrong,
-    sport,
-    board,
-  ]);
+  }, [enabled, phase, playerId, boardKey, feedback, wrongStreak, score, correct, wrong, roundTime, sport]);
 
   if (feedback) return null;
   return hintCell;
