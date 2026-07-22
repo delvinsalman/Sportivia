@@ -85,28 +85,25 @@ export function CoinBadge({ coins, onClick }: CoinBadgeProps) {
   return <div className={chipClass}>{inner}</div>;
 }
 
-/** Chunky home HUD coin meter — reads like in-game currency, not a web pill. */
+/** Chunky home HUD coin meter — matches the slanted game tabs, not a web pill. */
 export function HomeCoinMeter({ coins }: { coins: number }) {
   return (
     <div
-      className="relative flex shrink-0 items-center pl-3 pr-1"
+      className="relative flex h-10 shrink-0 items-center sm:h-11"
       title={`${coins.toLocaleString()} coins`}
     >
+      {/* Coin sits on top of the bar like a game currency token */}
       <div
-        className="pointer-events-none absolute -left-1 top-1/2 z-10 -translate-y-1/2 drop-shadow-[0_3px_0_rgba(0,0,0,0.55)]"
+        className="relative z-20 -mr-2.5 shrink-0 drop-shadow-[0_4px_0_rgba(0,0,0,0.55)]"
         aria-hidden
       >
-        <CoinIcon size={38} className="sm:scale-[1.1]" />
+        <CoinIcon size={44} className="sm:scale-110" />
       </div>
-      <div className="relative ml-5 min-w-[4.75rem] skew-x-[-10deg] rounded-md border-[2.5px] border-[#f0b232] bg-gradient-to-b from-[#3a2e12] via-[#1a160c] to-[#0f0d08] py-1.5 pl-5 pr-3 shadow-[0_4px_0_#8a6814,0_0_18px_rgba(240,178,50,0.28)] sm:ml-6 sm:min-w-[5.5rem] sm:py-2 sm:pl-6 sm:pr-3.5">
-        <div className="skew-x-[10deg] text-right leading-none">
-          <p className="text-[8px] font-black uppercase tracking-[0.18em] text-[#f0b232]/85 sm:text-[9px]">
-            Coins
-          </p>
-          <p className="mt-0.5 font-mono text-sm font-black tabular-nums text-[#ffe08a] drop-shadow-[0_2px_0_rgba(0,0,0,0.45)] sm:text-base">
-            {coins.toLocaleString()}
-          </p>
-        </div>
+
+      <div className="relative z-10 flex h-full min-w-[5.25rem] items-center skew-x-[-12deg] rounded-[0.45rem] border-2 border-[#f0b232] bg-gradient-to-b from-[#2f3038] via-[#1c1d22] to-[#14151a] pl-4 pr-3.5 shadow-[0_0_0_1px_rgba(240,178,50,0.35),0_0_18px_rgba(240,178,50,0.28),0_4px_0_#8a6814] sm:min-w-[6.25rem] sm:pl-5 sm:pr-4">
+        <span className="skew-x-[12deg] font-mono text-[15px] font-black leading-none tracking-tight text-[#ffe08a] drop-shadow-[0_2px_0_rgba(0,0,0,0.5)] sm:text-lg">
+          {coins.toLocaleString()}
+        </span>
       </div>
     </div>
   );
