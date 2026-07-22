@@ -99,7 +99,7 @@ export function CategoryGrid({
                   </>
                 ) : (
                   <>
-                    <div className="mb-1 flex h-[36px] shrink-0 items-center justify-center leading-none">
+                    <div className="mb-1 flex h-[30px] shrink-0 items-center justify-center leading-none">
                       <CategoryIcon categoryId={cell.category.id} tag={cell.category.tag} size={26} sport={sport} />
                     </div>
                     <span className="text-[9px] sm:text-[8px] font-semibold text-[#949ba4] uppercase tracking-wider leading-none">

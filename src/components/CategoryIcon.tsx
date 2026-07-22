@@ -604,7 +604,7 @@ export function CategoryIcon({ categoryId, tag, size = 38, sport }: CategoryIcon
   const meta = getMeta(categoryId, tag, sport);
 
   switch (meta.type) {
-    case 'flag': return <FlagCircle meta={meta} size={Math.round(size * 1.3)} />;
+    case 'flag': return <FlagCircle meta={meta} size={size} />;
     case 'jersey': return <TeamJerseyIcon meta={meta} sport="soccer" size={size} />;
     case 'league': return <LeagueBadge meta={meta} size={size} sport={sport} />;
     case 'trophy':
