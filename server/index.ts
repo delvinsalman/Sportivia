@@ -177,6 +177,8 @@ function removePlayer(ws: WebSocket) {
   const room = rooms.get(code);
   if (!room) return;
 
+  const leaving = room.players.get(playerId);
+  const wasPlaying = room.status === 'playing';
   room.players.delete(playerId);
   socketRoom.delete(ws);
   socketPlayer.delete(ws);
@@ -188,6 +190,35 @@ function removePlayer(ws: WebSocket) {
 
   if (room.hostId === playerId) {
     room.hostId = [...room.players.keys()][0];
+  }
+
+  // Mid-match disconnect → remaining player wins cleanly
+  if (wasPlaying && room.players.size === 1 && leaving) {
+    const winner = [...room.players.values()][0]!;
+    room.status = 'finished';
+    send(winner.ws, {
+      type: 'result',
+      winnerId: winner.id,
+      you: {
+        id: winner.id,
+        name: winner.name,
+        score: winner.score,
+        correct: winner.correct,
+        wrong: winner.wrong,
+        maxStreak: winner.maxStreak,
+      },
+      opponent: {
+        id: leaving.id,
+        name: leaving.name,
+        score: leaving.score,
+        correct: leaving.correct,
+        wrong: leaving.wrong,
+        maxStreak: leaving.maxStreak,
+      },
+      disconnected: true,
+    });
+    broadcast(room, lobbyPayload(room));
+    return;
   }
 
   broadcast(room, { type: 'opponent_left', players: publicPlayers(room), hostId: room.hostId });

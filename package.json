@@ -15,7 +15,9 @@
     "zip:itch": "npm run build:itch && rm -f sportivia-itch.zip && cd dist && zip -r ../sportivia-itch.zip . && cd .. && ls -lh sportivia-itch.zip",
     "start": "tsx server/index.ts",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audit:data": "tsx scripts/auditData.mts",
+    "audit:rosters": "tsx scripts/auditRosters.mts"
   },
   "dependencies": {
     "@emnapi/core": "1.11.2",

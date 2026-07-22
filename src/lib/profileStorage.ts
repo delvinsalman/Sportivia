@@ -157,7 +157,7 @@ export function loadProfile(): PlayerProfile {
     const profile: PlayerProfile = {
       ...base,
       playerName: parsed.playerName?.trim() || DEFAULT_PLAYER_NAME,
-      coins: typeof parsed.coins === 'number' ? parsed.coins : 0,
+      coins: typeof parsed.coins === 'number' ? Math.max(0, Math.floor(parsed.coins)) : 0,
       xp: parsed.xp ?? 0,
       level: levelFromXp(parsed.xp ?? 0),
       equippedCharacter: safeEquipped,
@@ -408,9 +408,13 @@ function pickCard(
   pool: CollectibleCard[],
   rarity: CardRarity,
   random: () => number,
-): CollectibleCard {
-  const rarityPool = pool.filter(card => card.rarity === rarity);
-  const choices = rarityPool.length ? rarityPool : pool;
+  excludeKeys: Set<string> = new Set(),
+): CollectibleCard | null {
+  const available = pool.filter(card => !excludeKeys.has(card.key));
+  const source = available.length ? available : pool;
+  const rarityPool = source.filter(card => card.rarity === rarity);
+  const choices = rarityPool.length ? rarityPool : source;
+  if (!choices.length) return null;
   return choices[Math.floor(random() * choices.length)]!;
 }
 
@@ -443,6 +447,7 @@ export function openCardPack(
   }
 
   const rolled: CollectibleCard[] = [];
+  const pulledKeys = new Set<string>();
   for (let index = 0; index < pack.cardCount; index++) {
     const isGuaranteedSlot = index === pack.cardCount - 1 && pack.guaranteedRarity;
     const rarity = rollRarity(
@@ -450,14 +455,36 @@ export function openCardPack(
       isGuaranteedSlot ? pack.guaranteedRarity : 'common',
       random,
     );
-    rolled.push(pickCard(pool, rarity, random));
+    const card = pickCard(pool, rarity, random, pulledKeys);
+    if (!card) break;
+    rolled.push(card);
+    pulledKeys.add(card.key);
   }
 
   const pityTriggered =
     profile.cardCollection.legendaryPity >= 34 &&
     !rolled.some(card => card.rarity === 'legendary');
-  if (pityTriggered) {
-    rolled[0] = pickCard(pool, 'legendary', random);
+  if (pityTriggered && rolled.length > 0) {
+    // Prefer a legend not already in this pack so uniqueness holds.
+    const legend =
+      pickCard(pool, 'legendary', random, pulledKeys) ??
+      pickCard(pool, 'legendary', random, new Set());
+    if (legend) {
+      const previous = rolled[0]!;
+      if (previous.key !== legend.key) {
+        pulledKeys.delete(previous.key);
+        const alreadyInPack = rolled.findIndex((card, i) => i > 0 && card.key === legend.key);
+        rolled[0] = legend;
+        pulledKeys.add(legend.key);
+        if (alreadyInPack >= 0) {
+          const refill = pickCard(pool, previous.rarity, random, pulledKeys);
+          if (refill) {
+            rolled[alreadyInPack] = refill;
+            pulledKeys.add(refill.key);
+          }
+        }
+      }
+    }
   }
 
   profile.coins -= pack.cost;

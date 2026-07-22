@@ -54,6 +54,8 @@ export interface DuelMatchResult {
     wrong: number;
     maxStreak: number;
   };
+  /** Opponent disconnected mid-match — you win by default. */
+  disconnected?: boolean;
   wager?: {
     yourCardKey: string | null;
     yourCardName: string | null;
