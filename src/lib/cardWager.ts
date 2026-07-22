@@ -63,8 +63,102 @@ export function stakeFromKey(cardKey: string | null | undefined): CardWagerStake
   return card ? toWagerStake(card) : null;
 }
 
+/** Catalog first; fall back to server/lobby metadata so duel stakes still settle. */
+export function resolveStake(
+  cardKey: string | null | undefined,
+  meta?: {
+    name?: string | null;
+    rarity?: string | null;
+    rating?: number | null;
+  } | null,
+): CardWagerStake | null {
+  if (!cardKey) return null;
+  const fromCatalog = stakeFromKey(cardKey);
+  if (fromCatalog) return fromCatalog;
+  if (!meta?.name) return null;
+  const rarity = (meta.rarity as CardRarity | null) ?? 'common';
+  const valid: CardRarity =
+    rarity === 'rare' || rarity === 'epic' || rarity === 'legendary' || rarity === 'common'
+      ? rarity
+      : 'common';
+  return {
+    cardKey,
+    name: meta.name,
+    rarity: valid,
+    rating: typeof meta.rating === 'number' && Number.isFinite(meta.rating) ? meta.rating : 70,
+  };
+}
+
 export function isWagerActive(agreement: CardWagerAgreement | null | undefined): boolean {
   return !!(agreement?.yourCard && agreement?.opponentCard);
+}
+
+function stakeAsCollectible(stake: CardWagerStake): CollectibleCard {
+  const existing = CARD_BY_KEY.get(stake.cardKey);
+  if (existing) return existing;
+  const [sportPart, ...rest] = stake.cardKey.split(':');
+  const sport = (sportPart as CollectibleCard['sport']) || 'soccer';
+  return {
+    key: stake.cardKey,
+    sport: ['soccer', 'basketball', 'baseball', 'football', 'hockey'].includes(sport)
+      ? sport
+      : 'soccer',
+    playerId: rest.join(':') || stake.cardKey,
+    name: stake.name,
+    country: '',
+    positions: [],
+    team: '',
+    retired: false,
+    era: '',
+    rarity: stake.rarity,
+    rating: stake.rating,
+  };
+}
+
+export function describeWagerSettlement(
+  outcome: 'win' | 'loss' | 'draw',
+  agreement: CardWagerAgreement,
+): CardWagerSettlement {
+  if (!isWagerActive(agreement)) {
+    return {
+      active: false,
+      outcome: 'none',
+      gained: null,
+      lost: null,
+      message: 'No card stake this match',
+    };
+  }
+
+  const yourCard = stakeAsCollectible(agreement.yourCard!);
+  const opponentCard = stakeAsCollectible(agreement.opponentCard!);
+
+  if (outcome === 'draw') {
+    return {
+      active: true,
+      outcome: 'draw',
+      gained: null,
+      lost: null,
+      message: 'Draw — both stakes returned',
+    };
+  }
+
+  if (outcome === 'win') {
+    return {
+      active: true,
+      outcome: 'win',
+      gained: opponentCard,
+      lost: null,
+      message: `You won ${opponentCard.name}`,
+    };
+  }
+
+  return {
+    active: true,
+    outcome: 'loss',
+    gained: null,
+    lost: yourCard,
+    message: `You lost ${yourCard.name}`,
+  };
 }
 
 function rollWeightedRarity(
@@ -143,54 +237,4 @@ export function ownedCardsForSport(
         b.rating - a.rating ||
         a.name.localeCompare(b.name),
     );
-}
-
-export function describeWagerSettlement(
-  outcome: 'win' | 'loss' | 'draw',
-  agreement: CardWagerAgreement,
-): CardWagerSettlement {
-  if (!isWagerActive(agreement)) {
-    return {
-      active: false,
-      outcome: 'none',
-      gained: null,
-      lost: null,
-      message: 'No card stake this match',
-    };
-  }
-
-  const yourCard = CARD_BY_KEY.get(agreement.yourCard!.cardKey) ?? null;
-  const opponentCard = CARD_BY_KEY.get(agreement.opponentCard!.cardKey) ?? null;
-
-  if (outcome === 'draw') {
-    return {
-      active: true,
-      outcome: 'draw',
-      gained: null,
-      lost: null,
-      message: 'Draw — both stakes returned',
-    };
-  }
-
-  if (outcome === 'win') {
-    return {
-      active: true,
-      outcome: 'win',
-      gained: opponentCard,
-      lost: null,
-      message: opponentCard
-        ? `You won ${opponentCard.name} · added to your collection`
-        : 'You won the stake',
-    };
-  }
-
-  return {
-    active: true,
-    outcome: 'loss',
-    gained: null,
-    lost: yourCard,
-    message: yourCard
-      ? `You lost ${yourCard.name} · removed from your collection`
-      : 'You lost your stake',
-  };
 }

@@ -17,7 +17,7 @@ import { getSettings } from '../lib/settings';
 import { BOT_DIFFICULTIES, botName, nextBotDelay, rollBotPoints } from '../lib/botOpponent';
 import {
   isWagerActive,
-  stakeFromKey,
+  resolveStake,
   type CardWagerAgreement,
 } from '../lib/cardWager';
 import { settleCardWager, addCardToCollection, removeCardFromCollection, grantDuelWin } from '../lib/profileStorage';
@@ -147,8 +147,16 @@ export function GameScreen({
     if (cardWager && isWagerActive(cardWager)) return cardWager;
     if (mode === 'duel' && duelResult?.wager) {
       return {
-        yourCard: stakeFromKey(duelResult.wager.yourCardKey),
-        opponentCard: stakeFromKey(duelResult.wager.opponentCardKey),
+        yourCard: resolveStake(duelResult.wager.yourCardKey, {
+          name: duelResult.wager.yourCardName,
+          rarity: duelResult.wager.yourCardRarity,
+          rating: duelResult.wager.yourCardRating,
+        }),
+        opponentCard: resolveStake(duelResult.wager.opponentCardKey, {
+          name: duelResult.wager.opponentCardName,
+          rarity: duelResult.wager.opponentCardRarity,
+          rating: duelResult.wager.opponentCardRating,
+        }),
       };
     }
     return cardWager;
@@ -166,7 +174,8 @@ export function GameScreen({
           : game.result.score < botScore
             ? 'loss'
             : 'draw';
-    } else if (mode === 'duel' && duelResult) {
+    } else if (mode === 'duel') {
+      if (!duelResult) return;
       if (duelResult.winnerId === 'draw') outcome = 'draw';
       else if (duelResult.winnerId === duelResult.you.id) outcome = 'win';
       else outcome = 'loss';
@@ -174,11 +183,19 @@ export function GameScreen({
 
     if (!outcome) return;
 
-    const agreement =
+    const agreement: CardWagerAgreement | null =
       mode === 'duel' && duelResult?.wager
         ? {
-            yourCard: stakeFromKey(duelResult.wager.yourCardKey),
-            opponentCard: stakeFromKey(duelResult.wager.opponentCardKey),
+            yourCard: resolveStake(duelResult.wager.yourCardKey, {
+              name: duelResult.wager.yourCardName,
+              rarity: duelResult.wager.yourCardRarity,
+              rating: duelResult.wager.yourCardRating,
+            }),
+            opponentCard: resolveStake(duelResult.wager.opponentCardKey, {
+              name: duelResult.wager.opponentCardName,
+              rarity: duelResult.wager.opponentCardRarity,
+              rating: duelResult.wager.opponentCardRating,
+            }),
           }
         : activeAgreement;
 
@@ -193,16 +210,21 @@ export function GameScreen({
     }
 
     wagerSettledRef.current = true;
-    const { profile: nextProfile, settlement } = settleCardWager(outcome, agreement!);
+    let { profile: nextProfile, settlement } = settleCardWager(outcome, agreement!);
+    // Mirror AI: if escrow never pulled the stake, remove it on loss now.
+    if (outcome === 'loss' && agreement!.yourCard && !escrowRef.current) {
+      const removed = removeCardFromCollection(agreement!.yourCard.cardKey);
+      if (removed.ok) nextProfile = removed.profile;
+    }
     escrowRef.current = false;
     setWagerInfo({
       active: settlement.active,
       outcome: settlement.outcome,
       message: settlement.message,
-      gainedName: settlement.gained?.name,
-      gainedRarity: settlement.gained?.rarity,
-      lostName: settlement.lost?.name,
-      lostRarity: settlement.lost?.rarity,
+      gainedName: settlement.gained?.name ?? agreement!.opponentCard?.name,
+      gainedRarity: settlement.gained?.rarity ?? agreement!.opponentCard?.rarity,
+      lostName: settlement.lost?.name ?? agreement!.yourCard?.name,
+      lostRarity: settlement.lost?.rarity ?? agreement!.yourCard?.rarity,
       keptName:
         settlement.outcome === 'win' || settlement.outcome === 'draw'
           ? agreement!.yourCard?.name

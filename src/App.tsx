@@ -31,7 +31,7 @@ import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from './types/
 import type { CreativeLoadout } from './types/creativeCharacter';
 import type { AthleteLoadout } from './types/athleteCharacter';
 import type { BobLoadout } from './types/bobCharacter';
-import { stakeFromKey, type CardWagerAgreement } from './lib/cardWager';
+import { resolveStake, type CardWagerAgreement } from './lib/cardWager';
 import { botName } from './lib/botOpponent';
 import { useDuel } from './hooks/useDuel';
 import { useAmbientMusic } from './hooks/useAmbientMusic';
@@ -103,29 +103,42 @@ export default function App() {
     setDuelSeed(duel.match.seed);
     setMode('duel');
 
-    const you = duel.match.players.find(p => p.id === duel.lobby?.youId);
-    const opp = duel.match.players.find(p => p.id !== duel.lobby?.youId);
+    const youId = duel.lobby?.youId;
+    const you =
+      duel.match.players.find(p => p.id === youId) ??
+      duel.match.players.find(p => p.name === profile.playerName);
+    const opp = duel.match.players.find(p => p.id !== (you?.id ?? youId));
     setCardWager({
-      yourCard: stakeFromKey(you?.wagerCardKey),
-      opponentCard: stakeFromKey(opp?.wagerCardKey),
+      yourCard: resolveStake(you?.wagerCardKey, {
+        name: you?.wagerCardName,
+        rarity: you?.wagerCardRarity,
+        rating: you?.wagerCardRating,
+      }),
+      opponentCard: resolveStake(opp?.wagerCardKey, {
+        name: opp?.wagerCardName,
+        rarity: opp?.wagerCardRarity,
+        rating: opp?.wagerCardRating,
+      }),
     });
     setScreen('intro');
-  }, [duel.match, duel.lobby?.youId]);
+  }, [duel.match, duel.lobby?.youId, profile.playerName]);
 
   // Joiners inherit the host's sport so stakes / boards match the room.
   useEffect(() => {
     if (duel.lobby?.sport) setSport(duel.lobby.sport);
   }, [duel.lobby?.sport]);
 
+  // Kick back to lobby only if the match was abandoned — keep results visible after finish.
   useEffect(() => {
     if (mode !== 'duel' || screen !== 'game') return;
+    if (duel.duelResult) return;
     if (duel.lobby?.status === 'lobby' || (!duel.lobby && duel.status === 'idle')) {
       startedMatchRef.current = null;
       setDuelSeed(null);
       setCardWager(null);
       setScreen('lobby');
     }
-  }, [duel.lobby, duel.lobby?.status, duel.status, mode, screen]);
+  }, [duel.lobby, duel.lobby?.status, duel.status, duel.duelResult, mode, screen]);
 
   function refreshProfile() {
     setProfile(loadProfile());

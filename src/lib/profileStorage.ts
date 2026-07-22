@@ -540,7 +540,10 @@ export function addCardToCollection(cardKey: string): {
 } {
   const profile = loadProfile();
   const card = CARD_BY_KEY.get(cardKey);
-  if (!card) return { ok: false, profile, duplicate: false, error: 'Unknown card' };
+  // Allow sport:id keys even if catalog lookup fails so duel transfers still land.
+  if (!card && !/^[a-z]+:.+/.test(cardKey)) {
+    return { ok: false, profile, duplicate: false, error: 'Unknown card' };
+  }
   const alreadyOwned = (profile.cardCollection.owned[cardKey] ?? 0) > 0;
   if (!alreadyOwned) {
     profile.cardCollection.owned[cardKey] = 1;
