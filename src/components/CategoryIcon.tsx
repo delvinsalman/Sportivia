@@ -355,15 +355,9 @@ function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
     return <FlagStripes colors={colors} size={size} />;
   }
 
-  // Coat-of-arms flags sit heavy on the hoist; nudge crop so the circle reads balanced.
-  const position =
-    code === 'rs' || code === 'sk' || code === 'si' || code === 'hr' || code === 'pt'
-      ? '62% 50%'
-      : '50% 50%';
-
   return (
     <div
-      className="relative shrink-0 overflow-hidden rounded-full border-2 border-white/20 shadow-md bg-[#121316]"
+      className="relative shrink-0 overflow-hidden rounded-full border border-white/30 shadow-[0_2px_6px_rgba(0,0,0,0.45)] bg-[#121316]"
       style={{ width: size, height: size }}
       aria-hidden
     >
@@ -371,18 +365,7 @@ function FlagCircle({ meta, size = 36 }: { meta: VisualMeta; size?: number }) {
         src={src}
         alt=""
         draggable={false}
-        className="pointer-events-none absolute select-none"
-        style={{
-          // Oversize + cover so landscape flags fully fill the circle (no letterbox bars).
-          left: '50%',
-          top: '50%',
-          width: '140%',
-          height: '140%',
-          maxWidth: 'none',
-          transform: 'translate(-50%, -50%)',
-          objectFit: 'cover',
-          objectPosition: position,
-        }}
+        className="absolute inset-0 h-full w-full object-cover object-center select-none"
         loading="lazy"
         referrerPolicy="no-referrer"
         onError={() => {
