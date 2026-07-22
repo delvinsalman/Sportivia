@@ -43,7 +43,7 @@ export function useRoundGame(sport: Sport, mode: GameMode, options?: RoundGameOp
   const [correct, setCorrect] = useState(0);
   const [skipped, setSkipped] = useState(0);
   const [wrong, setWrong] = useState(0);
-  const [, setWrongStreak] = useState(0);
+  const [wrongStreak, setWrongStreak] = useState(0);
   const [streak, setStreak] = useState(0);
   const [correctInCycle, setCorrectInCycle] = useState(0);
   const [roundTime, setRoundTime] = useState(ROUND_TIME);
@@ -347,6 +347,7 @@ export function useRoundGame(sport: Sport, mode: GameMode, options?: RoundGameOp
 
   return {
     board, currentPlayer, score, correct, skipped, wrong,
+    wrongStreak,
     streak, correctInCycle, maxStreak,
     roundTime, gameTimeLeft, totalGameTime,
     feedback, feedbackCell, showPoints,

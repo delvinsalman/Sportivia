@@ -1,6 +1,7 @@
 import { AnimatePresence } from 'framer-motion';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRoundGame } from '../hooks/useRoundGame';
+import { useStruggleHint } from '../hooks/useStruggleHint';
 import {
   CategoryGrid, PlayerBar, TopBar, BoardProgress,
   CountdownOverlay, GamePanel, BoardResetToast,
@@ -342,6 +343,21 @@ export function GameScreen({
   }
 
   const showHints = getSettings().showHints;
+  const reduceMotion = getSettings().reduceMotion;
+  const hintCell = useStruggleHint({
+    sport,
+    board: game.board,
+    player: game.currentPlayer,
+    phase: game.phase,
+    feedback: game.feedback,
+    boardKey: game.boardKey,
+    roundTime: game.roundTime,
+    score: game.score,
+    correct: game.correct,
+    wrong: game.wrong,
+    wrongStreak: game.wrongStreak,
+    enabled: !reduceMotion,
+  });
   const versusMode = mode === 'duel' || mode === 'bot';
   const versusScore = mode === 'bot' ? botScore : opponentScore;
   const versusName = mode === 'bot' ? botName(botDifficulty) : opponentName ?? 'Opponent';
@@ -404,6 +420,7 @@ export function GameScreen({
                   onPick={game.handlePick}
                   feedback={game.feedback}
                   feedbackCell={game.feedbackCell}
+                  hintCell={hintCell}
                   disabled={game.phase !== 'playing' || !game.currentPlayer || game.boardResetFlash}
                   sport={sport}
                   boardKey={game.boardKey}

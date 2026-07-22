@@ -15,6 +15,8 @@ interface CategoryGridProps {
   onPick: (index: number) => void;
   feedback: Feedback;
   feedbackCell: number | null;
+  /** Soft pulse on the correct cell when the player is struggling */
+  hintCell?: number | null;
   disabled: boolean;
   sport: Sport;
   boardKey?: number;
@@ -26,6 +28,7 @@ export function CategoryGrid({
   onPick,
   feedback,
   feedbackCell,
+  hintCell = null,
   disabled,
   sport,
   boardKey = 0,
@@ -46,6 +49,7 @@ export function CategoryGrid({
             const isFilled = cell.filled;
             const isWrong = feedback === 'wrong' && feedbackCell === i;
             const isCorrect = feedback === 'correct' && feedbackCell === i;
+            const isHint = !isFilled && !isWrong && !isCorrect && hintCell === i;
 
             return (
               <motion.button
@@ -69,7 +73,9 @@ export function CategoryGrid({
                       ? 'bg-[#3d1a1a] border-[2.5px] border-[#ed4245] shadow-[0_3px_0_#8f1e22] animate-shake'
                       : isCorrect
                         ? 'bg-[#142d1e] border-[2.5px] border-[#23a559] shadow-[0_3px_0_#14532d]'
-                        : 'bg-[#18191c]/95 border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#0c0d0f] hover:bg-[#1e1f24] hover:border-[#5c5e66] cursor-pointer backdrop-blur-sm'
+                        : isHint
+                          ? 'bg-[#1a160c]/95 border-[2.5px] border-[#f0b232] shadow-[0_3px_0_#8a6814] cursor-pointer animate-hint-pulse'
+                          : 'bg-[#18191c]/95 border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#0c0d0f] hover:bg-[#1e1f24] hover:border-[#5c5e66] cursor-pointer backdrop-blur-sm'
                   }
                 `}
               >

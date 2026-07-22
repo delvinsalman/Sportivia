@@ -59,6 +59,29 @@ button,
 
 .animate-shake { animation: shake 0.35s ease-in-out; }
 
+/* Candy Crush–style soft pulse on the correct cell when struggling */
+@keyframes hint-pulse {
+  0%,
+  100% {
+    border-color: #f0b232aa;
+    box-shadow:
+      0 3px 0 #8a6814,
+      0 0 0 0 rgba(240, 178, 50, 0);
+    filter: brightness(1);
+  }
+  50% {
+    border-color: #ffe08a;
+    box-shadow:
+      0 3px 0 #8a6814,
+      0 0 0 3px rgba(240, 178, 50, 0.35),
+      0 0 22px rgba(240, 178, 50, 0.45);
+    filter: brightness(1.12);
+  }
+}
+.animate-hint-pulse {
+  animation: hint-pulse 1.15s ease-in-out infinite;
+}
+
 @keyframes pop {
   0% { transform: scale(0.95); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
