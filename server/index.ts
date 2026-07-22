@@ -216,6 +216,16 @@ function removePlayer(ws: WebSocket) {
         maxStreak: leaving.maxStreak,
       },
       disconnected: true,
+      wager: {
+        yourCardKey: winner.wagerCardKey,
+        yourCardName: winner.wagerCardName,
+        yourCardRarity: winner.wagerCardRarity,
+        yourCardRating: winner.wagerCardRating,
+        opponentCardKey: leaving.wagerCardKey,
+        opponentCardName: leaving.wagerCardName,
+        opponentCardRarity: leaving.wagerCardRarity,
+        opponentCardRating: leaving.wagerCardRating,
+      },
     });
     broadcast(room, lobbyPayload(room));
     return;

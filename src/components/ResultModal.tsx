@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Share2, RotateCcw, Home, Sparkles, Coins, Zap } from 'lucide-react';
+import { Share2, RotateCcw, Home, Sparkles, Coins, Zap, Swords } from 'lucide-react';
 import type { GameResult } from '../types';
 import { generateShareText } from '../lib/roundEngine';
 import { SportBall } from './SportBall';
@@ -34,6 +34,13 @@ const modeLabels: Record<GameResult['mode'], string> = {
   duel: '1v1 Duel',
 };
 
+const RARITY_TINT: Record<string, string> = {
+  common: '#94a3b8',
+  rare: '#60a5fa',
+  epic: '#c084fc',
+  legendary: '#f0b232',
+};
+
 export function ResultModal({
   result,
   characterId,
@@ -53,6 +60,7 @@ export function ResultModal({
   const pet = petId ? getPetDef(petId) : null;
   const accent = SPORT_PODIUM_ACCENT[result.sport];
   const duel = result.duel;
+  const stake = result.cardWager;
 
   const shareText = generateShareText(
     result.sport, result.mode, result.score, result.correct, result.boardFilled, result.date,
@@ -87,11 +95,14 @@ export function ResultModal({
     setTimeout(() => setCopied(false), 2000);
   }
 
+  const showStake =
+    !!stake?.active && stake.outcome !== 'none' && !waitingForOpponent;
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="fixed inset-0 z-50 min-h-svh overflow-y-auto bg-[#0a0a0b]"
+      className="fixed inset-0 z-50 min-h-svh overflow-y-auto overflow-x-hidden bg-[#0a0a0b]"
     >
       <div
         className="pointer-events-none absolute inset-0"
@@ -101,19 +112,19 @@ export function ResultModal({
       />
 
       <div className="relative z-10 min-h-svh flex flex-col md:flex-row">
-        {/* Character hero — full height on desktop */}
+        {/* Character hero — compact on phones so stats stay visible */}
         <div
-          className="relative md:w-[44%] lg:w-[42%] min-h-[320px] md:min-h-svh flex flex-col items-center justify-center shrink-0 border-b md:border-b-0 md:border-r border-[#2b2d31]/80 px-4 py-10"
+          className="relative md:w-[44%] lg:w-[42%] min-h-[200px] max-h-[38svh] md:max-h-none md:min-h-svh flex flex-col items-center justify-center shrink-0 border-b md:border-b-0 md:border-r border-[#2b2d31]/80 px-3 py-5 pt-[max(1.25rem,env(safe-area-inset-top))] md:px-4 md:py-10"
           style={{ background: `radial-gradient(ellipse 80% 60% at 50% 55%, ${accent}22 0%, #0a0a0b 70%)` }}
         >
-          <div className="absolute top-5 left-5 flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#0c0d0f]">
-            <SportBall sport={result.sport} size={20} />
+          <div className="absolute top-[max(0.75rem,env(safe-area-inset-top))] left-3 md:top-5 md:left-5 flex items-center gap-2 px-2.5 py-1 rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] shadow-[0_3px_0_#0c0d0f]">
+            <SportBall sport={result.sport} size={18} />
             <span className="text-[10px] font-black text-[#949ba4] uppercase tracking-widest">
               {modeLabels[result.mode]}
             </span>
           </div>
 
-          <div className="relative w-full max-w-[440px] md:max-w-[480px]">
+          <div className="relative w-full max-w-[280px] md:max-w-[480px] scale-[0.78] md:scale-100 origin-center">
             <div className="relative mx-auto w-[72%] max-w-[360px]">
               <CharacterPodium
                 characterId={characterId}
@@ -150,19 +161,19 @@ export function ResultModal({
               </div>
             )}
           </div>
-          <p className="mt-4 text-sm font-semibold text-[#949ba4]">
+          <p className="mt-1 md:mt-4 text-xs md:text-sm font-semibold text-[#949ba4]">
             {character.name}{pet ? ` · ${pet.name}` : ''}
           </p>
         </div>
 
         {/* Stats panel */}
-        <div className="flex-1 flex flex-col justify-center px-6 py-8 sm:px-10 lg:px-14 max-w-2xl mx-auto w-full">
+        <div className="flex-1 flex flex-col justify-center px-4 py-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-10 lg:px-14 max-w-2xl mx-auto w-full">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.08, duration: 0.35 }}
           >
-            <div className="mb-6">
+            <div className="mb-5">
               <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#f2f3f5] tracking-tight">
                 {title}
               </h2>
@@ -173,19 +184,6 @@ export function ResultModal({
                 <p className="text-sm sm:text-base mt-2 font-black" style={{ color: accent }}>
                   You {result.score} — {duel.opponentScore} {duel.opponentName}
                   {waitingForOpponent ? ' · waiting…' : ''}
-                </p>
-              )}
-              {result.cardWager?.active && result.cardWager.outcome !== 'none' && !waitingForOpponent && (
-                <p
-                  className={`text-sm sm:text-base mt-2 font-black ${
-                    result.cardWager.outcome === 'win'
-                      ? 'text-[#23a559]'
-                      : result.cardWager.outcome === 'loss'
-                        ? 'text-[#ed4245]'
-                        : 'text-[#949ba4]'
-                  }`}
-                >
-                  {result.cardWager.message}
                 </p>
               )}
               {!result.completed && (
@@ -200,57 +198,153 @@ export function ResultModal({
               )}
             </div>
 
-            <div className="mb-8">
-              <p className="text-6xl sm:text-7xl font-black text-[#f0b232] font-mono leading-none drop-shadow-[0_4px_0_#8a6814]">
+            {showStake && (
+              <div
+                className={`mb-5 rounded-2xl border-[3px] p-3.5 sm:p-4 shadow-[0_4px_0_rgba(0,0,0,0.35)] ${
+                  stake.outcome === 'win'
+                    ? 'border-[#23a559]/70 bg-[#142d1e]/90'
+                    : stake.outcome === 'loss'
+                      ? 'border-[#ed4245]/70 bg-[#3d1a1a]/90'
+                      : 'border-[#3f4147] bg-[#1a1b1f]/95'
+                }`}
+              >
+                <div className="mb-2 flex items-center gap-2">
+                  <Swords
+                    className={`h-4 w-4 shrink-0 ${
+                      stake.outcome === 'win'
+                        ? 'text-[#23a559]'
+                        : stake.outcome === 'loss'
+                          ? 'text-[#ed4245]'
+                          : 'text-[#949ba4]'
+                    }`}
+                  />
+                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#b5bac1]">
+                    Card stake outcome
+                  </p>
+                </div>
+                <p
+                  className={`text-sm sm:text-base font-black leading-snug ${
+                    stake.outcome === 'win'
+                      ? 'text-[#4ade80]'
+                      : stake.outcome === 'loss'
+                        ? 'text-[#f98998]'
+                        : 'text-[#f2f3f5]'
+                  }`}
+                >
+                  {stake.message}
+                </p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  {stake.outcome === 'win' && stake.gainedName && (
+                    <div className="rounded-xl border-2 border-[#23a559]/45 bg-black/25 px-3 py-2.5">
+                      <p className="text-[9px] font-black uppercase tracking-wide text-[#23a559]">
+                        You gained
+                      </p>
+                      <p className="mt-0.5 truncate text-sm font-black text-[#f2f3f5]">
+                        {stake.gainedName}
+                      </p>
+                      {stake.gainedRarity && (
+                        <p
+                          className="mt-0.5 text-[10px] font-black uppercase"
+                          style={{ color: RARITY_TINT[stake.gainedRarity] ?? '#949ba4' }}
+                        >
+                          {stake.gainedRarity}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {stake.outcome === 'win' && stake.keptName && (
+                    <div className="rounded-xl border-2 border-white/10 bg-black/25 px-3 py-2.5">
+                      <p className="text-[9px] font-black uppercase tracking-wide text-[#949ba4]">
+                        You keep
+                      </p>
+                      <p className="mt-0.5 truncate text-sm font-black text-[#f2f3f5]">
+                        {stake.keptName}
+                      </p>
+                    </div>
+                  )}
+                  {stake.outcome === 'loss' && stake.lostName && (
+                    <div className="rounded-xl border-2 border-[#ed4245]/45 bg-black/25 px-3 py-2.5 sm:col-span-2">
+                      <p className="text-[9px] font-black uppercase tracking-wide text-[#ed4245]">
+                        Removed from your collection
+                      </p>
+                      <p className="mt-0.5 truncate text-sm font-black text-[#f2f3f5]">
+                        {stake.lostName}
+                      </p>
+                      {stake.lostRarity && (
+                        <p
+                          className="mt-0.5 text-[10px] font-black uppercase"
+                          style={{ color: RARITY_TINT[stake.lostRarity] ?? '#949ba4' }}
+                        >
+                          {stake.lostRarity}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {stake.outcome === 'draw' && stake.keptName && (
+                    <div className="rounded-xl border-2 border-white/10 bg-black/25 px-3 py-2.5 sm:col-span-2">
+                      <p className="text-[9px] font-black uppercase tracking-wide text-[#949ba4]">
+                        Returned to you
+                      </p>
+                      <p className="mt-0.5 truncate text-sm font-black text-[#f2f3f5]">
+                        {stake.keptName}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="mb-6">
+              <p className="text-5xl sm:text-7xl font-black text-[#f0b232] font-mono leading-none drop-shadow-[0_4px_0_#8a6814]">
                 {result.score}
               </p>
-              <p className="text-[10px] font-black text-[#949ba4] uppercase tracking-widest mt-2">Final Score</p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-[#949ba4]">Final Score</p>
             </div>
 
             {rewards && (
-              <div className="grid grid-cols-2 gap-3 mb-5">
-                <div className="rounded-[22px] bg-[#1a160c] p-4 sm:p-5 border-[3px] border-[#f0b232]/75 flex items-center gap-3 shadow-[0_5px_0_#8a6814]">
-                  <div className="w-11 h-11 rounded-xl bg-[#f0b232] border-[3px] border-white/30 flex items-center justify-center shadow-[0_3px_0_#8a6814]">
-                    <Coins className="w-5 h-5 text-[#18191c]" />
+              <div className="mb-5 grid grid-cols-2 gap-3">
+                <div className="flex items-center gap-3 rounded-[22px] border-[3px] border-[#f0b232]/75 bg-[#1a160c] p-4 shadow-[0_5px_0_#8a6814] sm:p-5">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border-[3px] border-white/30 bg-[#f0b232] shadow-[0_3px_0_#8a6814]">
+                    <Coins className="h-5 w-5 text-[#18191c]" />
                   </div>
                   <div>
-                    <p className="font-black text-[#f0b232] font-mono text-xl sm:text-2xl">
+                    <p className="font-mono text-xl font-black text-[#f0b232] sm:text-2xl">
                       +{rewards.coinsEarned}
                     </p>
-                    <p className="text-[10px] font-black text-[#949ba4] uppercase tracking-wide">Coins</p>
+                    <p className="text-[10px] font-black uppercase tracking-wide text-[#949ba4]">Coins</p>
                   </div>
                 </div>
-                <div className="rounded-[22px] bg-[#12152a] p-4 sm:p-5 border-[3px] border-[#5865f2]/75 flex items-center gap-3 shadow-[0_5px_0_#2f3aa8]">
-                  <div className="w-11 h-11 rounded-xl bg-[#5865f2] border-[3px] border-white/25 flex items-center justify-center shadow-[0_3px_0_#2f3aa8]">
-                    <Zap className="w-5 h-5 text-white" />
+                <div className="flex items-center gap-3 rounded-[22px] border-[3px] border-[#5865f2]/75 bg-[#12152a] p-4 shadow-[0_5px_0_#2f3aa8] sm:p-5">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border-[3px] border-white/25 bg-[#5865f2] shadow-[0_3px_0_#2f3aa8]">
+                    <Zap className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <p className="font-black text-[#5865f2] font-mono text-xl sm:text-2xl">
+                    <p className="font-mono text-xl font-black text-[#5865f2] sm:text-2xl">
                       +{rewards.xpEarned}
                     </p>
-                    <p className="text-[10px] font-black text-[#949ba4] uppercase tracking-wide">XP</p>
+                    <p className="text-[10px] font-black uppercase tracking-wide text-[#949ba4]">XP</p>
                   </div>
                 </div>
               </div>
             )}
 
             {rewards?.leveledUp && (
-              <div className="flex flex-col gap-1.5 mb-5 py-2.5 px-4 rounded-2xl bg-[#5865f2]/15 border-[3px] border-[#5865f2]/60 shadow-[0_4px_0_#2f3aa8]">
+              <div className="mb-5 flex flex-col gap-1.5 rounded-2xl border-[3px] border-[#5865f2]/60 bg-[#5865f2]/15 px-4 py-2.5 shadow-[0_4px_0_#2f3aa8]">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#5865f2] shrink-0" />
+                  <Sparkles className="h-4 w-4 shrink-0 text-[#5865f2]" />
                   <span className="text-sm font-black text-[#b5bac1]">
                     Leveled up to <strong className="text-[#f2f3f5]">{rewards.newLevel}</strong>
                   </span>
                 </div>
                 {(rewards.milestoneBonus ?? 0) > 0 && (
-                  <p className="text-xs font-black text-[#f0b232] pl-6">
+                  <p className="pl-6 text-xs font-black text-[#f0b232]">
                     Milestone bonus +{rewards.milestoneBonus!.toLocaleString()} coins
                   </p>
                 )}
               </div>
             )}
 
-            <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-8">
+            <div className="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
               {[
                 { label: 'Filled', value: `${result.boardFilled}/9` },
                 { label: 'Skipped', value: result.skipped },
@@ -264,10 +358,10 @@ export function ResultModal({
               ].map(({ label, value }) => (
                 <div
                   key={label}
-                  className="rounded-2xl bg-[#1a1b1f] p-3 sm:p-4 text-center border-[3px] border-[#3f4147] shadow-[0_4px_0_#0c0d0f]"
+                  className="rounded-2xl border-[3px] border-[#3f4147] bg-[#1a1b1f] p-3 text-center shadow-[0_4px_0_#0c0d0f] sm:p-4"
                 >
-                  <p className="font-black text-[#f2f3f5] text-sm sm:text-base">{value}</p>
-                  <p className="text-[9px] font-black text-[#949ba4] uppercase tracking-wide mt-0.5">{label}</p>
+                  <p className="text-sm font-black text-[#f2f3f5] sm:text-base">{value}</p>
+                  <p className="mt-0.5 text-[9px] font-black uppercase tracking-wide text-[#949ba4]">{label}</p>
                 </div>
               ))}
             </div>
@@ -276,26 +370,26 @@ export function ResultModal({
               <button
                 type="button"
                 onClick={handleShare}
-                className="py-3.5 rounded-2xl bg-[#1e1f22] hover:bg-[#2b2d31] text-[#f2f3f5] text-sm font-black border-[3px] border-[#3f4147] shadow-[0_4px_0_#0c0d0f] hover:translate-y-[1px] hover:shadow-[0_3px_0_#0c0d0f] transition-all flex items-center justify-center gap-2"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border-[3px] border-[#3f4147] bg-[#1e1f22] py-3.5 text-sm font-black text-[#f2f3f5] shadow-[0_4px_0_#0c0d0f] transition-all hover:translate-y-[1px] hover:bg-[#2b2d31] hover:shadow-[0_3px_0_#0c0d0f]"
               >
-                <Share2 className="w-4 h-4" />
+                <Share2 className="h-4 w-4" />
                 <span className="hidden sm:inline">{copied ? 'Copied!' : 'Share'}</span>
               </button>
               <button
                 type="button"
                 onClick={onPlayAgain}
                 disabled={waitingForOpponent}
-                className="py-3.5 rounded-2xl bg-[#23a559] hover:bg-[#1a7d43] disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-black border-[3px] border-white/25 shadow-[0_5px_0_#14532d] hover:translate-y-[1px] hover:shadow-[0_4px_0_#14532d] transition-all flex items-center justify-center gap-2"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border-[3px] border-white/25 bg-[#23a559] py-3.5 text-sm font-black text-white shadow-[0_5px_0_#14532d] transition-all hover:translate-y-[1px] hover:bg-[#1a7d43] hover:shadow-[0_4px_0_#14532d] disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <RotateCcw className="w-4 h-4" />
+                <RotateCcw className="h-4 w-4" />
                 {result.mode === 'duel' ? 'Rematch' : 'Again'}
               </button>
               <button
                 type="button"
                 onClick={onHome}
-                className="py-3.5 rounded-2xl bg-[#1e1f22] hover:bg-[#2b2d31] text-[#949ba4] hover:text-[#f2f3f5] text-sm font-black border-[3px] border-[#3f4147] shadow-[0_4px_0_#0c0d0f] hover:translate-y-[1px] hover:shadow-[0_3px_0_#0c0d0f] transition-all flex items-center justify-center gap-2"
+                className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border-[3px] border-[#3f4147] bg-[#1e1f22] py-3.5 text-sm font-black text-[#949ba4] shadow-[0_4px_0_#0c0d0f] transition-all hover:translate-y-[1px] hover:bg-[#2b2d31] hover:text-[#f2f3f5] hover:shadow-[0_3px_0_#0c0d0f]"
               >
-                <Home className="w-4 h-4" />
+                <Home className="h-4 w-4" />
                 Menu
               </button>
             </div>

@@ -77,7 +77,10 @@ export interface GameResult {
     outcome: 'win' | 'loss' | 'draw' | 'none';
     message: string;
     gainedName?: string;
+    gainedRarity?: string;
     lostName?: string;
+    lostRarity?: string;
+    keptName?: string;
   };
 }
 

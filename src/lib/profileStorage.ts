@@ -563,7 +563,7 @@ export function removeCardFromCollection(cardKey: string): {
   return { ok: true, profile };
 }
 
-/** Apply win/loss card stake. Win adds their card if new; loss removes yours entirely. */
+/** Apply win/loss card stake. Escrow already removed your card at match start. */
 export function settleCardWager(
   outcome: 'win' | 'loss' | 'draw',
   agreement: CardWagerAgreement,
@@ -574,26 +574,27 @@ export function settleCardWager(
   const settlement = describeWagerSettlement(outcome, agreement);
   let profile = loadProfile();
 
-  if (!isWagerActive(agreement) || outcome === 'draw') {
+  if (!isWagerActive(agreement)) {
     return { profile, settlement };
   }
 
-  if (outcome === 'win') {
-    if (agreement.opponentCard) {
-      const added = addCardToCollection(agreement.opponentCard.cardKey);
-      profile = added.profile;
-    }
+  // Escrow pulled your card at kickoff — restore it on draw or win.
+  if (outcome === 'draw' || outcome === 'win') {
     if (agreement.yourCard) {
       const restored = addCardToCollection(agreement.yourCard.cardKey);
       profile = restored.profile;
     }
   }
 
-  if (outcome === 'loss' && agreement.yourCard) {
-    const removed = removeCardFromCollection(agreement.yourCard.cardKey);
-    profile = removed.ok ? removed.profile : profile;
+  if (outcome === 'win' && agreement.opponentCard) {
+    const added = addCardToCollection(agreement.opponentCard.cardKey);
+    profile = added.profile;
+    if (added.duplicate && settlement.gained) {
+      settlement.message = `You won ${settlement.gained.name} (already owned) · you keep yours`;
+    }
   }
 
+  // Loss: leave escrowed card removed (do not re-remove / restore).
   return { profile, settlement };
 }
 

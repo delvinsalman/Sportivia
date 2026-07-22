@@ -168,7 +168,7 @@ export function describeWagerSettlement(
       outcome: 'draw',
       gained: null,
       lost: null,
-      message: 'Draw — both keep their cards',
+      message: 'Draw — both stakes returned',
     };
   }
 
@@ -179,7 +179,7 @@ export function describeWagerSettlement(
       gained: opponentCard,
       lost: null,
       message: opponentCard
-        ? `You won ${opponentCard.name}`
+        ? `You won ${opponentCard.name} · added to your collection`
         : 'You won the stake',
     };
   }
@@ -190,7 +190,7 @@ export function describeWagerSettlement(
     gained: null,
     lost: yourCard,
     message: yourCard
-      ? `You lost ${yourCard.name}`
+      ? `You lost ${yourCard.name} · removed from your collection`
       : 'You lost your stake',
   };
 }

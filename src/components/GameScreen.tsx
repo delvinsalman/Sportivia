@@ -194,12 +194,19 @@ export function GameScreen({
 
     wagerSettledRef.current = true;
     const { profile: nextProfile, settlement } = settleCardWager(outcome, agreement!);
+    escrowRef.current = false;
     setWagerInfo({
       active: settlement.active,
       outcome: settlement.outcome,
       message: settlement.message,
       gainedName: settlement.gained?.name,
+      gainedRarity: settlement.gained?.rarity,
       lostName: settlement.lost?.name,
+      lostRarity: settlement.lost?.rarity,
+      keptName:
+        settlement.outcome === 'win' || settlement.outcome === 'draw'
+          ? agreement!.yourCard?.name
+          : undefined,
     });
     onProfileChange?.(nextProfile);
   }, [
@@ -268,14 +275,23 @@ export function GameScreen({
   ]);
 
   function handleQuit() {
+    // Quitting mid-match with an active stake forfeits your escrowed card.
     if (
       escrowRef.current &&
       !wagerSettledRef.current &&
       cardWager?.yourCard &&
       isWagerActive(cardWager)
     ) {
+      wagerSettledRef.current = true;
+      escrowRef.current = false;
+    } else if (
+      escrowRef.current &&
+      !wagerSettledRef.current &&
+      cardWager?.yourCard
+    ) {
       const { profile } = addCardToCollection(cardWager.yourCard.cardKey);
       onProfileChange?.(profile);
+      escrowRef.current = false;
     }
     game.abandonRun();
     onHome();
