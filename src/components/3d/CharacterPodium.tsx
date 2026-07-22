@@ -1464,23 +1464,22 @@ function applyBobLoadout(scene: Object3D, loadout: BobLoadout) {
       const base = darker ? shade : tint;
 
       if (finish.kind === 'chameleon') {
+        // GTA-style angle flip — mix primary/shift by fresnel (works without env map)
         const next = new MeshPhysicalMaterial({
           name: mat.name,
           color: base,
           metalness: 0.55,
-          roughness: 0.22,
-          iridescence: 1,
-          iridescenceIOR: 1.35,
-          iridescenceThicknessRange: [120, 480],
-          sheen: 0.55,
+          roughness: 0.28,
+          clearcoat: 0.65,
+          clearcoatRoughness: 0.18,
+          sheen: 0.85,
           sheenColor: shift,
-          sheenRoughness: 0.35,
-          clearcoat: 0.55,
-          clearcoatRoughness: 0.2,
+          sheenRoughness: 0.3,
         });
-        // Angle blend like GTA chameleon paint
+        const shiftClone = shift.clone();
+        const key = `bob-cham-v3-${finish.id}-${darker ? 'd' : 'b'}`;
         next.onBeforeCompile = shader => {
-          shader.uniforms.bobShift = { value: shift };
+          shader.uniforms.bobShift = { value: shiftClone };
           shader.fragmentShader = shader.fragmentShader
             .replace(
               '#include <common>',
@@ -1488,16 +1487,18 @@ function applyBobLoadout(scene: Object3D, loadout: BobLoadout) {
 uniform vec3 bobShift;`,
             )
             .replace(
-              '#include <color_fragment>',
-              `#include <color_fragment>
-{
-  vec3 viewDir = normalize(vViewPosition);
-  float fresnel = pow(1.0 - abs(dot(normalize(normal), viewDir)), 2.2);
-  diffuseColor.rgb = mix(diffuseColor.rgb, bobShift, fresnel);
-}`,
+              'vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;',
+              `vec3 outgoingLight = totalDiffuse + totalSpecular + totalEmissiveRadiance;
+	{
+		vec3 viewDir = normalize( vViewPosition );
+		float fresnel = pow( clamp( 1.0 - abs( dot( normalize( normal ), viewDir ) ), 0.0, 1.0 ), 1.45 );
+		vec3 flipColor = mix( outgoingLight, bobShift, 0.82 );
+		outgoingLight = mix( outgoingLight, flipColor, fresnel );
+		outgoingLight += bobShift * fresnel * 0.22;
+	}`,
             );
         };
-        next.customProgramCacheKey = () => `bob-cham-${finish.id}-${darker ? 'd' : 'b'}`;
+        next.customProgramCacheKey = () => key;
         next.needsUpdate = true;
         return next;
       }
