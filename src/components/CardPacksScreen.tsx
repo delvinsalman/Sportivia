@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   ArrowLeft,
   ChevronDown,
-  Coins,
   Heart,
   Info,
   Layers3,
@@ -14,6 +13,7 @@ import {
   Trophy,
   X,
 } from 'lucide-react';
+import { CoinIcon } from './CoinIcon';
 import type { Sport } from '../types';
 import type { PlayerProfile } from '../types/profile';
 import type {
@@ -1206,7 +1206,7 @@ export function CardPacksScreen({
                           disabled={!affordable}
                           className="game-gold-cta mt-2.5 w-full py-2.5 text-sm"
                         >
-                          <Coins className="h-4 w-4" />
+                          <CoinIcon size="sm" />
                           {affordable ? pack.cost.toLocaleString() : 'Need more coins'}
                         </button>
                       </div>

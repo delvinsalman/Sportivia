@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Share2, RotateCcw, Home, Sparkles, Coins, Zap, Swords } from 'lucide-react';
+import { Share2, RotateCcw, Home, Sparkles, Zap, Swords } from 'lucide-react';
+import { CoinIcon } from './CoinIcon';
 import type { GameResult } from '../types';
 import { generateShareText } from '../lib/roundEngine';
 import { SportBall } from './SportBall';
@@ -266,8 +267,8 @@ export function ResultModal({
             {rewards && (
               <div className="mb-5 grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-3 rounded-[22px] border-[3px] border-[#f0b232]/75 bg-[#1a160c] p-4 shadow-[0_5px_0_#8a6814] sm:p-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border-[3px] border-white/30 bg-[#f0b232] shadow-[0_3px_0_#8a6814]">
-                    <Coins className="h-5 w-5 text-[#18191c]" />
+                  <div className="flex h-11 w-11 items-center justify-center drop-shadow-[0_3px_0_rgba(0,0,0,0.4)]">
+                    <CoinIcon size={40} />
                   </div>
                   <div>
                     <p className="font-mono text-xl font-black text-[#f0b232] sm:text-2xl">

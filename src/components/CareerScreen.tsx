@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Coins } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
+import { CoinIcon } from './CoinIcon';
 import type { Sport } from '../types';
 import type { PlayerProfile } from '../types/profile';
 import { SportBackground } from './SportBackground';
@@ -55,7 +56,7 @@ export function CareerScreen({
             Back
           </button>
           <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#f0b232]/70 shadow-[0_3px_0_#8a6814]">
-            <Coins className="w-3.5 h-3.5 text-[#f0b232]" />
+            <CoinIcon size="sm" />
             <span className="text-xs font-black text-[#f0b232] font-mono">
               {profile.coins.toLocaleString()}
             </span>

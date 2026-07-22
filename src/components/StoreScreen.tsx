@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
-import { ArrowLeft, ChevronLeft, ChevronRight, Coins, Lock, Palette, PawPrint, Sparkles, SlidersHorizontal, Check } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Lock, Palette, PawPrint, Sparkles, SlidersHorizontal, Check } from 'lucide-react';
+import { CoinIcon } from './CoinIcon';
 import type {
   CharacterId,
   DogVariantId,
@@ -339,7 +340,7 @@ export function StoreScreen({
               </div>
             )}
             <div className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-full bg-[#1e1f22] border-[2.5px] border-[#f0b232]/70 shadow-[0_3px_0_#8a6814] shrink-0">
-              <Coins className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#f0b232]" />
+              <CoinIcon size="sm" />
               <span className="text-xs sm:text-sm font-black text-[#f0b232] font-mono">{profile.coins}</span>
             </div>
           </div>

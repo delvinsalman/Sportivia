@@ -211,7 +211,7 @@ export function HomeScreen({
         animate={{ opacity: 1, x: 0 }}
         className="fixed top-0 right-0 z-30 flex max-w-[min(100vw-7.5rem,100%)] items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-none pt-[max(0.5rem,env(safe-area-inset-top))] pr-[max(0.5rem,env(safe-area-inset-right))] pb-2 pl-1 sm:max-w-none sm:gap-2.5 sm:overflow-visible sm:p-4"
       >
-        <HeaderStats profile={profile} online={showOnline} />
+        <HeaderStats profile={profile} online={showOnline} coinStyle="home" />
         <button
           type="button"
           onClick={() => {
