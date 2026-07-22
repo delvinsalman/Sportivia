@@ -147,8 +147,7 @@ export function HomeScreen({
         animate={{ opacity: 1, x: 0 }}
         className="fixed top-0 left-0 z-30 flex items-center gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-2 pb-2 sm:p-4"
       >
-        <SportBall sport={sport} size={28} className="shrink-0 drop-shadow-sm sm:hidden" />
-        <SportBall sport={sport} size={32} className="shrink-0 drop-shadow-sm hidden sm:block" />
+        <SportBall sport={sport} size={30} className="shrink-0 drop-shadow-sm" />
         <h1 className="text-xl sm:text-4xl font-black tracking-tight text-[#f2f3f5] leading-none">
           Sportivia
         </h1>

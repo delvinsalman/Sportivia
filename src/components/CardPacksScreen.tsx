@@ -1060,8 +1060,7 @@ export function CardPacksScreen({
                     : { border: '2px solid transparent' }
                 }
               >
-                <SportBall sport={item} size={32} className="sm:hidden" />
-                <SportBall sport={item} size={40} className="hidden sm:block" />
+                <SportBall sport={item} size={36} />
               </button>
             );
           })}
