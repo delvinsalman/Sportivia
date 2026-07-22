@@ -7,7 +7,6 @@ import {
   DEFAULT_CHARACTER,
   DEFAULT_CREATIVE_LOADOUT,
   DEFAULT_DOG_VARIANT,
-  DEFAULT_PLAYER_NAME,
   DEFAULT_RABBIT_VARIANT,
   DOG_VARIANTS,
   PETS,
@@ -32,6 +31,7 @@ import {
   type CardWagerAgreement,
   type CardWagerSettlement,
 } from './cardWager';
+import { pickRandomPlayerName } from './playerNames';
 
 const PROFILE_KEY = 'gridiq-profile-v4';
 const PAID_SKINS_MIGRATION_KEY = 'gridiq-paid-skins-v1';
@@ -69,7 +69,7 @@ function normalizeUnlockedPets(unlocked?: PetId[]): PetId[] {
 
 function defaultProfile(): PlayerProfile {
   return {
-    playerName: DEFAULT_PLAYER_NAME,
+    playerName: pickRandomPlayerName(),
     coins: 0,
     xp: 0,
     level: 1,
@@ -156,7 +156,7 @@ export function loadProfile(): PlayerProfile {
 
     const profile: PlayerProfile = {
       ...base,
-      playerName: parsed.playerName?.trim() || DEFAULT_PLAYER_NAME,
+      playerName: parsed.playerName?.trim() || pickRandomPlayerName(),
       coins: typeof parsed.coins === 'number' ? Math.max(0, Math.floor(parsed.coins)) : 0,
       xp: parsed.xp ?? 0,
       level: levelFromXp(parsed.xp ?? 0),
@@ -316,7 +316,7 @@ export function unequipPet(): PlayerProfile {
 export function updatePlayerName(name: string): PlayerProfile {
   const profile = loadProfile();
   const trimmed = name.trim().slice(0, 18);
-  profile.playerName = trimmed || DEFAULT_PLAYER_NAME;
+  profile.playerName = trimmed || pickRandomPlayerName();
   saveProfile(profile);
   return profile;
 }

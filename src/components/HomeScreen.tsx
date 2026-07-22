@@ -17,7 +17,7 @@ import { SPORT_ACCENT, SPORT_PODIUM_ACCENT, SPORT_LABEL, SPORT_RAIL_BG } from '.
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 import { PAGE_TRANSITION } from '../lib/pageTransitions';
 import { useSettings } from '../hooks/useSettings';
-import { BOT_DIFFICULTIES } from '../lib/botOpponent';
+import { pickRandomPlayerName } from '../lib/playerNames';
 
 interface HomeScreenProps {
   sport: Sport;
@@ -70,7 +70,7 @@ function EditableName({
 
   function commit() {
     const trimmed = draft.trim().slice(0, 18);
-    onSave(trimmed || 'Pro');
+    onSave(trimmed || pickRandomPlayerName());
     setEditing(false);
   }
 
