@@ -88,7 +88,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
               </p>
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-[#f2f3f5] tracking-tight leading-[0.95] mb-4">
                 Sports trivia
-                <span className="block" style={{ color: accent }}>built for speed</span>
+                <span className="block" style={{ color: accent }}>built for speed.</span>
               </h1>
               <p className="text-base sm:text-lg text-[#b5bac1] leading-relaxed max-w-md mb-6">
                 Match stars to categories on a live 3×3 board across Soccer, NBA, MLB, NFL, and NHL.

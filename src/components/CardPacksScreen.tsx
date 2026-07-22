@@ -1073,6 +1073,10 @@ export function CardPacksScreen({
             type="button"
             onClick={() => {
               playMenuBack();
+              if (tab === 'collection') {
+                setTab('packs');
+                return;
+              }
               onBack();
             }}
             className={MENU_BACK_CLASS}
