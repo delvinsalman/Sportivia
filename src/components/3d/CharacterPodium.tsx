@@ -792,7 +792,7 @@ const PET_SPECIALS: Record<PetId, PetSpecialMove[]> = {
   frog: [],
   shark: [],
   snake: [],
-  dog: ['look', 'paw', 'bark'],
+  dog: ['look', 'paw', 'bark', 'shake', 'step'],
 };
 
 function petSpecialDuration(type: PetSpecialMove) {
@@ -885,35 +885,86 @@ function usePetSkeletalIdle(scene: Object3D, petId: PetId, enabled: boolean, sho
     const leftEar = findBone(/^ear1l$|^ear2l$|ear.*left|left.*ear/);
     const rightEar = findBone(/^ear1r$|^ear2r$|ear.*right|right.*ear/);
 
-    const breath = Math.sin(t * 1.1) * 0.015 + 0.02;
-    const sway = Math.sin(t * 0.55) * 0.04;
+    const isDog = petId === 'dog';
+    // Dogs get a livelier continuous idle; other natural pets keep the calmer baseline.
+    const breathAmp = isDog ? 0.028 : 0.015;
+    const swayAmp = isDog ? 0.07 : 0.04;
+    const breath = Math.sin(t * (isDog ? 1.35 : 1.1)) * breathAmp + (isDog ? 0.028 : 0.02);
+    const sway = Math.sin(t * (isDog ? 0.85 : 0.55)) * swayAmp;
+    const weightShift = isDog ? Math.sin(t * 0.72) * 0.035 : 0;
+    const happyWag = isDog ? Math.sin(t * 4.2) * 0.22 + Math.sin(t * 7.1) * 0.06 : Math.sin(t * 1.9) * 0.14;
 
     const look = lookRef.current;
     if (t > look.next) {
-      look.next = t + (showcase ? randBetween(3.5, 6.5) : randBetween(5.5, 9));
-      look.targetYaw = (Math.random() - 0.5) * (showcase ? 0.4 : 0.24);
-      look.targetPitch = (Math.random() - 0.5) * 0.08;
+      look.next =
+        t +
+        (isDog
+          ? showcase
+            ? randBetween(2.2, 4.2)
+            : randBetween(3.5, 6)
+          : showcase
+            ? randBetween(3.5, 6.5)
+            : randBetween(5.5, 9));
+      look.targetYaw =
+        (Math.random() - 0.5) * (isDog ? (showcase ? 0.55 : 0.38) : showcase ? 0.4 : 0.24);
+      look.targetPitch = (Math.random() - 0.5) * (isDog ? 0.14 : 0.08);
     }
-    look.yaw += (look.targetYaw - look.yaw) * 0.05;
-    look.pitch += (look.targetPitch - look.pitch) * 0.05;
+    look.yaw += (look.targetYaw - look.yaw) * (isDog ? 0.08 : 0.05);
+    look.pitch += (look.targetPitch - look.pitch) * (isDog ? 0.08 : 0.05);
 
-    if (neckBone) set(neckBone, look.pitch * 0.45, look.yaw * 0.45, 0);
-    if (headBone) set(headBone, look.pitch * 0.8 + Math.sin(t * 2.3) * 0.012, look.yaw * 0.8, sway * 0.02);
-    if (tailBone) set(tailBone, 0, Math.sin(t * 1.9) * 0.14, 0);
+    if (neckBone) set(neckBone, look.pitch * 0.45 + weightShift * 0.3, look.yaw * 0.45, weightShift * 0.2);
+    if (headBone) {
+      set(
+        headBone,
+        look.pitch * 0.8 + Math.sin(t * (isDog ? 2.8 : 2.3)) * (isDog ? 0.022 : 0.012),
+        look.yaw * 0.8 + (isDog ? Math.sin(t * 1.1) * 0.03 : 0),
+        sway * (isDog ? 0.045 : 0.02),
+      );
+    }
+    if (tailBone) set(tailBone, isDog ? Math.sin(t * 2.4) * 0.06 : 0, happyWag, isDog ? Math.sin(t * 3.1) * 0.05 : 0);
     tailBones.forEach((name, index) => {
       const phase = index * 0.35;
-      const amount = 0.1 + index * 0.025;
-      set(name, 0, Math.sin(t * 1.8 - phase) * amount, 0);
+      const amount = (isDog ? 0.16 : 0.1) + index * (isDog ? 0.04 : 0.025);
+      const speed = isDog ? 3.6 : 1.8;
+      set(
+        name,
+        isDog ? Math.sin(t * 2.1 - phase) * 0.04 : 0,
+        Math.sin(t * speed - phase) * amount,
+        isDog ? Math.sin(t * 2.8 - phase) * 0.03 : 0,
+      );
     });
-    if (leftEar) set(leftEar, Math.sin(t * 2.8) * 0.08, 0, 0);
-    if (rightEar) set(rightEar, Math.sin(t * 2.8 + 0.4) * 0.08, 0, 0);
+    if (leftEar) {
+      set(
+        leftEar,
+        Math.sin(t * (isDog ? 3.6 : 2.8)) * (isDog ? 0.14 : 0.08) + (isDog ? Math.sin(t * 5.2) * 0.04 : 0),
+        isDog ? Math.sin(t * 2.2) * 0.05 : 0,
+        0,
+      );
+    }
+    if (rightEar) {
+      set(
+        rightEar,
+        Math.sin(t * (isDog ? 3.6 : 2.8) + 0.4) * (isDog ? 0.14 : 0.08) +
+          (isDog ? Math.sin(t * 5.2 + 0.6) * 0.04 : 0),
+        isDog ? Math.sin(t * 2.2 + 0.5) * 0.05 : 0,
+        0,
+      );
+    }
 
-    if (leftFront) set(leftFront, -0.012 + Math.sin(t * 0.9) * 0.01, 0, 0);
-    if (rightFront) set(rightFront, -0.01 + Math.sin(t * 0.9 + 0.7) * 0.01, 0, 0);
-    if (leftBack) set(leftBack, -0.008 + Math.sin(t * 0.85) * 0.008, 0, 0);
-    if (rightBack) set(rightBack, -0.008 + Math.sin(t * 0.85 + 0.5) * 0.008, 0, 0);
-    if (spineBone) set(spineBone, breath * 0.4, sway * 0.2, 0);
-    if (hipsBone) set(hipsBone, 0, sway * 0.15, 0);
+    if (leftFront) {
+      set(leftFront, -0.012 + Math.sin(t * (isDog ? 1.25 : 0.9)) * (isDog ? 0.028 : 0.01) + weightShift * 0.4, 0, weightShift * 0.25);
+    }
+    if (rightFront) {
+      set(rightFront, -0.01 + Math.sin(t * (isDog ? 1.25 : 0.9) + 0.7) * (isDog ? 0.028 : 0.01) - weightShift * 0.4, 0, -weightShift * 0.25);
+    }
+    if (leftBack) {
+      set(leftBack, -0.008 + Math.sin(t * (isDog ? 1.15 : 0.85)) * (isDog ? 0.022 : 0.008) - weightShift * 0.3, 0, 0);
+    }
+    if (rightBack) {
+      set(rightBack, -0.008 + Math.sin(t * (isDog ? 1.15 : 0.85) + 0.5) * (isDog ? 0.022 : 0.008) + weightShift * 0.3, 0, 0);
+    }
+    if (spineBone) set(spineBone, breath * (isDog ? 0.7 : 0.4), sway * (isDog ? 0.35 : 0.2), weightShift * 0.15);
+    if (hipsBone) set(hipsBone, isDog ? Math.sin(t * 0.9) * 0.012 : 0, sway * (isDog ? 0.28 : 0.15), weightShift * 0.2);
 
     const specials = PET_SPECIALS[petId] || ['look'];
     const special = specialRef.current;
@@ -926,7 +977,10 @@ function usePetSkeletalIdle(scene: Object3D, petId: PetId, enabled: boolean, sho
         duration: petSpecialDuration(pick),
       };
       nextSpecialRef.current =
-        now + randBetween(showcase ? 12_000 : 15_000, showcase ? 21_000 : 25_000);
+        now +
+        (isDog
+          ? randBetween(showcase ? 6_500 : 9_000, showcase ? 12_000 : 16_000)
+          : randBetween(showcase ? 12_000 : 15_000, showcase ? 21_000 : 25_000));
     }
 
     if (special) {
@@ -935,6 +989,65 @@ function usePetSkeletalIdle(scene: Object3D, petId: PetId, enabled: boolean, sho
       const ease = Math.sin(u * Math.PI);
 
       switch (petId) {
+        case 'dog':
+          if (special.type === 'look') {
+            if (neckBone) set(neckBone, 0.1 * ease, Math.sin(elapsed * 2.4) * 0.32 * ease, 0);
+            if (headBone) set(headBone, 0.14 * ease, Math.sin(elapsed * 2.4) * 0.4 * ease, 0);
+            if (leftEar) set(leftEar, 0.12 * ease, 0, 0);
+            if (rightEar) set(rightEar, 0.12 * ease, 0, 0);
+          } else if (special.type === 'paw') {
+            // Offer a paw — lift one front leg, lean in, curious head tilt
+            const lift = Math.sin(u * Math.PI);
+            if (leftFront) set(leftFront, -0.55 * lift, 0.08 * ease, 0.18 * ease);
+            if (leftFrontLower) set(leftFrontLower, 0.45 * lift, 0, 0);
+            if (rightFront) set(rightFront, -0.08 * ease, 0, -0.06 * ease);
+            if (spineBone) set(spineBone, 0.08 * ease, -0.1 * ease, 0);
+            if (hipsBone) set(hipsBone, -0.06 * ease, 0.08 * ease, 0);
+            if (neckBone) set(neckBone, -0.12 * ease, 0.1 * ease, 0);
+            if (headBone) set(headBone, -0.1 * ease + Math.sin(elapsed * 3) * 0.04, 0.16 * ease, 0);
+            tailBones.forEach((name, index) => {
+              set(name, 0, Math.sin(elapsed * 7 - index * 0.4) * 0.28 * ease, 0);
+            });
+          } else if (special.type === 'bark') {
+            // Excited bark — head up, chest puff, fast wag
+            const yap = Math.sin(elapsed * 10) * ease;
+            if (neckBone) set(neckBone, -0.22 * ease + yap * 0.06, 0, 0);
+            if (headBone) set(headBone, 0.28 * ease + yap * 0.1, yap * 0.05, 0);
+            if (spineBone) set(spineBone, 0.1 * ease, 0, 0);
+            if (hipsBone) set(hipsBone, -0.05 * ease, 0, 0);
+            if (leftFront) set(leftFront, -0.06 * ease, 0, 0);
+            if (rightFront) set(rightFront, -0.06 * ease, 0, 0);
+            tailBones.forEach((name, index) => {
+              set(name, 0, Math.sin(elapsed * 9 - index * 0.35) * 0.34 * ease, 0);
+            });
+            if (leftEar) set(leftEar, 0.16 * ease, 0, 0);
+            if (rightEar) set(rightEar, 0.16 * ease, 0, 0);
+          } else if (special.type === 'shake') {
+            // Full-body shake-off
+            const shake = Math.sin(elapsed * 14) * ease;
+            if (spineBone) set(spineBone, 0, shake * 0.22, shake * 0.12);
+            if (hipsBone) set(hipsBone, 0, shake * 0.16, 0);
+            if (neckBone) set(neckBone, 0, shake * 0.28, 0);
+            if (headBone) set(headBone, Math.sin(elapsed * 12) * 0.12 * ease, shake * 0.2, 0);
+            if (leftEar) set(leftEar, shake * 0.2, 0, 0);
+            if (rightEar) set(rightEar, -shake * 0.2, 0, 0);
+            tailBones.forEach((name, index) => {
+              set(name, 0, Math.sin(elapsed * 11 - index * 0.4) * 0.3 * ease, 0);
+            });
+          } else if (special.type === 'step') {
+            // Restless step in place
+            const step = Math.sin(elapsed * 6.5);
+            if (leftFront) set(leftFront, -0.2 * ease + step * 0.08, 0, 0.04 * ease);
+            if (rightFront) set(rightFront, -0.16 * ease - step * 0.08, 0, -0.04 * ease);
+            if (leftBack) set(leftBack, -0.1 * ease - step * 0.05, 0, 0);
+            if (rightBack) set(rightBack, -0.12 * ease + step * 0.05, 0, 0);
+            if (hipsBone) set(hipsBone, Math.sin(elapsed * 6.5) * 0.04 * ease, 0, 0);
+            if (headBone) set(headBone, 0.06 * ease, Math.sin(elapsed * 3) * 0.08 * ease, 0);
+            tailBones.forEach((name, index) => {
+              set(name, 0, Math.sin(elapsed * 5 - index * 0.3) * 0.18 * ease, 0);
+            });
+          }
+          break;
         case 'wolf':
           if (special.type === 'paw') {
             if (leftFront) set(leftFront, -0.24 * ease, 0, 0);
@@ -1286,6 +1399,10 @@ function PodiumRig({
         group.current.position.y = baseY.current + Math.sin(t * 1.5) * 0.008;
         group.current.rotation.x = 0;
         group.current.rotation.z = 0;
+      } else if (petId === 'dog') {
+        group.current.position.y = baseY.current + Math.sin(t * 1.6) * 0.014;
+        group.current.rotation.x = Math.sin(t * 1.1) * 0.01;
+        group.current.rotation.z = Math.sin(t * 0.85) * 0.016;
       } else {
         group.current.position.y = baseY.current;
         group.current.rotation.x = 0;
@@ -1300,6 +1417,15 @@ function PodiumRig({
       group.current.position.y = baseY.current + Math.sin(t * 1.35) * 0.016;
       group.current.rotation.x = Math.sin(t * 0.9) * 0.012;
       group.current.rotation.z = Math.sin(t * 0.7) * 0.014;
+      group.current.scale.setScalar(scale);
+      return;
+    }
+
+    // Street Dog — a bit more root bounce so the pet feels alive on the home/store stage
+    if (petId === 'dog') {
+      group.current.position.y = baseY.current + Math.sin(t * 1.55) * 0.028;
+      group.current.rotation.x = Math.sin(t * 1.05) * 0.02;
+      group.current.rotation.z = Math.sin(t * 0.8) * 0.026;
       group.current.scale.setScalar(scale);
       return;
     }
