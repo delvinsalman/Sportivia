@@ -1,10 +1,12 @@
 import { motion } from 'framer-motion';
+import type { CSSProperties } from 'react';
 import type { Sport } from '../types';
 import { SportBall } from './SportBall';
 import {
   SPORT_ACCENT,
   SPORT_LABEL,
   SPORT_PICKER_BG,
+  SPORT_RAIL_BG,
   SPORTS,
 } from '../lib/sportTheme';
 import { playMenuClick } from '../lib/menuAudio';
@@ -25,6 +27,7 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
         {SPORTS.map(sp => {
           const active = sport === sp;
           const label = SPORT_LABEL[sp];
+          const railBg = SPORT_RAIL_BG[sp];
           return (
             <button
               key={sp}
@@ -37,6 +40,13 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
                 onSportChange(sp);
               }}
               className={`game-sport-tab ${active ? 'game-sport-tab-active' : ''}`}
+              style={
+                {
+                  '--sport-rail-bg': railBg.base,
+                  '--sport-rail-bg-hover': railBg.hover,
+                  '--sport-rail-bg-active': railBg.active,
+                } as CSSProperties
+              }
             >
               <span className="shrink-0 w-[28px] h-[28px] flex items-center justify-center">
                 <SportBall sport={sp} size={28} />

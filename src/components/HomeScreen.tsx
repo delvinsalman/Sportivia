@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Pencil, Play, ShoppingBag, Check, Info, Trophy, Settings,
@@ -13,7 +13,7 @@ import { SportPicker } from './SportPicker';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { HeaderStats, LevelCorner } from './LevelBar';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import { SPORT_ACCENT, SPORT_PODIUM_ACCENT, SPORT_LABEL } from '../lib/sportTheme';
+import { SPORT_ACCENT, SPORT_PODIUM_ACCENT, SPORT_LABEL, SPORT_RAIL_BG } from '../lib/sportTheme';
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 import { PAGE_TRANSITION } from '../lib/pageTransitions';
 import { useSettings } from '../hooks/useSettings';
@@ -161,7 +161,14 @@ export function HomeScreen({
       >
         <SportPicker sport={sport} onSportChange={onSportChange} layout="rail" />
 
-        <div className="game-sport-record">
+        <div
+          className="game-sport-record"
+          style={
+            {
+              '--sport-rail-bg': SPORT_RAIL_BG[sport].base,
+            } as CSSProperties
+          }
+        >
           <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg border-2 border-[#f0b232]/55 bg-[#f0b232]/18 shrink-0">
             <Trophy className="w-4 h-4 text-[#f0b232]" />
           </div>
