@@ -308,7 +308,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, margin: '-24px' }}
                   transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.2) }}
-                  className="relative overflow-hidden rounded-3xl py-7 pr-5 sm:py-8 sm:pr-8"
+                  className="relative overflow-hidden rounded-3xl px-5 py-7 sm:px-8 sm:py-8"
                   style={{
                     background: `radial-gradient(ellipse 85% 90% at 12% 20%, ${item.glare} 0%, transparent 58%), radial-gradient(ellipse 70% 60% at 92% 80%, ${item.glare} 0%, transparent 50%), rgba(12, 13, 16, 0.28)`,
                   }}
