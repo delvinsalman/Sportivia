@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Pencil, Play, ShoppingBag, Check, Info, Trophy, Settings,
+  Pencil, Play, ShoppingBag, Check, Info, Settings,
   Medal, Layers3, ArrowLeft,
 } from 'lucide-react';
 import type { Sport, GameMode, BotDifficulty } from '../types';
@@ -169,8 +169,15 @@ export function HomeScreen({
             } as CSSProperties
           }
         >
-          <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg border-2 border-[#f0b232]/55 bg-[#f0b232]/18 shrink-0">
-            <Trophy className="w-4 h-4 text-[#f0b232]" />
+          <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 shrink-0">
+            <img
+              src="/icons/trophy-record.png"
+              alt=""
+              width={32}
+              height={32}
+              draggable={false}
+              className="h-7 w-7 sm:h-8 sm:w-8 select-none object-contain drop-shadow-[0_2px_0_rgba(0,0,0,0.35)]"
+            />
           </div>
           <div className="min-w-0 flex-1 hidden sm:block">
             <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#949ba4] leading-none mb-1">
