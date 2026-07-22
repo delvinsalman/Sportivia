@@ -153,21 +153,21 @@ export function HomeScreen({
         </h1>
       </motion.div>
 
-      {/* Left rail: profile head + sports + record (stacked under logo) */}
-      <motion.aside
-        initial={{ opacity: 0, x: -16 }}
+      {/* Profile headshot — under logo */}
+      <motion.div
+        initial={{ opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed left-0 top-[3.55rem] sm:top-[4.35rem] z-30 pl-2 sm:pl-5 flex flex-col items-stretch gap-2.5 sm:gap-3.5 max-sm:scale-[0.92] max-sm:origin-top-left max-h-[calc(100svh-4.5rem)] overflow-y-auto no-scrollbar"
+        className="fixed left-0 top-[3.55rem] sm:top-[4.35rem] z-30 pl-2 sm:pl-5 max-sm:scale-[0.92] max-sm:origin-top-left"
       >
         <div className="game-home-profile">
           <div className="game-home-profile-avatar" aria-hidden>
             <CharacterPodium
               characterId={profile.equippedCharacter}
               accent={character.accent}
-              height={72}
+              height={58}
               bare
               portrait
-              className="w-full pointer-events-none"
+              className="w-full h-full pointer-events-none"
               {...(profile.equippedCharacter === 'creative'
                 ? { creativeLoadout: profile.creativeLoadout }
                 : {})}
@@ -194,7 +194,14 @@ export function HomeScreen({
             </p>
           </div>
         </div>
+      </motion.div>
 
+      {/* Sports + record — mid-left like before, nudged slightly down */}
+      <motion.aside
+        initial={{ opacity: 0, x: -16 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="fixed left-0 top-[calc(50%+1.75rem)] sm:top-[calc(50%+2rem)] -translate-y-1/2 z-30 pl-2 sm:pl-5 flex flex-col items-stretch gap-3 sm:gap-4 max-sm:scale-[0.92] max-sm:origin-left"
+      >
         <SportPicker sport={sport} onSportChange={onSportChange} layout="rail" />
 
         <div className="game-sport-record">

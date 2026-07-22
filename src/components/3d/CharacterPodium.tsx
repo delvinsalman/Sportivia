@@ -7,7 +7,7 @@ import {
   useRef,
   type ReactNode,
 } from 'react';
-import { Canvas, useFrame } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { ContactShadows, useAnimations, useFBX, useGLTF } from '@react-three/drei';
 import { Box3, Color, Float32BufferAttribute, LoopOnce, LoopRepeat, MeshPhysicalMaterial, Vector3 } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
@@ -1748,6 +1748,7 @@ function Scene({
   hero,
   showcase = false,
   hidePodium = false,
+  portrait = false,
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
@@ -1762,6 +1763,7 @@ function Scene({
   hero?: boolean;
   showcase?: boolean;
   hidePodium?: boolean;
+  portrait?: boolean;
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
@@ -1772,9 +1774,10 @@ function Scene({
 }) {
   return (
     <>
-      <ambientLight intensity={hero ? 1.15 : 1.1} />
-      <hemisphereLight args={['#ffffff', '#3a3a48', hero ? 0.95 : 0.75]} />
-      {hero ? (
+      {portrait && <PortraitCamera />}
+      <ambientLight intensity={hero || portrait ? 1.25 : 1.1} />
+      <hemisphereLight args={['#ffffff', '#3a3a48', hero || portrait ? 1.05 : 0.75]} />
+      {hero || portrait ? (
         <HeroSpotlights accent={accent} />
       ) : (
         <>
@@ -1782,6 +1785,12 @@ function Scene({
           <spotLight position={[2.5, 5, 3]} angle={0.4} penumbra={0.5} intensity={2.5} />
           <pointLight position={[-2, 2, -1]} intensity={0.9} color={accent} />
           <pointLight position={[2, 1.5, 2]} intensity={0.6} color="#ffffff" />
+        </>
+      )}
+      {portrait && (
+        <>
+          <directionalLight position={[0.6, 1.4, 2.2]} intensity={2.4} color="#ffffff" />
+          <pointLight position={[0, 1.1, 1.6]} intensity={1.8} color="#ffffff" />
         </>
       )}
 
@@ -1803,13 +1812,15 @@ function Scene({
         ) : null}
       </ModelErrorBoundary>
 
-      <ContactShadows
-        position={[0, hidePodium ? STAND_Y - 0.02 : PODIUM_SURFACE_Y - 0.06, 0]}
-        opacity={hidePodium ? 0.22 : 0.32}
-        scale={hidePodium ? 3.2 : 5}
-        blur={3.5}
-        far={3.5}
-      />
+      {!portrait && (
+        <ContactShadows
+          position={[0, hidePodium ? STAND_Y - 0.02 : PODIUM_SURFACE_Y - 0.06, 0]}
+          opacity={hidePodium ? 0.22 : 0.32}
+          scale={hidePodium ? 3.2 : 5}
+          blur={3.5}
+          far={3.5}
+        />
+      )}
     </>
   );
 }
@@ -1821,6 +1832,46 @@ function LoadingFallback() {
       <meshStandardMaterial color="#3f4147" wireframe />
     </mesh>
   );
+}
+
+/** Frame the upper body / head for the home profile avatar. */
+function PortraitCamera() {
+  const { camera, scene } = useThree();
+  const framed = useRef(false);
+
+  useFrame(() => {
+    if (framed.current) return;
+
+    const box = new Box3();
+    let hasMesh = false;
+    scene.traverse(obj => {
+      const mesh = obj as Mesh;
+      if (!mesh.isMesh || !mesh.visible) return;
+      // Ignore shadow planes / tiny helpers
+      const geom = mesh.geometry;
+      if (!geom) return;
+      box.expandByObject(mesh);
+      hasMesh = true;
+    });
+    if (!hasMesh || box.isEmpty()) return;
+
+    const size = box.getSize(new Vector3());
+    if (size.y < 0.05) return;
+
+    const center = box.getCenter(new Vector3());
+    // Aim at face band (upper ~22% of the fitted body)
+    const headY = box.min.y + size.y * 0.78;
+    const focus = new Vector3(center.x, headY, center.z);
+    const dist = Math.max(size.y * 0.4, size.x * 0.9, size.z * 0.9, 0.9);
+    camera.position.set(focus.x, headY + size.y * 0.015, focus.z + dist);
+    camera.near = 0.05;
+    camera.far = 40;
+    camera.lookAt(focus);
+    camera.updateProjectionMatrix();
+    framed.current = true;
+  });
+
+  return null;
 }
 
 interface CharacterPodiumProps {
@@ -1928,32 +1979,33 @@ export function CharacterPodium({
       <Canvas
         camera={{
           position: isPortrait
-            ? [0, 0.72, 2.15]
+            ? [0, 0.35, 1.55]
             : framed
               ? petId
                 ? [0, 0.35, 5.8]
                 : [0, 0.05, 4.4]
               : [0, 0.55, 3.1],
-          fov: isPortrait ? 28 : framed ? (petId ? 38 : 34) : 42,
+          fov: isPortrait ? 32 : framed ? (petId ? 38 : 34) : 42,
         }}
         gl={{ alpha: true, antialias: true }}
-        style={{ background: 'transparent', height: '100%' }}
+        style={{ background: 'transparent', height: '100%', width: '100%' }}
         onCreated={({ gl, camera }) => {
           gl.setClearColor(0x000000, 0);
-          gl.toneMappingExposure = framed || isPortrait ? 1.15 : 1;
-          if (isPortrait) camera.lookAt(0, 0.62, 0);
+          gl.toneMappingExposure = framed || isPortrait ? 1.2 : 1;
+          if (isPortrait) camera.lookAt(0, 0.25, 0);
           else if (framed) camera.lookAt(0, petId ? 0.15 : -0.15, 0);
         }}
       >
         <Suspense fallback={<LoadingFallback />}>
           <Scene
-            key={`${sceneKey}-${variantKey}-${glow}-${noPodium ? 'flat' : 'pod'}-${isFrozen ? 'still' : 'live'}-${sport ?? 'any'}`}
+            key={`${sceneKey}-${variantKey}-${glow}-${noPodium ? 'flat' : 'pod'}-${isFrozen ? 'still' : 'live'}-${sport ?? 'any'}-p${isPortrait ? 1 : 0}`}
             characterId={characterId}
             petId={petId}
             accent={glow}
             hero={framed || isPortrait}
             showcase={hero && !isFrozen}
             hidePodium={noPodium}
+            portrait={isPortrait}
             creativeLoadout={creativeLoadout}
             athleteLoadout={athleteLoadout}
             bobLoadout={bobLoadout}
