@@ -313,7 +313,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                     background: `radial-gradient(ellipse 85% 90% at 12% 20%, ${item.glare} 0%, transparent 58%), radial-gradient(ellipse 70% 60% at 92% 80%, ${item.glare} 0%, transparent 50%), rgba(12, 13, 16, 0.28)`,
                   }}
                 >
-                  <div className="relative z-10 grid gap-5 sm:grid-cols-[7.5rem_1fr] sm:gap-4 sm:items-start">
+                  <div className="relative z-10 grid gap-5 sm:grid-cols-[5.5rem_1fr] sm:gap-2 sm:items-start">
                     <div className="flex flex-col gap-3 sm:gap-4">
                       <p
                         className="text-[11px] font-bold uppercase tracking-[0.18em]"
