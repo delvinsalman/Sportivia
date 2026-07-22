@@ -300,6 +300,9 @@ export function HomeScreen({
               {...(profile.equippedCharacter === 'athlete'
                 ? { athleteLoadout: profile.athleteLoadout }
                 : {})}
+              {...(profile.equippedCharacter === 'bob'
+                ? { bobLoadout: profile.bobLoadout }
+                : {})}
               {...(profile.equippedCharacter === 'bunny'
                 ? { rabbitVariant: profile.rabbitVariant }
                 : {})}

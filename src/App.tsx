@@ -22,6 +22,7 @@ import {
   updatePlayerName,
   saveCreativeLoadout,
   saveAthleteLoadout,
+  saveBobLoadout,
   saveRabbitVariant,
   saveDogVariant,
 } from './lib/profileStorage';
@@ -29,6 +30,7 @@ import type { PlayerProfile } from './types/profile';
 import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from './types/profile';
 import type { CreativeLoadout } from './types/creativeCharacter';
 import type { AthleteLoadout } from './types/athleteCharacter';
+import type { BobLoadout } from './types/bobCharacter';
 import { stakeFromKey, type CardWagerAgreement } from './lib/cardWager';
 import { botName } from './lib/botOpponent';
 import { useDuel } from './hooks/useDuel';
@@ -207,6 +209,10 @@ export default function App() {
     setProfile(saveAthleteLoadout(loadout));
   }
 
+  function handleSaveBobLoadout(loadout: BobLoadout) {
+    setProfile(saveBobLoadout(loadout));
+  }
+
   function handleSaveRabbitVariant(variant: RabbitVariantId) {
     setProfile(saveRabbitVariant(variant));
   }
@@ -274,6 +280,7 @@ export default function App() {
               onUnequipPet={handleUnequipPet}
               onSaveCreativeLoadout={handleSaveCreativeLoadout}
               onSaveAthleteLoadout={handleSaveAthleteLoadout}
+              onSaveBobLoadout={handleSaveBobLoadout}
               onSaveRabbitVariant={handleSaveRabbitVariant}
               onSaveDogVariant={handleSaveDogVariant}
             />
@@ -368,6 +375,7 @@ export default function App() {
               equippedPet={profile.equippedPet}
               creativeLoadout={profile.creativeLoadout}
               athleteLoadout={profile.athleteLoadout}
+              bobLoadout={profile.bobLoadout}
               rabbitVariant={profile.rabbitVariant}
               dogVariant={profile.dogVariant}
               seedKey={mode === 'duel' ? duelSeed ?? undefined : undefined}

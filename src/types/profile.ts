@@ -1,9 +1,11 @@
 import type { PlayerStats } from '../types';
 import type { CreativeLoadout } from './creativeCharacter';
 import type { AthleteLoadout } from './athleteCharacter';
+import type { BobLoadout } from './bobCharacter';
 import type { CardCollectionState } from './cards';
 import { DEFAULT_CREATIVE_LOADOUT } from './creativeCharacter';
 import { DEFAULT_ATHLETE_LOADOUT } from './athleteCharacter';
+import { DEFAULT_BOB_LOADOUT } from './bobCharacter';
 
 export type CharacterId =
   | 'cube-man'
@@ -109,6 +111,8 @@ export interface PlayerProfile {
   creativeLoadout: CreativeLoadout;
   /** Kit colors for the Athlete skin */
   athleteLoadout: AthleteLoadout;
+  /** Body tint for Boxscore Bob */
+  bobLoadout: BobLoadout;
   /** Selected look included with the Rabbit skin bundle */
   rabbitVariant: RabbitVariantId;
   /** Selected breed included with the Dog pet */
@@ -290,11 +294,14 @@ export const CHARACTERS: CharacterDef[] = [
   {
     id: 'bob',
     name: 'Boxscore Bob',
-    tagline: 'Does it all · always ready',
+    tagline: 'Pick a color · customize anytime',
     price: 23_000,
     modelPath: '/models/bob.glb',
     accent: '#38bdf8',
     footOffsetY: 0,
+    customizable: true,
+    poseMode: 'procedural',
+    showcaseRestMs: [4_000, 7_500],
   },
   {
     id: 'bunny',
@@ -480,6 +487,7 @@ export const DEFAULT_RABBIT_VARIANT: RabbitVariantId = 'base';
 export const DEFAULT_DOG_VARIANT: DogVariantId = 'husky';
 export { DEFAULT_CREATIVE_LOADOUT };
 export { DEFAULT_ATHLETE_LOADOUT };
+export { DEFAULT_BOB_LOADOUT };
 
 export const RABBIT_VARIANTS: RabbitVariantDef[] = [
   { id: 'base', name: 'Classic', modelPath: '/models/rabbit/base.glb' },

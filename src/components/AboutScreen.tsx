@@ -136,6 +136,9 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                   {...(profile.equippedCharacter === 'athlete'
                     ? { athleteLoadout: profile.athleteLoadout }
                     : {})}
+                  {...(profile.equippedCharacter === 'bob'
+                    ? { bobLoadout: profile.bobLoadout }
+                    : {})}
                   {...(profile.equippedCharacter === 'bunny'
                     ? { rabbitVariant: profile.rabbitVariant }
                     : {})}

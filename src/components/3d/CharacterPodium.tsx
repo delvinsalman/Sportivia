@@ -43,6 +43,12 @@ import {
   athleteRegionForBone,
   DEFAULT_ATHLETE_LOADOUT,
 } from '../../types/athleteCharacter';
+import type { BobLoadout } from '../../types/bobCharacter';
+import {
+  bobLoadoutKey,
+  DEFAULT_BOB_LOADOUT,
+  isBobLockedMaterial,
+} from '../../types/bobCharacter';
 import type { Sport } from '../../types';
 
 const TARGET_HEIGHT = 1.35;
@@ -1442,11 +1448,46 @@ function applyAthleteLoadout(scene: Object3D, loadout: AthleteLoadout) {
   });
 }
 
+function applyBobLoadout(scene: Object3D, loadout: BobLoadout) {
+  const tint = new Color(loadout.color);
+  // Slightly darker shade for secondary pink material ("Material")
+  const shade = tint.clone().multiplyScalar(0.88);
+
+  scene.traverse(child => {
+    const mesh = child as Mesh;
+    if (!mesh.isMesh || !mesh.material) return;
+
+    const paint = (mat: MeshStandardMaterial, darker: boolean) => {
+      if (isBobLockedMaterial(mat.name)) return mat;
+      const next = mat.clone();
+      next.color.copy(darker ? shade : tint);
+      next.vertexColors = false;
+      next.metalness = 0.08;
+      next.roughness = 0.55;
+      next.needsUpdate = true;
+      return next;
+    };
+
+    if (Array.isArray(mesh.material)) {
+      mesh.material = mesh.material.map(m => {
+        const std = m as MeshStandardMaterial;
+        const darker = /^material$/i.test(std.name);
+        return paint(std, darker);
+      });
+    } else {
+      const std = mesh.material as MeshStandardMaterial;
+      const darker = /^material$/i.test(std.name);
+      mesh.material = paint(std, darker);
+    }
+  });
+}
+
 function GlbModel({
   def,
   showcase = false,
   creativeLoadout,
   athleteLoadout,
+  bobLoadout,
   sport,
   petId,
 }: {
@@ -1454,13 +1495,14 @@ function GlbModel({
   showcase?: boolean;
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
+  bobLoadout?: BobLoadout;
   sport?: Sport;
   petId?: PetId;
 }) {
   const isCreative =
     'customizable' in def && !!def.customizable && def.modelPath.includes('creative');
-  const isAthlete =
-    'id' in def && def.id === 'athlete';
+  const isAthlete = 'id' in def && def.id === 'athlete';
+  const isBob = 'id' in def && def.id === 'bob';
   const { scene, animations: embeddedAnims } = useGLTF(def.modelPath);
   const animations = useMemo(
     () => embeddedAnims.map(clip => clip.clone()),
@@ -1468,18 +1510,22 @@ function GlbModel({
   );
   const loadout = creativeLoadout ?? DEFAULT_CREATIVE_LOADOUT;
   const kit = athleteLoadout ?? DEFAULT_ATHLETE_LOADOUT;
+  const bobKit = bobLoadout ?? DEFAULT_BOB_LOADOUT;
   const loadoutKey = isCreative
     ? creativeLoadoutKey(loadout)
     : isAthlete
       ? athleteLoadoutKey(kit)
-      : '';
+      : isBob
+        ? bobLoadoutKey(bobKit)
+        : '';
   const clone = useMemo(() => {
     const next = SkeletonUtils.clone(scene);
     if (isCreative) applyCreativeLoadout(next, loadout);
     if (isAthlete) applyAthleteLoadout(next, kit);
+    if (isBob) applyBobLoadout(next, bobKit);
     return next;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, isCreative, isAthlete, loadoutKey]);
+  }, [scene, isCreative, isAthlete, isBob, loadoutKey]);
 
   return (
     <PodiumRig
@@ -1499,11 +1545,13 @@ function CharacterModel({
   showcase = false,
   creativeLoadout,
   athleteLoadout,
+  bobLoadout,
   rabbitVariant,
   sport,
 }: CharacterModelProps & {
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
+  bobLoadout?: BobLoadout;
   sport?: Sport;
 }) {
   const baseDef = getCharacterDef(characterId);
@@ -1518,6 +1566,7 @@ function CharacterModel({
         showcase={showcase}
         creativeLoadout={creativeLoadout}
         athleteLoadout={athleteLoadout}
+        bobLoadout={bobLoadout}
         sport={sport}
       />
     );
@@ -1605,6 +1654,7 @@ function Scene({
   hidePodium = false,
   creativeLoadout,
   athleteLoadout,
+  bobLoadout,
   rabbitVariant,
   dogVariant,
   sport,
@@ -1617,6 +1667,7 @@ function Scene({
   hidePodium?: boolean;
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
+  bobLoadout?: BobLoadout;
   rabbitVariant?: RabbitVariantId;
   dogVariant?: DogVariantId;
   sport?: Sport;
@@ -1646,6 +1697,7 @@ function Scene({
             showcase={showcase}
             creativeLoadout={creativeLoadout}
             athleteLoadout={athleteLoadout}
+            bobLoadout={bobLoadout}
             rabbitVariant={rabbitVariant}
             sport={sport}
           />
@@ -1688,6 +1740,8 @@ interface CharacterPodiumProps {
   creativeLoadout?: CreativeLoadout;
   /** Kit colors for Pro Athlete skin */
   athleteLoadout?: AthleteLoadout;
+  /** Body tint for Boxscore Bob */
+  bobLoadout?: BobLoadout;
   /** Appearance included with the Rabbit skin */
   rabbitVariant?: RabbitVariantId;
   /** Breed included with the Street Dog pet */
@@ -1708,6 +1762,7 @@ export function CharacterPodium({
   hidePodium = false,
   creativeLoadout,
   athleteLoadout,
+  bobLoadout,
   rabbitVariant,
   dogVariant,
   sport,
@@ -1720,7 +1775,9 @@ export function CharacterPodium({
       ? creativeLoadoutKey(creativeLoadout)
       : characterId === 'athlete' && athleteLoadout
         ? athleteLoadoutKey(athleteLoadout)
-        : '';
+        : characterId === 'bob' && bobLoadout
+          ? bobLoadoutKey(bobLoadout)
+          : '';
   const sceneKey = petId ? `pet-${petId}` : `char-${characterId}-${loadoutKey}`;
   const variantKey =
     characterId === 'bunny'
@@ -1788,6 +1845,7 @@ export function CharacterPodium({
             hidePodium={hidePodium}
             creativeLoadout={creativeLoadout}
             athleteLoadout={athleteLoadout}
+            bobLoadout={bobLoadout}
             rabbitVariant={rabbitVariant}
             dogVariant={dogVariant}
             sport={sport}

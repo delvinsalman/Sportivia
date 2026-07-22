@@ -30,6 +30,12 @@ import {
   DEFAULT_ATHLETE_LOADOUT,
   normalizeAthleteLoadout,
 } from '../types/athleteCharacter';
+import type { BobLoadout } from '../types/bobCharacter';
+import {
+  BOB_COLORS,
+  DEFAULT_BOB_LOADOUT,
+  normalizeBobLoadout,
+} from '../types/bobCharacter';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SportBackground } from './SportBackground';
 import type { Sport } from '../types';
@@ -48,6 +54,7 @@ interface StoreScreenProps {
   onUnequipPet: () => void;
   onSaveCreativeLoadout: (loadout: CreativeLoadout) => void;
   onSaveAthleteLoadout: (loadout: AthleteLoadout) => void;
+  onSaveBobLoadout: (loadout: BobLoadout) => void;
   onSaveRabbitVariant: (variant: RabbitVariantId) => void;
   onSaveDogVariant: (variant: DogVariantId) => void;
 }
@@ -65,6 +72,7 @@ export function StoreScreen({
   onUnequipPet,
   onSaveCreativeLoadout,
   onSaveAthleteLoadout,
+  onSaveBobLoadout,
   onSaveRabbitVariant,
   onSaveDogVariant,
 }: StoreScreenProps) {
@@ -85,6 +93,9 @@ export function StoreScreen({
   );
   const [draftAthleteLoadout, setDraftAthleteLoadout] = useState<AthleteLoadout>(() =>
     normalizeAthleteLoadout(profile.athleteLoadout),
+  );
+  const [draftBobLoadout, setDraftBobLoadout] = useState<BobLoadout>(() =>
+    normalizeBobLoadout(profile.bobLoadout),
   );
   const [draftRabbitVariant, setDraftRabbitVariant] = useState<RabbitVariantId>(
     profile.rabbitVariant,
@@ -116,6 +127,10 @@ export function StoreScreen({
   }, [profile.athleteLoadout]);
 
   useEffect(() => {
+    setDraftBobLoadout(normalizeBobLoadout(profile.bobLoadout));
+  }, [profile.bobLoadout]);
+
+  useEffect(() => {
     setDraftRabbitVariant(profile.rabbitVariant);
   }, [profile.rabbitVariant]);
 
@@ -142,10 +157,16 @@ export function StoreScreen({
   const nextItem = previewIndex < catalog.length - 1 ? catalog[previewIndex + 1] : null;
   const isCreativePreview = !isPets && safePreviewId === 'creative';
   const isAthletePreview = !isPets && safePreviewId === 'athlete';
+  const isBobPreview = !isPets && safePreviewId === 'bob';
   const isRabbitPreview = !isPets && safePreviewId === 'bunny';
   const isDogPreview = isPets && safePreviewId === 'dog';
   const canCustomize =
-    (isCreativePreview || isAthletePreview || isRabbitPreview || isDogPreview) && owned;
+    (isCreativePreview ||
+      isAthletePreview ||
+      isBobPreview ||
+      isRabbitPreview ||
+      isDogPreview) &&
+    owned;
   const previewLoadout =
     isCreativePreview ? (customizing ? draftLoadout : profile.creativeLoadout) : undefined;
   const previewAthleteLoadout = isAthletePreview
@@ -153,12 +174,18 @@ export function StoreScreen({
       ? draftAthleteLoadout
       : profile.athleteLoadout
     : undefined;
+  const previewBobLoadout = isBobPreview
+    ? customizing
+      ? draftBobLoadout
+      : profile.bobLoadout
+    : undefined;
   const activeSlot = CREATIVE_SLOTS.find(s => s.id === slotId) ?? CREATIVE_SLOTS[0];
   const slotIndex = Math.max(0, CREATIVE_SLOTS.findIndex(s => s.id === activeSlot.id));
   const canSlotPrev = slotIndex > 0;
   const canSlotNext = slotIndex < CREATIVE_SLOTS.length - 1;
   const activeAthleteSlot = ATHLETE_SLOTS.find(s => s.id === athleteSlotId) ?? ATHLETE_SLOTS[0];
   const athleteSlotColors = colorsForSlot(activeAthleteSlot.id);
+  const isCompactColorEdit = isAthletePreview || isBobPreview;
 
   const selectItem = (id: string) => {
     if (id === safePreviewId) return;
@@ -213,6 +240,7 @@ export function StoreScreen({
     playMenuClick();
     setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
     setDraftAthleteLoadout(normalizeAthleteLoadout(profile.athleteLoadout));
+    setDraftBobLoadout(normalizeBobLoadout(profile.bobLoadout));
     setDraftRabbitVariant(profile.rabbitVariant);
     setDraftDogVariant(profile.dogVariant);
     setSlotId('face');
@@ -225,6 +253,7 @@ export function StoreScreen({
     if (isRabbitPreview) onSaveRabbitVariant(draftRabbitVariant);
     else if (isDogPreview) onSaveDogVariant(draftDogVariant);
     else if (isAthletePreview) onSaveAthleteLoadout(draftAthleteLoadout);
+    else if (isBobPreview) onSaveBobLoadout(draftBobLoadout);
     else onSaveCreativeLoadout(draftLoadout);
     setCustomizing(false);
   };
@@ -234,6 +263,7 @@ export function StoreScreen({
     if (isRabbitPreview) setDraftRabbitVariant('base');
     else if (isDogPreview) setDraftDogVariant('husky');
     else if (isAthletePreview) setDraftAthleteLoadout({ ...DEFAULT_ATHLETE_LOADOUT });
+    else if (isBobPreview) setDraftBobLoadout({ ...DEFAULT_BOB_LOADOUT });
     else setDraftLoadout({ ...DEFAULT_CREATIVE_LOADOUT });
   };
 
@@ -251,6 +281,7 @@ export function StoreScreen({
                 setCustomizing(false);
                 setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
                 setDraftAthleteLoadout(normalizeAthleteLoadout(profile.athleteLoadout));
+                setDraftBobLoadout(normalizeBobLoadout(profile.bobLoadout));
                 setDraftRabbitVariant(profile.rabbitVariant);
                 setDraftDogVariant(profile.dogVariant);
                 return;
@@ -323,6 +354,9 @@ export function StoreScreen({
                               ...(prevItem.id === 'athlete'
                                 ? { athleteLoadout: profile.athleteLoadout }
                                 : {}),
+                              ...(prevItem.id === 'bob'
+                                ? { bobLoadout: profile.bobLoadout }
+                                : {}),
                               ...(prevItem.id === 'bunny'
                                 ? { rabbitVariant: profile.rabbitVariant }
                                 : {}),
@@ -375,6 +409,7 @@ export function StoreScreen({
                             ...(previewAthleteLoadout
                               ? { athleteLoadout: previewAthleteLoadout }
                               : {}),
+                            ...(previewBobLoadout ? { bobLoadout: previewBobLoadout } : {}),
                             ...(isRabbitPreview
                               ? {
                                   rabbitVariant: customizing
@@ -434,6 +469,9 @@ export function StoreScreen({
                               ...(nextItem.id === 'athlete'
                                 ? { athleteLoadout: profile.athleteLoadout }
                                 : {}),
+                              ...(nextItem.id === 'bob'
+                                ? { bobLoadout: profile.bobLoadout }
+                                : {}),
                               ...(nextItem.id === 'bunny'
                                 ? { rabbitVariant: profile.rabbitVariant }
                                 : {}),
@@ -458,7 +496,7 @@ export function StoreScreen({
             {customizing ? (
               <div
                 className={`w-full max-w-lg px-2 flex flex-col ${
-                  isAthletePreview ? 'gap-1.5 shrink-0' : 'gap-3'
+                  isCompactColorEdit ? 'gap-1.5 shrink-0' : 'gap-3'
                 }`}
               >
                 {isRabbitPreview ? (
@@ -601,6 +639,31 @@ export function StoreScreen({
                       })}
                     </div>
                   </>
+                ) : isBobPreview ? (
+                  <div className="grid grid-cols-5 sm:grid-cols-8 gap-1.5">
+                    {BOB_COLORS.map(opt => {
+                      const active =
+                        draftBobLoadout.color.toLowerCase() === opt.hex.toLowerCase();
+                      return (
+                        <button
+                          key={opt.id}
+                          type="button"
+                          title={opt.label}
+                          aria-label={opt.label}
+                          onClick={() => {
+                            playMenuSelect();
+                            setDraftBobLoadout({ color: opt.hex });
+                          }}
+                          className={`h-9 rounded-lg border-2 transition-all ${
+                            active
+                              ? 'border-white ring-2 ring-[#38bdf8] scale-[1.03]'
+                              : 'border-[#3f4147] hover:border-[#6d6f78]'
+                          }`}
+                          style={{ background: opt.hex }}
+                        />
+                      );
+                    })}
+                  </div>
                 ) : (
                   <>
                 <div className="flex items-center gap-1.5">
@@ -691,12 +754,12 @@ export function StoreScreen({
                   </>
                 )}
 
-                <div className={`flex gap-2 ${isAthletePreview ? 'mt-0.5' : ''}`}>
+                <div className={`flex gap-2 ${isCompactColorEdit ? 'mt-0.5' : ''}`}>
                   <button
                     type="button"
                     onClick={resetCustomize}
                     className={`flex-1 rounded-2xl text-sm font-black border-[3px] border-[#3f4147] bg-[#2b2d31] text-[#dbdee1] shadow-[0_4px_0_#1a1b1f] ${
-                      isAthletePreview ? 'py-2' : 'py-3'
+                      isCompactColorEdit ? 'py-2' : 'py-3'
                     }`}
                   >
                     Reset
@@ -705,7 +768,7 @@ export function StoreScreen({
                     type="button"
                     onClick={saveCustomize}
                     className={`flex-[1.4] rounded-2xl text-sm font-black border-[3px] border-white/25 bg-[#5865f2] hover:bg-[#4752c4] text-white shadow-[0_5px_0_#2f3aa8] flex items-center justify-center gap-2 ${
-                      isAthletePreview ? 'py-2' : 'py-3'
+                      isCompactColorEdit ? 'py-2' : 'py-3'
                     }`}
                   >
                     <Check className="w-4 h-4" />
@@ -715,7 +778,9 @@ export function StoreScreen({
                         ? 'Save Breed'
                         : isAthletePreview
                           ? 'Save Kit'
-                          : 'Save Look'}
+                          : isBobPreview
+                            ? 'Save Color'
+                            : 'Save Look'}
                   </button>
                 </div>
               </div>
@@ -736,7 +801,9 @@ export function StoreScreen({
                             ? 'Choose Dog Breed'
                             : isAthletePreview
                               ? 'Customize Jersey'
-                              : 'Customize Kit'}
+                              : isBobPreview
+                                ? 'Pick Color'
+                                : 'Customize Kit'}
                       </button>
                     )}
                     <button

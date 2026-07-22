@@ -3,6 +3,7 @@ import type { CharacterId, DogVariantId, PetId, PlayerProfile, RabbitVariantId }
 import {
   CHARACTERS,
   DEFAULT_ATHLETE_LOADOUT,
+  DEFAULT_BOB_LOADOUT,
   DEFAULT_CHARACTER,
   DEFAULT_CREATIVE_LOADOUT,
   DEFAULT_DOG_VARIANT,
@@ -19,6 +20,7 @@ import {
   normalizeAthleteLoadout,
   type AthleteLoadout,
 } from '../types/athleteCharacter';
+import { normalizeBobLoadout, type BobLoadout } from '../types/bobCharacter';
 import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult } from './seasonMeta';
@@ -77,6 +79,7 @@ function defaultProfile(): PlayerProfile {
     unlockedPets: [],
     creativeLoadout: { ...DEFAULT_CREATIVE_LOADOUT },
     athleteLoadout: { ...DEFAULT_ATHLETE_LOADOUT },
+    bobLoadout: { ...DEFAULT_BOB_LOADOUT },
     rabbitVariant: DEFAULT_RABBIT_VARIANT,
     dogVariant: DEFAULT_DOG_VARIANT,
     cardCollection: {
@@ -118,6 +121,7 @@ export function loadProfile(): PlayerProfile {
 
     const creativeLoadout = normalizeCreativeLoadout(parsed.creativeLoadout);
     const athleteLoadout = normalizeAthleteLoadout(parsed.athleteLoadout);
+    const bobLoadout = normalizeBobLoadout(parsed.bobLoadout);
     const rabbitVariant = RABBIT_VARIANTS.some(variant => variant.id === parsed.rabbitVariant)
       ? (parsed.rabbitVariant as RabbitVariantId)
       : DEFAULT_RABBIT_VARIANT;
@@ -162,6 +166,7 @@ export function loadProfile(): PlayerProfile {
       unlockedPets,
       creativeLoadout,
       athleteLoadout,
+      bobLoadout,
       rabbitVariant,
       dogVariant,
       cardCollection,
@@ -345,6 +350,14 @@ export function saveAthleteLoadout(loadout: AthleteLoadout): PlayerProfile {
   const profile = loadProfile();
   if (!profile.unlockedCharacters.includes('athlete')) return profile;
   profile.athleteLoadout = normalizeAthleteLoadout(loadout);
+  saveProfile(profile);
+  return profile;
+}
+
+export function saveBobLoadout(loadout: BobLoadout): PlayerProfile {
+  const profile = loadProfile();
+  if (!profile.unlockedCharacters.includes('bob')) return profile;
+  profile.bobLoadout = normalizeBobLoadout(loadout);
   saveProfile(profile);
   return profile;
 }

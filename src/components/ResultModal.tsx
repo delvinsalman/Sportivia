@@ -10,6 +10,7 @@ import { getCharacterDef, getPetDef } from '../types/profile';
 import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
+import type { BobLoadout } from '../types/bobCharacter';
 
 interface ResultModalProps {
   result: GameResult;
@@ -17,6 +18,7 @@ interface ResultModalProps {
   petId?: PetId | null;
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
+  bobLoadout?: BobLoadout;
   rabbitVariant?: RabbitVariantId;
   dogVariant?: DogVariantId;
   onPlayAgain: () => void;
@@ -38,6 +40,7 @@ export function ResultModal({
   petId,
   creativeLoadout,
   athleteLoadout,
+  bobLoadout,
   rabbitVariant,
   dogVariant,
   onPlayAgain,
@@ -126,6 +129,7 @@ export function ResultModal({
                 {...(characterId === 'athlete' && athleteLoadout
                   ? { athleteLoadout }
                   : {})}
+                {...(characterId === 'bob' && bobLoadout ? { bobLoadout } : {})}
                 {...(characterId === 'bunny' && rabbitVariant
                   ? { rabbitVariant }
                   : {})}
