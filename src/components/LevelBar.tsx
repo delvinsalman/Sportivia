@@ -100,12 +100,12 @@ export function HomeCoinMeter({ coins }: { coins: number }) {
   );
 }
 
-/** Live player count — same shell as the coin meter, green live accent. */
+/** Live player count — same shell as the coin meter, neutral chrome. */
 export function HomeOnlineMeter({ online }: { online?: number | null }) {
   const live = typeof online === 'number';
   return (
     <div
-      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border-2 border-[#23a559]/85 bg-gradient-to-b from-[#14291c] to-[#0c1410] px-2.5 shadow-[0_3px_0_#14532d] sm:h-11 sm:gap-2.5 sm:px-3"
+      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border-2 border-[#3f4147] bg-gradient-to-b from-[#2a2c33] to-[#14151a] px-2.5 shadow-[0_3px_0_#0c0d0f] sm:h-11 sm:gap-2.5 sm:px-3"
       title="Players online right now"
     >
       <span className="relative flex h-2.5 w-2.5 shrink-0">
@@ -120,8 +120,8 @@ export function HomeOnlineMeter({ online }: { online?: number | null }) {
           }`}
         />
       </span>
-      <Users className="h-4 w-4 shrink-0 text-[#4ade80]" strokeWidth={2.5} />
-      <span className="min-w-[1ch] font-mono text-sm font-black tabular-nums leading-none tracking-tight text-[#86efac] sm:text-[15px]">
+      <Users className="h-4 w-4 shrink-0 text-[#b5bac1]" strokeWidth={2.5} />
+      <span className="min-w-[1ch] font-mono text-sm font-black tabular-nums leading-none tracking-tight text-[#f2f3f5] sm:text-[15px]">
         {live ? online : '…'}
       </span>
     </div>
