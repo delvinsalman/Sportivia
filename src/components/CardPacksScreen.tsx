@@ -1181,21 +1181,16 @@ export function CardPacksScreen({
                       initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05, duration: 0.28 }}
-                      className="game-pack-frame group relative"
+                      className="game-pack-panel group relative px-5 py-4 sm:px-6 sm:py-4"
                       style={
                         {
-                          '--pack-line': `${accent}99`,
-                          '--pack-line-hot': `${accent}ee`,
+                          '--pack-line': `${accent}88`,
+                          '--pack-line-hot': `${accent}cc`,
+                          background: `linear-gradient(165deg, ${accent}2e 0%, ${deep}b8 42%, rgba(12, 13, 16, 0.72) 100%)`,
+                          boxShadow: `0 4px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 ${glow}22`,
                         } as CSSProperties
                       }
                     >
-                      <div
-                        className="game-pack-panel game-pack-scoop relative px-5 py-4 sm:px-6 sm:py-4"
-                        style={{
-                          background: `linear-gradient(165deg, ${accent}2e 0%, ${deep}b8 42%, rgba(12, 13, 16, 0.72) 100%)`,
-                          boxShadow: `inset 0 1px 0 ${glow}22`,
-                        }}
-                      >
                       <div className="relative z-10 flex min-h-[250px] items-center justify-center overflow-hidden py-0 sm:min-h-[255px]">
                         <PackArt pack={pack} sport={sport} interactive />
                       </div>
@@ -1217,7 +1212,6 @@ export function CardPacksScreen({
                           <CoinIcon size="sm" />
                           {affordable ? pack.cost.toLocaleString() : 'Need more coins'}
                         </button>
-                      </div>
                       </div>
                     </motion.article>
                   );
