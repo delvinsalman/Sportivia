@@ -2,12 +2,12 @@ import { Lock } from 'lucide-react';
 import type { CharacterDef, CharacterId, PlayerProfile } from '../types/profile';
 import { CharacterPodium } from './3d/CharacterPodium';
 import {
+  CARD_STAT_KEYS,
+  CARD_STAT_LABELS,
   cardTierColors,
   cardTierLabel,
   characterCardStats,
   characterOverall,
-  FEATURED_STAT_KEYS,
-  FEATURED_STAT_LABELS,
   getCharacterLevel,
 } from '../lib/characterCards';
 import type { CreativeLoadout } from '../types/creativeCharacter';
@@ -46,8 +46,8 @@ export function CharacterFutCard({
 }: CharacterFutCardProps) {
   const owned = profile.unlockedCharacters.includes(character.id);
   const level = getCharacterLevel(profile, character.id);
-  const ovr = characterOverall(character, Math.max(1, level));
-  const stats = characterCardStats(character, Math.max(1, level));
+  const stats = characterCardStats(character, profile);
+  const ovr = characterOverall(character, profile);
   const tier = cardTierColors(ovr);
   const ring = accent ?? character.accent;
   const label = owned ? cardTierLabel(ovr) : 'Locked';
@@ -96,7 +96,7 @@ export function CharacterFutCard({
 
           <div
             className={`relative mx-auto mt-1 w-full overflow-hidden rounded-lg ${
-              compact ? 'h-[4.25rem]' : 'h-[7.5rem] rounded-xl'
+              compact ? 'h-[3.6rem]' : 'h-[7.5rem] rounded-xl'
             }`}
           >
             {liveModel && owned ? (
@@ -104,7 +104,7 @@ export function CharacterFutCard({
                 <CharacterPodium
                   characterId={character.id}
                   accent={character.accent}
-                  height={compact ? 100 : 150}
+                  height={compact ? 90 : 150}
                   bare
                   hidePodium
                   className="h-full w-full"
@@ -157,10 +157,10 @@ export function CharacterFutCard({
           </p>
 
           <div className={`mt-1 grid grid-cols-2 gap-x-2 ${compact ? 'gap-y-0 px-0.5' : 'gap-y-0.5 px-0.5'}`}>
-            {FEATURED_STAT_KEYS.map(key => (
+            {CARD_STAT_KEYS.map(key => (
               <div key={key} className="flex items-baseline justify-between gap-1">
                 <span className="text-[7px] font-bold uppercase tracking-wider text-white/45">
-                  {FEATURED_STAT_LABELS[key]}
+                  {CARD_STAT_LABELS[key]}
                 </span>
                 <span
                   className={`font-mono font-black text-[#f2f3f5] ${compact ? 'text-[10px]' : 'text-[11px]'}`}

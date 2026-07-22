@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Lock, Sparkles } from 'lucide-react';
+import { ArrowLeft, Lock, Plus, Search, Sparkles } from 'lucide-react';
 import { HomeCoinMeter } from './LevelBar';
 import { SportBackground } from './SportBackground';
 import { CharacterPodium } from './3d/CharacterPodium';
@@ -8,13 +8,16 @@ import type { Sport } from '../types';
 import type { CharacterId, PlayerProfile } from '../types/profile';
 import { CHARACTERS, getCharacterDef } from '../types/profile';
 import {
-  canUpgradeCharacter,
+  CARD_CATEGORY_OPTIONS,
+  CARD_STAT_KEYS,
+  CARD_STAT_LABELS,
+  canUpgradeCharacterStat,
   characterCardStats,
   characterOverall,
-  FEATURED_STAT_KEYS,
-  FEATURED_STAT_LABELS,
   getCharacterLevel,
-  MAX_CHARACTER_LEVEL,
+  matchesCardCategory,
+  type CardCategoryFilter,
+  type CardStatKey,
 } from '../lib/characterCards';
 import { playMenuBack, playMenuClick, playMenuConfirm, playMenuSelect } from '../lib/menuAudio';
 
@@ -23,7 +26,7 @@ interface CharacterCardsScreenProps {
   profile: PlayerProfile;
   onBack: () => void;
   onPurchaseCharacter: (id: CharacterId) => void;
-  onUpgradeCharacter: (id: CharacterId) => void;
+  onUpgradeCharacterStat: (id: CharacterId, stat: CardStatKey) => void;
   onEquipCharacter: (id: CharacterId) => void;
 }
 
@@ -32,7 +35,7 @@ export function CharacterCardsScreen({
   profile,
   onBack,
   onPurchaseCharacter,
-  onUpgradeCharacter,
+  onUpgradeCharacterStat,
   onEquipCharacter,
 }: CharacterCardsScreenProps) {
   const [selectedId, setSelectedId] = useState<CharacterId>(() =>
@@ -40,19 +43,43 @@ export function CharacterCardsScreen({
       ? profile.equippedCharacter
       : CHARACTERS[0].id,
   );
+  const [query, setQuery] = useState('');
+  const [category, setCategory] = useState<CardCategoryFilter>('all');
 
   const character = useMemo(() => getCharacterDef(selectedId), [selectedId]);
   const owned = profile.unlockedCharacters.includes(selectedId);
   const equipped = profile.equippedCharacter === selectedId;
   const level = getCharacterLevel(profile, selectedId);
-  const ovr = characterOverall(character, Math.max(1, level || 1));
-  const stats = characterCardStats(character, Math.max(1, level || 1));
-  const upgrade = canUpgradeCharacter(profile, selectedId);
+  const stats = characterCardStats(character, profile);
+  const ovr = characterOverall(character, profile);
   const canAfford = character.price <= 0 || profile.coins >= character.price;
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return CHARACTERS.filter(item => {
+      if (!matchesCardCategory(item, profile, category)) return false;
+      if (!q) return true;
+      return (
+        item.name.toLowerCase().includes(q) ||
+        item.tagline.toLowerCase().includes(q) ||
+        item.id.toLowerCase().includes(q)
+      );
+    });
+  }, [category, profile, query]);
 
   function select(id: CharacterId) {
     playMenuSelect();
     setSelectedId(id);
+  }
+
+  function upgradeStat(stat: CardStatKey) {
+    const check = canUpgradeCharacterStat(profile, character, stat);
+    if (!check.ok) {
+      playMenuClick();
+      return;
+    }
+    playMenuConfirm();
+    onUpgradeCharacterStat(selectedId, stat);
   }
 
   return (
@@ -80,7 +107,6 @@ export function CharacterCardsScreen({
         </header>
 
         <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 lg:flex-row lg:items-stretch lg:gap-6">
-          {/* Featured card — centered in its column */}
           <div className="flex w-full shrink-0 flex-col items-center justify-center lg:w-[22.5rem] xl:w-[24rem]">
             <div className="w-full max-w-[20rem] sm:max-w-[22rem]">
               <div className="relative overflow-hidden rounded-[1.35rem] border-[3px] border-[#3f4147] bg-[#12141a]/90 shadow-[0_6px_0_#0a0b0d]">
@@ -105,11 +131,11 @@ export function CharacterCardsScreen({
                     </p>
                   </div>
 
-                  <div className="relative mx-auto mt-0.5 h-[180px] w-full sm:h-[210px]">
+                  <div className="relative mx-auto mt-0.5 h-[150px] w-full sm:h-[175px]">
                     <CharacterPodium
                       characterId={selectedId}
                       accent={character.accent}
-                      height={210}
+                      height={175}
                       bare
                       hero
                       sport={sport}
@@ -138,17 +164,46 @@ export function CharacterCardsScreen({
                     <p className="text-lg font-black uppercase tracking-wide text-[#f2f3f5] sm:text-xl">
                       {character.name}
                     </p>
-                    <div className="mt-2.5 grid grid-cols-2 gap-x-4 gap-y-1 px-2">
-                      {FEATURED_STAT_KEYS.map(key => (
-                        <div key={key} className="flex items-baseline justify-between gap-2">
-                          <span className="text-[10px] font-bold uppercase tracking-wider text-white/45">
-                            {FEATURED_STAT_LABELS[key]}
-                          </span>
-                          <span className="font-mono text-base font-black text-[#f2f3f5]">
-                            {owned ? stats[key] : '—'}
-                          </span>
-                        </div>
-                      ))}
+                    <div className="mt-2.5 grid grid-cols-2 gap-x-3 gap-y-1.5 px-0.5">
+                      {CARD_STAT_KEYS.map(key => {
+                        const check = owned
+                          ? canUpgradeCharacterStat(profile, character, key)
+                          : { ok: false, cost: 0, reason: 'Locked' as const };
+                        return (
+                          <div
+                            key={key}
+                            className="flex items-center justify-between gap-1 rounded-lg bg-black/25 px-2 py-1.5 border border-white/5"
+                          >
+                            <div className="min-w-0 text-left">
+                              <p className="text-[9px] font-bold uppercase tracking-wider text-white/45">
+                                {CARD_STAT_LABELS[key]}
+                              </p>
+                              <p className="font-mono text-base font-black leading-none text-[#f2f3f5]">
+                                {owned ? stats[key] : '—'}
+                              </p>
+                            </div>
+                            {owned && (
+                              <button
+                                type="button"
+                                title={
+                                  check.ok
+                                    ? `+1 · ${check.cost.toLocaleString()} coins`
+                                    : check.reason
+                                }
+                                onClick={() => upgradeStat(key)}
+                                disabled={!check.ok}
+                                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-2 transition-all ${
+                                  check.ok
+                                    ? 'border-[#23a559]/80 bg-[#23a559]/25 text-[#4ade80] hover:bg-[#23a559]/40'
+                                    : 'border-[#3f4147] bg-[#1e1f22] text-[#5c5e66] cursor-not-allowed'
+                                }`}
+                              >
+                                <Plus className="h-4 w-4" strokeWidth={3} />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -156,50 +211,25 @@ export function CharacterCardsScreen({
 
               <div className="mt-2.5 space-y-2">
                 {owned ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (equipped) {
-                          playMenuClick();
-                          return;
-                        }
-                        playMenuConfirm();
-                        onEquipCharacter(selectedId);
-                      }}
-                      disabled={equipped}
-                      className={`w-full py-3 rounded-2xl text-sm font-black border-[3px] transition-all ${
-                        equipped
-                          ? 'bg-[#2b2d31] text-[#949ba4] cursor-default border-[#3f4147] shadow-[0_4px_0_#1a1b1f]'
-                          : 'bg-[#5865f2] hover:bg-[#4752c4] text-white border-white/25 shadow-[0_5px_0_#2f3aa8] hover:translate-y-[1px] hover:shadow-[0_4px_0_#2f3aa8]'
-                      }`}
-                    >
-                      {equipped ? 'Equipped' : 'Equip'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!upgrade.ok) {
-                          playMenuClick();
-                          return;
-                        }
-                        playMenuConfirm();
-                        onUpgradeCharacter(selectedId);
-                      }}
-                      disabled={!upgrade.ok}
-                      className={`w-full py-2.5 rounded-2xl text-sm font-black border-[3px] transition-all ${
-                        upgrade.ok
-                          ? 'bg-[#23a559] hover:bg-[#1e8f4c] text-white border-white/25 shadow-[0_5px_0_#14532d] hover:translate-y-[1px] hover:shadow-[0_4px_0_#14532d]'
-                          : 'bg-[#2b2d31] text-[#5c5e66] cursor-not-allowed border-[#3f4147] shadow-[0_4px_0_#1a1b1f]'
-                      }`}
-                    >
-                      {level >= MAX_CHARACTER_LEVEL
-                        ? 'Max Level'
-                        : upgrade.ok
-                          ? `Upgrade · ${upgrade.cost.toLocaleString()} coins`
-                          : upgrade.reason ?? 'Upgrade'}
-                    </button>
-                  </>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (equipped) {
+                        playMenuClick();
+                        return;
+                      }
+                      playMenuConfirm();
+                      onEquipCharacter(selectedId);
+                    }}
+                    disabled={equipped}
+                    className={`w-full py-3 rounded-2xl text-sm font-black border-[3px] transition-all ${
+                      equipped
+                        ? 'bg-[#2b2d31] text-[#949ba4] cursor-default border-[#3f4147] shadow-[0_4px_0_#1a1b1f]'
+                        : 'bg-[#5865f2] hover:bg-[#4752c4] text-white border-white/25 shadow-[0_5px_0_#2f3aa8] hover:translate-y-[1px] hover:shadow-[0_4px_0_#2f3aa8]'
+                    }`}
+                  >
+                    {equipped ? 'Equipped' : 'Equip'}
+                  </button>
                 ) : (
                   <button
                     type="button"
@@ -234,31 +264,82 @@ export function CharacterCardsScreen({
                   </button>
                 )}
                 <p className="px-1 text-center text-[10px] font-semibold leading-snug text-[#6d6f78]">
-                  Upgrade cards to raise stats. Unlock looks in Store.
+                  Upgrade each stat to raise overall. Unlock looks in Store.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Collection — fills remaining height; scrolls inside the pane only */}
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-            <p className="mb-2 shrink-0 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-[#949ba4] lg:text-left">
-              Your collection
-            </p>
-            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-0.5 [scrollbar-width:thin]">
-              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-2.5 xl:grid-cols-4">
-                {CHARACTERS.map(item => (
-                  <CharacterFutCard
-                    key={item.id}
-                    character={item}
-                    profile={profile}
-                    selected={selectedId === item.id}
-                    compact
-                    accent={item.accent}
-                    onSelect={select}
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+            <div className="mb-2.5 shrink-0 space-y-2.5">
+              <p className="text-center text-lg font-black uppercase tracking-[0.12em] text-[#f2f3f5] sm:text-xl lg:text-left">
+                Your collection
+              </p>
+
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <label className="relative min-w-0 flex-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[#6d6f78]" />
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder="Search skins…"
+                    className="w-full rounded-xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] py-2 pl-9 pr-3 text-sm font-semibold text-[#f2f3f5] placeholder:text-[#6d6f78] outline-none focus:border-[#5c5e66]"
                   />
-                ))}
+                </label>
               </div>
+
+              <div className="flex gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none]">
+                {CARD_CATEGORY_OPTIONS.map(opt => {
+                  const active = category === opt.id;
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      onClick={() => {
+                        playMenuClick();
+                        setCategory(opt.id);
+                      }}
+                      className={`shrink-0 rounded-full border-[2.5px] px-3 py-1 text-[11px] font-black uppercase tracking-wide transition-all ${
+                        active
+                          ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232]'
+                          : 'border-[#3f4147] bg-[#1e1f22] text-[#949ba4] hover:text-[#f2f3f5]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Exactly ~2 rows visible; scroll for the rest */}
+            <div
+              className="overflow-y-auto overscroll-contain pr-0.5 [scrollbar-width:thin]"
+              style={{
+                // Two compact rows visible; scroll for the rest of the collection.
+                maxHeight: 'calc(2 * 12.75rem + 0.625rem)',
+              }}
+            >
+              {filtered.length === 0 ? (
+                <p className="rounded-2xl border-[2.5px] border-[#3f4147] bg-[#1e1f22]/70 px-4 py-8 text-center text-sm font-semibold text-[#6d6f78]">
+                  No skins match that filter.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 xl:grid-cols-4">
+                  {filtered.map(item => (
+                    <CharacterFutCard
+                      key={item.id}
+                      character={item}
+                      profile={profile}
+                      selected={selectedId === item.id}
+                      compact
+                      accent={item.accent}
+                      onSelect={select}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>

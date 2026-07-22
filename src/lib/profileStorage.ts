@@ -24,7 +24,7 @@ import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult, grantDuelWinAchievement } from './seasonMeta';
 import { pickRandomPlayerName } from './playerNames';
-import { canUpgradeCharacter } from './characterCards';
+import { canUpgradeCharacterStat, type CardStatKey } from './characterCards';
 
 const PROFILE_KEY = 'gridiq-profile-v4';
 const PAID_SKINS_MIGRATION_KEY = 'gridiq-paid-skins-v1';
@@ -75,7 +75,7 @@ function defaultProfile(): PlayerProfile {
     bobLoadout: { ...DEFAULT_BOB_LOADOUT },
     rabbitVariant: DEFAULT_RABBIT_VARIANT,
     dogVariant: DEFAULT_DOG_VARIANT,
-    characterLevels: {},
+    characterStatLevels: {},
     stats: loadStats(),
   };
 }
@@ -118,16 +118,41 @@ export function loadProfile(): PlayerProfile {
       ? (parsed.dogVariant as DogVariantId)
       : DEFAULT_DOG_VARIANT;
 
-    const characterLevels: Partial<Record<CharacterId, number>> = {};
-    if (parsed.characterLevels && typeof parsed.characterLevels === 'object') {
-      for (const [key, value] of Object.entries(parsed.characterLevels)) {
+    const STAT_KEYS = ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const;
+    const characterStatLevels: PlayerProfile['characterStatLevels'] = {};
+    const parsedStatLevels = (parsed as { characterStatLevels?: unknown }).characterStatLevels;
+    if (parsedStatLevels && typeof parsedStatLevels === 'object') {
+      for (const [key, value] of Object.entries(parsedStatLevels as Record<string, unknown>)) {
         const id = migrateCharacterId(key);
-        if (!id || typeof value !== 'number') continue;
-        characterLevels[id] = Math.max(1, Math.min(15, Math.floor(value)));
+        if (!id || !value || typeof value !== 'object') continue;
+        const next: Partial<Record<(typeof STAT_KEYS)[number], number>> = {};
+        for (const stat of STAT_KEYS) {
+          const raw = (value as Record<string, unknown>)[stat];
+          if (typeof raw !== 'number') continue;
+          next[stat] = Math.max(0, Math.min(15, Math.floor(raw)));
+        }
+        characterStatLevels[id] = next;
       }
     }
-    for (const id of unlocked) {
-      if (characterLevels[id] == null) characterLevels[id] = 1;
+    // Migrate old overall levels into a balanced per-stat bonus so progress isn't lost.
+    const legacyLevels = (parsed as { characterLevels?: unknown }).characterLevels;
+    if (legacyLevels && typeof legacyLevels === 'object') {
+      for (const [key, value] of Object.entries(legacyLevels as Record<string, unknown>)) {
+        const id = migrateCharacterId(key);
+        if (!id || typeof value !== 'number') continue;
+        if (characterStatLevels[id]) continue;
+        const overall = Math.max(1, Math.min(15, Math.floor(value)));
+        const bonus = Math.max(0, overall - 1);
+        if (bonus <= 0) continue;
+        characterStatLevels[id] = {
+          pac: bonus,
+          sho: bonus,
+          pas: bonus,
+          dri: bonus,
+          def: bonus,
+          phy: bonus,
+        };
+      }
     }
 
     const profile: PlayerProfile = {
@@ -145,7 +170,7 @@ export function loadProfile(): PlayerProfile {
       bobLoadout,
       rabbitVariant,
       dogVariant,
-      characterLevels,
+      characterStatLevels,
       stats: loadStats(),
     };
 
@@ -315,20 +340,29 @@ export function purchaseCharacter(id: CharacterId): { ok: boolean; profile: Play
 
   if (def.price > 0) profile.coins -= def.price;
   profile.unlockedCharacters = [...profile.unlockedCharacters, id];
-  profile.characterLevels = { ...profile.characterLevels, [id]: 1 };
+  profile.characterStatLevels = { ...profile.characterStatLevels, [id]: {} };
   profile.equippedCharacter = id;
   saveProfile(profile);
   return { ok: true, profile };
 }
 
-export function upgradeCharacter(id: CharacterId): { ok: boolean; profile: PlayerProfile; error?: string } {
+export function upgradeCharacterStat(
+  id: CharacterId,
+  stat: CardStatKey,
+): { ok: boolean; profile: PlayerProfile; error?: string } {
   const profile = loadProfile();
-  const check = canUpgradeCharacter(profile, id);
+  const def = CHARACTERS.find(c => c.id === id);
+  if (!def) return { ok: false, profile, error: 'Unknown character' };
+  const check = canUpgradeCharacterStat(profile, def, stat);
   if (!check.ok) {
     return { ok: false, profile, error: check.reason ?? 'Cannot upgrade' };
   }
   profile.coins -= check.cost;
-  profile.characterLevels = { ...profile.characterLevels, [id]: check.level + 1 };
+  const prev = profile.characterStatLevels?.[id] ?? {};
+  profile.characterStatLevels = {
+    ...profile.characterStatLevels,
+    [id]: { ...prev, [stat]: check.level + 1 },
+  };
   saveProfile(profile);
   return { ok: true, profile };
 }

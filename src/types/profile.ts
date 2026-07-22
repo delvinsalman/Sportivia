@@ -116,8 +116,8 @@ export interface PlayerProfile {
   rabbitVariant: RabbitVariantId;
   /** Selected breed included with the Dog pet */
   dogVariant: DogVariantId;
-  /** Per-skin upgrade level (1–15). Missing keys mean level 1 when unlocked. */
-  characterLevels: Partial<Record<CharacterId, number>>;
+  /** Per-skin per-stat upgrade levels (0–15 each). Overall is derived from the six stats. */
+  characterStatLevels: Partial<Record<CharacterId, Partial<Record<'pac' | 'sho' | 'pas' | 'dri' | 'def' | 'phy', number>>>>;
   stats: PlayerStats;
 }
 

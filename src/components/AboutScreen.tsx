@@ -90,7 +90,7 @@ const GUIDE: Array<{
   {
     eyebrow: 'Cards',
     title: 'Upgrade your skin cards',
-    body: 'Every skin has a collectible card with overall rating and six attributes. Spend coins to level them up. In-game perks come later — unlock looks in the Store.',
+    body: 'Every skin has a six-stat card. Spend coins to upgrade PAC, SHO, PAS, DRI, DEF, and PHY one by one — overall rises with them. Unlock looks in the Store.',
     Icon: LayoutGrid,
     glare: 'rgba(168, 85, 247, 0.14)',
     demo: '',
