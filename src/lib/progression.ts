@@ -21,7 +21,8 @@ export function xpForLevel(level: number): number {
 }
 
 export function xpToNextLevel(level: number): number {
-  return 100 + (level - 1) * 50;
+  // Steeper curve so early levels take a few runs, not one.
+  return 175 + (level - 1) * 85;
 }
 
 export function levelFromXp(xp: number): number {
@@ -77,34 +78,34 @@ export function milestoneBonusBetween(previousLevel: number, newLevel: number): 
 
 export function computeGameRewards(result: GameResult): GameRewards {
   let coins = Math.floor(result.score / 5) + result.correct * 3;
-  let xp = result.correct * 12 + Math.floor(result.score / 8);
+  let xp = result.correct * 8 + Math.floor(result.score / 12);
 
   if (result.mode === 'daily') {
     coins += 40;
-    xp += 30;
+    xp += 18;
   }
   if (result.mode === 'timed') {
     coins += 25;
-    xp += 20;
+    xp += 12;
   }
   if (result.mode === 'duel') {
     coins += 35;
-    xp += 25;
+    xp += 15;
   }
   if (result.mode === 'bot') {
     coins += 20;
-    xp += 20;
+    xp += 12;
   }
   if (result.perfectBoard) {
     coins += 100;
-    xp += 80;
+    xp += 45;
   }
   if (result.correct >= 5) {
     coins += 15;
   }
 
   coins = Math.max(10, coins);
-  xp = Math.max(15, xp);
+  xp = Math.max(10, xp);
 
   return {
     coinsEarned: coins,

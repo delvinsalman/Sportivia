@@ -51,12 +51,12 @@ export interface QuestDef {
 }
 
 export const QUEST_POOL: QuestDef[] = [
-  { id: 'play_daily', title: 'Show Up', detail: 'Finish today’s Daily', target: 1, coinReward: 60, xpReward: 40 },
-  { id: 'correct_pack', title: 'Board Control', detail: 'Get 10 correct answers', target: 10, coinReward: 80, xpReward: 50 },
-  { id: 'score_climb', title: 'Big Score', detail: 'Score 150+ in one Ranked run', target: 1, coinReward: 90, xpReward: 55 },
-  { id: 'collect_fresh', title: 'New Faces', detail: 'Add 4 new players to your collection', target: 4, coinReward: 70, xpReward: 45 },
-  { id: 'ranked_finish', title: 'Climb Time', detail: 'Finish 2 Ranked games', target: 2, coinReward: 85, xpReward: 50 },
-  { id: 'duel_finish', title: 'Face-Off', detail: 'Finish a 1v1 Duel', target: 1, coinReward: 100, xpReward: 60 },
+  { id: 'play_daily', title: 'Show Up', detail: 'Finish today’s Daily', target: 1, coinReward: 60, xpReward: 25 },
+  { id: 'correct_pack', title: 'Board Control', detail: 'Get 10 correct answers', target: 10, coinReward: 80, xpReward: 35 },
+  { id: 'score_climb', title: 'Big Score', detail: 'Score 150+ in one Ranked run', target: 1, coinReward: 90, xpReward: 38 },
+  { id: 'collect_fresh', title: 'New Faces', detail: 'Add 4 new players to your collection', target: 4, coinReward: 70, xpReward: 30 },
+  { id: 'ranked_finish', title: 'Climb Time', detail: 'Finish 2 Ranked games', target: 2, coinReward: 85, xpReward: 35 },
+  { id: 'duel_finish', title: 'Face-Off', detail: 'Finish a 1v1 Duel', target: 1, coinReward: 100, xpReward: 40 },
 ];
 
 export interface QuestProgress {
