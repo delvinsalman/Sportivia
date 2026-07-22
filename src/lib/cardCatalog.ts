@@ -260,19 +260,8 @@ function rarityFromScore(
 ): CardRarity {
   if (LEGENDARY_IDS[sport].has(id)) return 'legendary';
   if (starRating !== undefined) {
-    // NFL/MLB star tables are dense — use higher bars so packs still have commons.
-    if (sport === 'football' || sport === 'baseball') {
-      if (starRating >= 92) return 'epic';
-      if (starRating >= 84) return 'rare';
-      return 'common';
-    }
     if (starRating >= 88) return 'epic';
     if (starRating >= 80) return 'rare';
-    return 'common';
-  }
-  if (sport === 'football' || sport === 'baseball') {
-    if (score >= 10) return 'epic';
-    if (score >= 5) return 'rare';
     return 'common';
   }
   if (score >= 8) return 'epic';
@@ -321,12 +310,11 @@ function footballRatingFloor(player: {
   superBowls: number;
 }): number {
   let floor = 68;
-  if (player.mvp) floor = Math.max(floor, 92);
-  if (player.superBowls >= 3) floor = Math.max(floor, 90);
-  else if (player.superBowls >= 2) floor = Math.max(floor, 86);
-  else if (player.superBowls >= 1) floor = Math.max(floor, 82);
-  // Pro Bowl alone keeps players in common/rare territory for pack variety
-  if (player.proBowl) floor = Math.max(floor, 76);
+  if (player.mvp) floor = Math.max(floor, 94);
+  if (player.superBowls >= 3) floor = Math.max(floor, 93);
+  else if (player.superBowls >= 2) floor = Math.max(floor, 90);
+  else if (player.superBowls >= 1) floor = Math.max(floor, 86);
+  if (player.proBowl) floor = Math.max(floor, 85);
   return floor;
 }
 
@@ -364,23 +352,17 @@ function soccerRatingFloor(player: { trophies: string[]; decades: string[] }): n
 function baseballRatingFloor(player: { awards: string[]; battingTitle: boolean }): number {
   const joined = player.awards.join(' ');
   let floor = 68;
-  if (/MVP/i.test(joined)) floor = Math.max(floor, 90);
-  if (/Cy Young/i.test(joined)) floor = Math.max(floor, 90);
-  if (/World Series/i.test(joined) && /MVP|Cy Young/i.test(joined)) floor = Math.max(floor, 92);
-  else if (/World Series/i.test(joined)) floor = Math.max(floor, 80);
-  // All-Star alone should not force rare+
-  if (/All-Star/i.test(joined)) floor = Math.max(floor, 74);
-  if (player.battingTitle) floor = Math.max(floor, 82);
+  if (/MVP/i.test(joined)) floor = Math.max(floor, 92);
+  if (/Cy Young/i.test(joined)) floor = Math.max(floor, 92);
+  if (/World Series/i.test(joined) && /MVP|Cy Young/i.test(joined)) floor = Math.max(floor, 94);
+  else if (/World Series/i.test(joined)) floor = Math.max(floor, 84);
+  if (/All-Star/i.test(joined)) floor = Math.max(floor, 82);
+  if (player.battingTitle) floor = Math.max(floor, 86);
   return floor;
 }
 
 function rarityFromRating(sport: Sport, id: string, rating: number): CardRarity {
   if (LEGENDARY_IDS[sport].has(id)) return 'legendary';
-  if (sport === 'football' || sport === 'baseball') {
-    if (rating >= 92) return 'epic';
-    if (rating >= 84) return 'rare';
-    return 'common';
-  }
   if (rating >= 88) return 'epic';
   if (rating >= 80) return 'rare';
   return 'common';
@@ -392,28 +374,17 @@ function resolveCardRating(
   score: number,
   ratingFloor: number,
 ): { rating: number; rarity: CardRarity } {
-  const rawManual = STAR_RATINGS[sport][id];
-  // NFL/MLB star tables rate almost everyone highly — only force 90+ into epic/rare.
-  const manual =
-    (sport === 'football' || sport === 'baseball') &&
-    rawManual != null &&
-    rawManual < 90
-      ? undefined
-      : rawManual;
+  const manual = STAR_RATINGS[sport][id];
   const seedRarity = rarityFromScore(sport, id, score, manual);
   const hashRating = ratingFor(sport, seedRarity, score, id);
-  const poolRating = Math.max(manual ?? hashRating, ratingFloor);
-  // Display rating can still show the hand-tuned number on the card face.
-  const displayRating = Math.max(poolRating, rawManual ?? 0);
+  let rating = Math.max(manual ?? hashRating, ratingFloor);
 
   if (LEGENDARY_IDS[sport].has(id)) {
-    return {
-      rating: Math.max(displayRating, rawManual ?? 94),
-      rarity: 'legendary',
-    };
+    rating = manual ?? Math.max(rating, 94);
+    return { rating, rarity: 'legendary' };
   }
 
-  return { rating: displayRating, rarity: rarityFromRating(sport, id, poolRating) };
+  return { rating, rarity: rarityFromRating(sport, id, rating) };
 }
 
 function latestEra(decades: string[]): string {
