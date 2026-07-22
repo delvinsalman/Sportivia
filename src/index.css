@@ -509,7 +509,7 @@ button,
 
 .game-pack-panel:hover {
   border-color: var(--pack-line-hot, rgba(255, 255, 255, 0.4));
-  filter: brightness(1.04);
+  filter: brightness(1.08);
   box-shadow:
     0 10px 28px rgba(0, 0, 0, 0.34),
     0 0 0 1px rgba(255, 255, 255, 0.06);

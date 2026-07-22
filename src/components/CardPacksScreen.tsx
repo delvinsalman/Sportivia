@@ -1184,10 +1184,10 @@ export function CardPacksScreen({
                       className="game-pack-panel group relative px-5 py-4 sm:px-6 sm:py-4"
                       style={
                         {
-                          '--pack-line': `${accent}88`,
-                          '--pack-line-hot': `${accent}cc`,
-                          background: `linear-gradient(165deg, ${accent}2e 0%, ${deep}b8 42%, rgba(12, 13, 16, 0.72) 100%)`,
-                          boxShadow: `0 4px 18px rgba(0, 0, 0, 0.28), inset 0 1px 0 ${glow}22`,
+                          '--pack-line': `${accent}bb`,
+                          '--pack-line-hot': `${accent}ff`,
+                          background: `linear-gradient(165deg, ${accent}52 0%, ${deep}e0 40%, rgba(12, 13, 16, 0.62) 100%)`,
+                          boxShadow: `0 4px 18px rgba(0, 0, 0, 0.28), 0 0 28px ${accent}22, inset 0 1px 0 ${glow}44`,
                         } as CSSProperties
                       }
                     >
