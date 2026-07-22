@@ -100,6 +100,34 @@ export function HomeCoinMeter({ coins }: { coins: number }) {
   );
 }
 
+/** Live player count — same shell as the coin meter, green live accent. */
+export function HomeOnlineMeter({ online }: { online?: number | null }) {
+  const live = typeof online === 'number';
+  return (
+    <div
+      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border-2 border-[#23a559]/85 bg-gradient-to-b from-[#14291c] to-[#0c1410] px-2.5 shadow-[0_3px_0_#14532d] sm:h-11 sm:gap-2.5 sm:px-3"
+      title="Players online right now"
+    >
+      <span className="relative flex h-2.5 w-2.5 shrink-0">
+        <span
+          className={`absolute inline-flex h-full w-full rounded-full bg-[#23a559] opacity-55 ${
+            live ? 'animate-ping' : ''
+          }`}
+        />
+        <span
+          className={`relative inline-flex h-2.5 w-2.5 rounded-full ${
+            live ? 'bg-[#23a559]' : 'bg-[#5c5e66]'
+          }`}
+        />
+      </span>
+      <Users className="h-4 w-4 shrink-0 text-[#4ade80]" strokeWidth={2.5} />
+      <span className="min-w-[1ch] font-mono text-sm font-black tabular-nums leading-none tracking-tight text-[#86efac] sm:text-[15px]">
+        {live ? online : '…'}
+      </span>
+    </div>
+  );
+}
+
 export function HeaderStats({
   profile,
   online,
@@ -113,27 +141,30 @@ export function HeaderStats({
   const showOnline = settings.showOnlineCount;
 
   return (
-    <div className="flex items-center gap-1.5 shrink-0">
-      {showOnline && (
-        <div className="game-chip hidden min-[380px]:flex" title="Players online right now">
-          <span className="relative flex h-2 w-2">
-            <span
-              className={`absolute inline-flex h-full w-full rounded-full bg-[#23a559] opacity-60 ${
-                typeof online === 'number' ? 'animate-ping' : ''
-              }`}
-            />
-            <span
-              className={`relative inline-flex h-2 w-2 rounded-full ${
-                typeof online === 'number' ? 'bg-[#23a559]' : 'bg-[#5c5e66]'
-              }`}
-            />
-          </span>
-          <Users className="h-3.5 w-3.5" />
-          <span className="min-w-[1ch] font-mono text-[11px] font-bold tabular-nums">
-            {typeof online === 'number' ? online : '…'}
-          </span>
-        </div>
-      )}
+    <div className="flex items-center gap-1.5 shrink-0 sm:gap-2">
+      {showOnline &&
+        (coinStyle === 'home' ? (
+          <HomeOnlineMeter online={online} />
+        ) : (
+          <div className="game-chip hidden min-[380px]:flex" title="Players online right now">
+            <span className="relative flex h-2 w-2">
+              <span
+                className={`absolute inline-flex h-full w-full rounded-full bg-[#23a559] opacity-60 ${
+                  typeof online === 'number' ? 'animate-ping' : ''
+                }`}
+              />
+              <span
+                className={`relative inline-flex h-2 w-2 rounded-full ${
+                  typeof online === 'number' ? 'bg-[#23a559]' : 'bg-[#5c5e66]'
+                }`}
+              />
+            </span>
+            <Users className="h-3.5 w-3.5" />
+            <span className="min-w-[1ch] font-mono text-[11px] font-bold tabular-nums">
+              {typeof online === 'number' ? online : '…'}
+            </span>
+          </div>
+        ))}
       {coinStyle === 'home' ? (
         <HomeCoinMeter coins={profile.coins} />
       ) : (
