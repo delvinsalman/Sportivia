@@ -1115,6 +1115,7 @@ function PodiumRig({
   sport,
   petId,
   characterId,
+  frozen = false,
 }: {
   scene: Object3D;
   animations: AnimationClip[];
@@ -1123,6 +1124,8 @@ function PodiumRig({
   sport?: Sport;
   petId?: PetId;
   characterId?: CharacterId;
+  /** Bind pose only — no idle / flourish motion */
+  frozen?: boolean;
 }) {
   const group = useRef<Group>(null);
   const targetHeight = def.targetHeight ?? TARGET_HEIGHT;
@@ -1146,7 +1149,7 @@ function PodiumRig({
   const isCreativeSkeletal = skeletalIdle && characterId === 'creative';
   const isRabbit = characterId === 'bunny';
   const { actions, names } = useAnimations(
-    isNaturalPet || proceduralOnly || skeletalIdle ? [] : animations,
+    frozen || isNaturalPet || proceduralOnly || skeletalIdle ? [] : animations,
     scene,
   );
   const procedural = useRef<ProceduralState>({ move: null, start: 0, duration: 1 });
@@ -1163,15 +1166,15 @@ function PodiumRig({
     };
   }, []);
 
-  usePetSkeletalIdle(scene, petId ?? 'pug', isNaturalPet, showcase);
-  useStarterSkeletalIdle(scene, characterId, isStarterSkeletal, showcase);
-  useCreativeSkeletalIdle(scene, isCreativeSkeletal, showcase);
+  usePetSkeletalIdle(scene, petId ?? 'pug', !frozen && isNaturalPet, showcase);
+  useStarterSkeletalIdle(scene, characterId, !frozen && isStarterSkeletal, showcase);
+  useCreativeSkeletalIdle(scene, !frozen && isCreativeSkeletal, showcase);
 
   const rabbitRest = def.showcaseRestMs ?? ([4_200, 7_800] as [number, number]);
   useRabbitShowcase(
     actions,
     names,
-    isRabbit && showcase && !proceduralOnly && !skeletalIdle,
+    !frozen && isRabbit && showcase && !proceduralOnly && !skeletalIdle,
     triggerProcedural,
     rabbitRest,
   );
@@ -1179,7 +1182,7 @@ function PodiumRig({
   useHomeShowcase(
     actions,
     names,
-    !isRabbit && !isNaturalPet && showcase && !proceduralOnly && !skeletalIdle,
+    !frozen && !isRabbit && !isNaturalPet && showcase && !proceduralOnly && !skeletalIdle,
     triggerProcedural,
     {
       timeScale: animTimeScale,
@@ -1192,14 +1195,19 @@ function PodiumRig({
   useSimpleIdle(
     actions,
     names,
-    !isRabbit && !isNaturalPet && !showcase && !proceduralOnly && !skeletalIdle,
+    !frozen && !isRabbit && !isNaturalPet && !showcase && !proceduralOnly && !skeletalIdle,
     animTimeScale,
   );
   // Store / peek: keep rabbit's peppy idle looping even without showcase flourishes
-  useSimpleIdle(actions, names, isRabbit && !showcase && !proceduralOnly && !skeletalIdle, 1.12);
+  useSimpleIdle(
+    actions,
+    names,
+    !frozen && isRabbit && !showcase && !proceduralOnly && !skeletalIdle,
+    1.12,
+  );
 
   useEffect(() => {
-    if (!proceduralOnly) return;
+    if (frozen || !proceduralOnly) return;
     let cancelled = false;
     const tick = () => {
       if (cancelled) return;
@@ -1213,7 +1221,7 @@ function PodiumRig({
       cancelled = true;
       clearTimeout(timer);
     };
-  }, [showcase, proceduralOnly, triggerProcedural]);
+  }, [frozen, showcase, proceduralOnly, triggerProcedural]);
 
   useFrame(state => {
     if (!group.current) return;
@@ -1221,6 +1229,14 @@ function PodiumRig({
     group.current.rotation.y = faceYaw;
     group.current.position.x = position[0];
     group.current.position.z = position[2];
+
+    if (frozen) {
+      group.current.position.y = baseY.current;
+      group.current.rotation.x = 0;
+      group.current.rotation.z = 0;
+      group.current.scale.setScalar(scale);
+      return;
+    }
 
     const t = state.clock.elapsedTime;
 
@@ -1364,10 +1380,12 @@ function FbxCharacterModel({
   def,
   showcase = false,
   sport,
+  frozen = false,
 }: {
   def: CharacterDef;
   showcase?: boolean;
   sport?: Sport;
+  frozen?: boolean;
 }) {
   const fbx = useFBX(def.modelPath);
   const scene = useMemo(() => SkeletonUtils.clone(fbx), [fbx]);
@@ -1379,6 +1397,7 @@ function FbxCharacterModel({
       showcase={showcase}
       sport={sport}
       characterId={def.id}
+      frozen={frozen}
     />
   );
 }
@@ -1561,6 +1580,7 @@ function GlbModel({
   bobLoadout,
   sport,
   petId,
+  frozen = false,
 }: {
   def: CharacterDef | PetDef;
   showcase?: boolean;
@@ -1569,6 +1589,7 @@ function GlbModel({
   bobLoadout?: BobLoadout;
   sport?: Sport;
   petId?: PetId;
+  frozen?: boolean;
 }) {
   const isCreative =
     'customizable' in def && !!def.customizable && def.modelPath.includes('creative');
@@ -1607,6 +1628,7 @@ function GlbModel({
       sport={sport}
       petId={petId}
       characterId={petId ? undefined : (def.id as CharacterId)}
+      frozen={frozen}
     />
   );
 }
@@ -1619,11 +1641,13 @@ function CharacterModel({
   bobLoadout,
   rabbitVariant,
   sport,
+  frozen = false,
 }: CharacterModelProps & {
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
   sport?: Sport;
+  frozen?: boolean;
 }) {
   const baseDef = getCharacterDef(characterId);
   const def =
@@ -1639,10 +1663,11 @@ function CharacterModel({
         athleteLoadout={athleteLoadout}
         bobLoadout={bobLoadout}
         sport={sport}
+        frozen={frozen}
       />
     );
   }
-  return <FbxCharacterModel def={def} showcase={showcase} sport={sport} />;
+  return <FbxCharacterModel def={def} showcase={showcase} sport={sport} frozen={frozen} />;
 }
 
 function PetModel({
@@ -1729,6 +1754,7 @@ function Scene({
   rabbitVariant,
   dogVariant,
   sport,
+  frozen = false,
 }: {
   characterId?: CharacterId;
   petId?: PetId;
@@ -1742,6 +1768,7 @@ function Scene({
   rabbitVariant?: RabbitVariantId;
   dogVariant?: DogVariantId;
   sport?: Sport;
+  frozen?: boolean;
 }) {
   return (
     <>
@@ -1771,6 +1798,7 @@ function Scene({
             bobLoadout={bobLoadout}
             rabbitVariant={rabbitVariant}
             sport={sport}
+            frozen={frozen}
           />
         ) : null}
       </ModelErrorBoundary>
@@ -1807,6 +1835,10 @@ interface CharacterPodiumProps {
   peek?: boolean;
   /** Companion mode — model only, no disc */
   hidePodium?: boolean;
+  /** Static bind pose — no idle / flourish motion */
+  frozen?: boolean;
+  /** Close-up head framing (implies frozen + hidePodium) */
+  portrait?: boolean;
   /** Outfit for Kit Creator skin */
   creativeLoadout?: CreativeLoadout;
   /** Kit colors for Pro Athlete skin */
@@ -1831,6 +1863,8 @@ export function CharacterPodium({
   hero = false,
   peek = false,
   hidePodium = false,
+  frozen = false,
+  portrait = false,
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
@@ -1841,6 +1875,9 @@ export function CharacterPodium({
   const def = petId ? getPetDef(petId) : getCharacterDef(characterId ?? 'cube-man');
   const glow = accent ?? def.accent;
   const framed = hero || peek;
+  const isPortrait = portrait;
+  const isFrozen = frozen || isPortrait;
+  const noPodium = hidePodium || isPortrait;
   const loadoutKey =
     characterId === 'creative' && creativeLoadout
       ? creativeLoadoutKey(creativeLoadout)
@@ -1859,10 +1896,10 @@ export function CharacterPodium({
 
   return (
     <div
-      className={`relative ${framed || bare ? 'overflow-visible' : 'overflow-hidden'} ${bare ? className : `rounded-2xl border border-[#2b2d31]/80 ${className}`}`}
+      className={`relative ${framed || bare || isPortrait ? 'overflow-hidden' : 'overflow-hidden'} ${bare ? className : `rounded-2xl border border-[#2b2d31]/80 ${className}`}`}
       style={{
         height,
-        paddingBottom: framed || bare ? 20 : 0,
+        paddingBottom: framed || bare ? (isPortrait ? 0 : 20) : 0,
         ...(bare
           ? { background: 'transparent' }
           : {
@@ -1870,7 +1907,7 @@ export function CharacterPodium({
             }),
       }}
     >
-      {framed && !hidePodium && (
+      {framed && !noPodium && (
         <div
           className="absolute left-1/2 -translate-x-1/2 pointer-events-none"
           style={{
@@ -1890,36 +1927,40 @@ export function CharacterPodium({
       )}
       <Canvas
         camera={{
-          position: framed
-            ? petId
-              ? [0, 0.35, 5.8]
-              : [0, 0.05, 4.4]
-            : [0, 0.55, 3.1],
-          fov: framed ? (petId ? 38 : 34) : 42,
+          position: isPortrait
+            ? [0, 0.72, 2.15]
+            : framed
+              ? petId
+                ? [0, 0.35, 5.8]
+                : [0, 0.05, 4.4]
+              : [0, 0.55, 3.1],
+          fov: isPortrait ? 28 : framed ? (petId ? 38 : 34) : 42,
         }}
         gl={{ alpha: true, antialias: true }}
         style={{ background: 'transparent', height: '100%' }}
         onCreated={({ gl, camera }) => {
           gl.setClearColor(0x000000, 0);
-          gl.toneMappingExposure = framed ? 1.15 : 1;
-          if (framed) camera.lookAt(0, petId ? 0.15 : -0.15, 0);
+          gl.toneMappingExposure = framed || isPortrait ? 1.15 : 1;
+          if (isPortrait) camera.lookAt(0, 0.62, 0);
+          else if (framed) camera.lookAt(0, petId ? 0.15 : -0.15, 0);
         }}
       >
         <Suspense fallback={<LoadingFallback />}>
           <Scene
-            key={`${sceneKey}-${variantKey}-${glow}-${hidePodium ? 'flat' : 'pod'}-${sport ?? 'any'}`}
+            key={`${sceneKey}-${variantKey}-${glow}-${noPodium ? 'flat' : 'pod'}-${isFrozen ? 'still' : 'live'}-${sport ?? 'any'}`}
             characterId={characterId}
             petId={petId}
             accent={glow}
-            hero={framed}
-            showcase={hero}
-            hidePodium={hidePodium}
+            hero={framed || isPortrait}
+            showcase={hero && !isFrozen}
+            hidePodium={noPodium}
             creativeLoadout={creativeLoadout}
             athleteLoadout={athleteLoadout}
             bobLoadout={bobLoadout}
             rabbitVariant={rabbitVariant}
             dogVariant={dogVariant}
             sport={sport}
+            frozen={isFrozen}
           />
         </Suspense>
       </Canvas>

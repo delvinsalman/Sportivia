@@ -555,6 +555,29 @@ body {
   box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
 }
 
+.game-home-profile {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.4rem 0.7rem 0.4rem 0.4rem;
+  border-radius: 0.85rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(180deg, rgba(42, 44, 51, 0.98), rgba(22, 23, 27, 0.98));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+  min-width: 9.75rem;
+}
+
+.game-home-profile-avatar {
+  width: 3.35rem;
+  height: 3.35rem;
+  border-radius: 9999px;
+  overflow: hidden;
+  flex-shrink: 0;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  background: radial-gradient(circle at 50% 28%, #3a3d46 0%, #121316 75%);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+}
+
 @media (min-width: 640px) {
   .game-sport-tab {
     min-height: 2.9rem;
