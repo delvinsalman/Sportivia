@@ -20,6 +20,7 @@ import { getCharacterDef, getPetDef } from '../types/profile';
 import { SportBackground } from './SportBackground';
 import { SportBall } from './SportBall';
 import { CharacterPodium } from './3d/CharacterPodium';
+import { GuideDemoTile } from './GuideDemoTile';
 import { SPORT_ACCENT, SPORT_LABEL, SPORT_PODIUM_ACCENT, SPORTS } from '../lib/sportTheme';
 import { playMenuBack, playMenuConfirm } from '../lib/menuAudio';
 
@@ -46,6 +47,7 @@ const GUIDE: Array<{
   body: string;
   Icon: LucideIcon;
   glare: string;
+  demo: string;
 }> = [
   {
     eyebrow: 'The board',
@@ -53,6 +55,7 @@ const GUIDE: Array<{
     body: 'A player drops in. Tap the cell that fits — club, country, award, era, and more — before the clock runs out. Streaks multiply your score. Fill the board, then it refreshes.',
     Icon: LayoutGrid,
     glare: 'rgba(88, 101, 242, 0.16)',
+    demo: '/demos/board.mp4',
   },
   {
     eyebrow: 'Five sports',
@@ -60,6 +63,7 @@ const GUIDE: Array<{
     body: 'Soccer, NBA, MLB, NFL, and NHL each have their own pool, look, and record. Switch sports from the home rail anytime.',
     Icon: Globe2,
     glare: 'rgba(35, 165, 89, 0.15)',
+    demo: '/demos/sports.mp4',
   },
   {
     eyebrow: 'Modes',
@@ -67,6 +71,7 @@ const GUIDE: Array<{
     body: 'Training is practice with no rewards. Daily is a shared board with a first-finish payday. Ranked is timed and competitive. Vs AI races a bot. 1v1 Duel is a live lobby with a code.',
     Icon: Gamepad2,
     glare: 'rgba(240, 178, 50, 0.14)',
+    demo: '/demos/modes.mp4',
   },
   {
     eyebrow: 'Vs AI & Duels',
@@ -74,6 +79,7 @@ const GUIDE: Array<{
     body: 'Pick Beginner, Pro, or Expert against the bot. Online, create or join a room, ready up together, and the highest score wins the match.',
     Icon: Swords,
     glare: 'rgba(237, 66, 69, 0.14)',
+    demo: '/demos/duels.mp4',
   },
   {
     eyebrow: 'Card stakes',
@@ -81,6 +87,7 @@ const GUIDE: Array<{
     body: 'Optionally stake a card from your collection. Win and you keep yours and take theirs. Lose and that card is gone. Draw returns both stakes.',
     Icon: Layers3,
     glare: 'rgba(168, 85, 247, 0.15)',
+    demo: '/demos/stakes.mp4',
   },
   {
     eyebrow: 'Packs & collection',
@@ -88,6 +95,7 @@ const GUIDE: Array<{
     body: 'Spend coins on Prospect, Elite, or Icon packs. Cards go Common to Legendary. Duplicates refund coins. Browse your collection by sport anytime.',
     Icon: PackageOpen,
     glare: 'rgba(249, 115, 22, 0.14)',
+    demo: '/demos/packs.mp4',
   },
   {
     eyebrow: 'Store',
@@ -95,6 +103,7 @@ const GUIDE: Array<{
     body: 'Unlock characters and companions with coins. Equip them on home, About, and results. Some skins have loadouts and breed variants.',
     Icon: ShoppingBag,
     glare: 'rgba(56, 189, 248, 0.14)',
+    demo: '/demos/store.mp4',
   },
   {
     eyebrow: 'Progress',
@@ -102,6 +111,7 @@ const GUIDE: Array<{
     body: 'Finishing scoring runs earns coins and XP. Level up for milestones. Career tracks best scores, streaks, and perfect boards per sport.',
     Icon: Trophy,
     glare: 'rgba(253, 224, 71, 0.13)',
+    demo: '/demos/progress.mp4',
   },
   {
     eyebrow: 'Live & identity',
@@ -109,6 +119,7 @@ const GUIDE: Array<{
     body: 'Edit your display name on home. See who’s online. Host or join a duel with a short code — same board, fair race.',
     Icon: Wifi,
     glare: 'rgba(74, 222, 128, 0.13)',
+    demo: '/demos/live.mp4',
   },
   {
     eyebrow: 'Settings',
@@ -116,6 +127,7 @@ const GUIDE: Array<{
     body: 'Mute audio, tune music and SFX, reduce motion, or turn off match tips. Promo codes redeem from Settings when you have one.',
     Icon: Settings,
     glare: 'rgba(148, 163, 184, 0.16)',
+    demo: '/demos/settings.mp4',
   },
 ];
 
@@ -266,7 +278,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
         </section>
 
         {/* Guide — everything Sportivia does */}
-        <section className="w-full max-w-3xl pb-[max(4rem,env(safe-area-inset-bottom))] pt-4 md:pt-8">
+        <section className="w-full max-w-5xl pb-[max(4rem,env(safe-area-inset-bottom))] pt-4 md:pt-8">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -313,28 +325,33 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                     background: `radial-gradient(ellipse 85% 90% at 12% 20%, ${item.glare} 0%, transparent 58%), radial-gradient(ellipse 70% 60% at 92% 80%, ${item.glare} 0%, transparent 50%), rgba(12, 13, 16, 0.28)`,
                   }}
                 >
-                  <div className="relative z-10 grid gap-5 sm:grid-cols-[5.5rem_1fr] sm:gap-2 sm:items-start">
-                    <div className="flex flex-col gap-3 sm:gap-4">
-                      <p
-                        className="text-[11px] font-bold uppercase tracking-[0.18em]"
-                        style={{ color: accent }}
-                      >
-                        {item.eyebrow}
-                      </p>
-                      <Icon
-                        className="h-12 w-12 sm:h-16 sm:w-16"
-                        style={{ color: accent }}
-                        strokeWidth={1.75}
-                        aria-hidden
-                      />
+                  <div className="relative z-10 grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(12rem,15.5rem)] lg:gap-8 lg:items-center">
+                    <div className="grid gap-5 sm:grid-cols-[5.5rem_1fr] sm:gap-2 sm:items-start min-w-0">
+                      <div className="flex flex-col gap-3 sm:gap-4">
+                        <p
+                          className="text-[11px] font-bold uppercase tracking-[0.18em]"
+                          style={{ color: accent }}
+                        >
+                          {item.eyebrow}
+                        </p>
+                        <Icon
+                          className="h-12 w-12 sm:h-16 sm:w-16"
+                          style={{ color: accent }}
+                          strokeWidth={1.75}
+                          aria-hidden
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-xl sm:text-2xl font-extrabold text-[#f2f3f5] tracking-tight leading-snug">
+                          {item.title}
+                        </h3>
+                        <p className="mt-2 text-sm sm:text-[15px] text-[#949ba4] leading-relaxed">
+                          {item.body}
+                        </p>
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <h3 className="text-xl sm:text-2xl font-extrabold text-[#f2f3f5] tracking-tight leading-snug">
-                        {item.title}
-                      </h3>
-                      <p className="mt-2 text-sm sm:text-[15px] text-[#949ba4] leading-relaxed">
-                        {item.body}
-                      </p>
+                    <div className="w-full max-w-[16rem] justify-self-start lg:max-w-none lg:w-auto lg:justify-self-stretch">
+                      <GuideDemoTile src={item.demo} label={item.title} accent={accent} />
                     </div>
                   </div>
                 </motion.article>
