@@ -1,5 +1,19 @@
 import { motion } from 'framer-motion';
-import { ArrowLeft, Play } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import {
+  ArrowLeft,
+  Play,
+  LayoutGrid,
+  Globe2,
+  Gamepad2,
+  Swords,
+  Layers3,
+  PackageOpen,
+  ShoppingBag,
+  Trophy,
+  Wifi,
+  Settings,
+} from 'lucide-react';
 import type { Sport } from '../types';
 import type { PlayerProfile } from '../types/profile';
 import { getCharacterDef, getPetDef } from '../types/profile';
@@ -30,56 +44,78 @@ const GUIDE: Array<{
   eyebrow: string;
   title: string;
   body: string;
+  Icon: LucideIcon;
+  glare: string;
 }> = [
   {
     eyebrow: 'The board',
     title: 'Match stars to categories',
     body: 'A player drops in. Tap the cell that fits — club, country, award, era, and more — before the clock runs out. Streaks multiply your score. Fill the board, then it refreshes.',
+    Icon: LayoutGrid,
+    glare: 'rgba(88, 101, 242, 0.16)',
   },
   {
     eyebrow: 'Five sports',
     title: 'One game, five worlds',
     body: 'Soccer, NBA, MLB, NFL, and NHL each have their own pool, look, and record. Switch sports from the home rail anytime.',
+    Icon: Globe2,
+    glare: 'rgba(35, 165, 89, 0.15)',
   },
   {
     eyebrow: 'Modes',
     title: 'Play how you want',
     body: 'Training is practice with no rewards. Daily is a shared board with a first-finish payday. Ranked is timed and competitive. Vs AI races a bot. 1v1 Duel is a live lobby with a code.',
+    Icon: Gamepad2,
+    glare: 'rgba(240, 178, 50, 0.14)',
   },
   {
     eyebrow: 'Vs AI & Duels',
     title: 'Race someone — or something',
     body: 'Pick Beginner, Pro, or Expert against the bot. Online, create or join a room, ready up together, and the highest score wins the match.',
+    Icon: Swords,
+    glare: 'rgba(237, 66, 69, 0.14)',
   },
   {
     eyebrow: 'Card stakes',
     title: 'Put a player on the line',
     body: 'Optionally stake a card from your collection. Win and you keep yours and take theirs. Lose and that card is gone. Draw returns both stakes.',
+    Icon: Layers3,
+    glare: 'rgba(168, 85, 247, 0.15)',
   },
   {
     eyebrow: 'Packs & collection',
     title: 'Open packs. Build your set',
     body: 'Spend coins on Prospect, Elite, or Icon packs. Cards go Common to Legendary. Duplicates refund coins. Browse your collection by sport anytime.',
+    Icon: PackageOpen,
+    glare: 'rgba(249, 115, 22, 0.14)',
   },
   {
     eyebrow: 'Store',
     title: 'Skins, pets, and style',
     body: 'Unlock characters and companions with coins. Equip them on home, About, and results. Some skins have loadouts and breed variants.',
+    Icon: ShoppingBag,
+    glare: 'rgba(56, 189, 248, 0.14)',
   },
   {
     eyebrow: 'Progress',
     title: 'Coins, XP, and career',
     body: 'Finishing scoring runs earns coins and XP. Level up for milestones. Career tracks best scores, streaks, and perfect boards per sport.',
+    Icon: Trophy,
+    glare: 'rgba(253, 224, 71, 0.13)',
   },
   {
     eyebrow: 'Live & identity',
     title: 'Your name. Your lobby',
     body: 'Edit your display name on home. See who’s online. Host or join a duel with a short code — same board, fair race.',
+    Icon: Wifi,
+    glare: 'rgba(74, 222, 128, 0.13)',
   },
   {
     eyebrow: 'Settings',
     title: 'Sound, motion, tips',
     body: 'Mute audio, tune music and SFX, reduce motion, or turn off match tips. Promo codes redeem from Settings when you have one.',
+    Icon: Settings,
+    glare: 'rgba(148, 163, 184, 0.16)',
   },
 ];
 
@@ -252,7 +288,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             {MODES.map(mode => (
               <div
                 key={mode.name}
-                className="rounded-2xl border-[2.5px] border-[#3f4147] bg-[#121316]/75 px-3.5 py-2.5 shadow-[0_3px_0_#0a0a0b]"
+                className="rounded-2xl bg-[#121316]/55 px-3.5 py-2.5"
               >
                 <p className="text-xs font-black text-[#f2f3f5] leading-none">{mode.name}</p>
                 <p className="mt-1 text-[10px] font-bold uppercase tracking-wide text-[#6d6f78]">
@@ -262,32 +298,48 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             ))}
           </div>
 
-          <div className="space-y-0 border-t border-white/10">
-            {GUIDE.map((item, index) => (
-              <motion.article
-                key={item.title}
-                initial={{ opacity: 0, y: 12 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: '-24px' }}
-                transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.2) }}
-                className="grid gap-3 border-b border-white/10 py-7 sm:grid-cols-[9rem_1fr] sm:gap-8 sm:py-8"
-              >
-                <p
-                  className="text-[11px] font-bold uppercase tracking-[0.18em] sm:pt-1"
-                  style={{ color: accent }}
+          <div className="space-y-4 sm:space-y-5">
+            {GUIDE.map((item, index) => {
+              const Icon = item.Icon;
+              return (
+                <motion.article
+                  key={item.title}
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-24px' }}
+                  transition={{ duration: 0.35, delay: Math.min(index * 0.03, 0.2) }}
+                  className="relative overflow-hidden rounded-3xl px-5 py-7 sm:px-8 sm:py-8"
+                  style={{
+                    background: `radial-gradient(ellipse 85% 90% at 12% 20%, ${item.glare} 0%, transparent 58%), radial-gradient(ellipse 70% 60% at 92% 80%, ${item.glare} 0%, transparent 50%), rgba(12, 13, 16, 0.28)`,
+                  }}
                 >
-                  {item.eyebrow}
-                </p>
-                <div className="min-w-0">
-                  <h3 className="text-xl sm:text-2xl font-extrabold text-[#f2f3f5] tracking-tight leading-snug">
-                    {item.title}
-                  </h3>
-                  <p className="mt-2 max-w-2xl text-sm sm:text-[15px] text-[#949ba4] leading-relaxed">
-                    {item.body}
-                  </p>
-                </div>
-              </motion.article>
-            ))}
+                  <div className="relative z-10 grid gap-4 sm:grid-cols-[9.5rem_1fr] sm:gap-10">
+                    <div className="flex flex-col gap-2.5 sm:pt-0.5">
+                      <p
+                        className="text-[11px] font-bold uppercase tracking-[0.18em]"
+                        style={{ color: accent }}
+                      >
+                        {item.eyebrow}
+                      </p>
+                      <Icon
+                        className="h-5 w-5 sm:h-[1.35rem] sm:w-[1.35rem]"
+                        style={{ color: accent }}
+                        strokeWidth={2.25}
+                        aria-hidden
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-xl sm:text-2xl font-extrabold text-[#f2f3f5] tracking-tight leading-snug">
+                        {item.title}
+                      </h3>
+                      <p className="mt-2 max-w-2xl text-sm sm:text-[15px] text-[#949ba4] leading-relaxed">
+                        {item.body}
+                      </p>
+                    </div>
+                  </div>
+                </motion.article>
+              );
+            })}
           </div>
 
           <motion.div
