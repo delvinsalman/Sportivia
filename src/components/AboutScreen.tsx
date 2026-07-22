@@ -60,7 +60,7 @@ const GUIDE: Array<{
   {
     eyebrow: 'Five sports',
     title: 'One game, five worlds',
-    body: 'Soccer, NBA, MLB, NFL, and NHL each have their own pool, look, and record. Switch sports from the home rail anytime.',
+    body: 'Soccer, Basketball, Baseball, Football, and Hockey each have their own pool, look, and record. Switch sports from the home rail anytime.',
     Icon: Globe2,
     glare: 'rgba(35, 165, 89, 0.15)',
     demo: '/demos/sports.mp4',
@@ -203,7 +203,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                 <span className="block" style={{ color: accent }}>built for speed.</span>
               </h1>
               <p className="text-base sm:text-lg text-[#b5bac1] leading-relaxed max-w-md mb-6">
-                Match stars to categories on a live 3×3 board across Soccer, NBA, MLB, NFL, and NHL.
+                Match stars to categories on a live 3×3 board across Soccer, Basketball, Baseball, Football, and Hockey.
               </p>
               <div className="flex flex-wrap gap-2">
                 {SPORTS.map(s => (

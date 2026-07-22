@@ -57,10 +57,10 @@ interface CardPacksScreenProps {
 
 const SPORT_META: Record<Sport, { label: string; short: string; icon: string; accent: string }> = {
   soccer: { label: 'Soccer', short: 'SOC', icon: '⚽', accent: '#23a559' },
-  basketball: { label: 'NBA', short: 'NBA', icon: '🏀', accent: '#f97316' },
-  baseball: { label: 'MLB', short: 'MLB', icon: '⚾', accent: '#f8fafc' },
-  football: { label: 'NFL', short: 'NFL', icon: '🏈', accent: '#a16207' },
-  hockey: { label: 'NHL', short: 'NHL', icon: '🏒', accent: '#38bdf8' },
+  basketball: { label: 'Basketball', short: 'BKB', icon: '🏀', accent: '#f97316' },
+  baseball: { label: 'Baseball', short: 'BSB', icon: '⚾', accent: '#f8fafc' },
+  football: { label: 'Football', short: 'FTB', icon: '🏈', accent: '#a16207' },
+  hockey: { label: 'Hockey', short: 'HKY', icon: '🏒', accent: '#38bdf8' },
 };
 
 const RARITY_META: Record<

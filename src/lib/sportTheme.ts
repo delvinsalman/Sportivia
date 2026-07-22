@@ -20,10 +20,10 @@ export const SPORT_STITCH: Record<Sport, string> = {
 
 export const SPORT_LABEL: Record<Sport, string> = {
   soccer: 'Soccer',
-  basketball: 'NBA',
-  baseball: 'MLB',
-  football: 'NFL',
-  hockey: 'NHL',
+  basketball: 'Basketball',
+  baseball: 'Baseball',
+  football: 'Football',
+  hockey: 'Hockey',
 };
 
 export const SPORT_PICKER_BG: Record<Sport, string> = {
