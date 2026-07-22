@@ -200,97 +200,55 @@ export function ResultModal({
 
             {showStake && (
               <div
-                className={`mb-5 rounded-2xl border-[3px] p-3.5 sm:p-4 shadow-[0_4px_0_rgba(0,0,0,0.35)] ${
+                className={`mb-4 flex items-center gap-2.5 rounded-xl border-2 px-3 py-2.5 ${
                   stake.outcome === 'win'
-                    ? 'border-[#23a559]/70 bg-[#142d1e]/90'
+                    ? 'border-[#23a559]/55 bg-[#142d1e]/85'
                     : stake.outcome === 'loss'
-                      ? 'border-[#ed4245]/70 bg-[#3d1a1a]/90'
-                      : 'border-[#3f4147] bg-[#1a1b1f]/95'
+                      ? 'border-[#ed4245]/55 bg-[#3d1a1a]/85'
+                      : 'border-[#3f4147] bg-[#1a1b1f]/90'
                 }`}
               >
-                <div className="mb-2 flex items-center gap-2">
-                  <Swords
-                    className={`h-4 w-4 shrink-0 ${
+                <Swords
+                  className={`h-4 w-4 shrink-0 ${
+                    stake.outcome === 'win'
+                      ? 'text-[#23a559]'
+                      : stake.outcome === 'loss'
+                        ? 'text-[#ed4245]'
+                        : 'text-[#949ba4]'
+                  }`}
+                />
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`truncate text-sm font-black ${
                       stake.outcome === 'win'
-                        ? 'text-[#23a559]'
+                        ? 'text-[#4ade80]'
                         : stake.outcome === 'loss'
-                          ? 'text-[#ed4245]'
-                          : 'text-[#949ba4]'
+                          ? 'text-[#f98998]'
+                          : 'text-[#f2f3f5]'
                     }`}
-                  />
-                  <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#b5bac1]">
-                    Card stake outcome
+                  >
+                    {stake.outcome === 'win' && stake.gainedName
+                      ? `Won ${stake.gainedName}`
+                      : stake.outcome === 'loss' && stake.lostName
+                        ? `Lost ${stake.lostName}`
+                        : stake.outcome === 'draw' && stake.keptName
+                          ? `Draw · kept ${stake.keptName}`
+                          : stake.message}
                   </p>
                 </div>
-                <p
-                  className={`text-sm sm:text-base font-black leading-snug ${
-                    stake.outcome === 'win'
-                      ? 'text-[#4ade80]'
-                      : stake.outcome === 'loss'
-                        ? 'text-[#f98998]'
-                        : 'text-[#f2f3f5]'
-                  }`}
-                >
-                  {stake.message}
-                </p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {stake.outcome === 'win' && stake.gainedName && (
-                    <div className="rounded-xl border-2 border-[#23a559]/45 bg-black/25 px-3 py-2.5">
-                      <p className="text-[9px] font-black uppercase tracking-wide text-[#23a559]">
-                        You gained
-                      </p>
-                      <p className="mt-0.5 truncate text-sm font-black text-[#f2f3f5]">
-                        {stake.gainedName}
-                      </p>
-                      {stake.gainedRarity && (
-                        <p
-                          className="mt-0.5 text-[10px] font-black uppercase"
-                          style={{ color: RARITY_TINT[stake.gainedRarity] ?? '#949ba4' }}
-                        >
-                          {stake.gainedRarity}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {stake.outcome === 'win' && stake.keptName && (
-                    <div className="rounded-xl border-2 border-white/10 bg-black/25 px-3 py-2.5">
-                      <p className="text-[9px] font-black uppercase tracking-wide text-[#949ba4]">
-                        You keep
-                      </p>
-                      <p className="mt-0.5 truncate text-sm font-black text-[#f2f3f5]">
-                        {stake.keptName}
-                      </p>
-                    </div>
-                  )}
-                  {stake.outcome === 'loss' && stake.lostName && (
-                    <div className="rounded-xl border-2 border-[#ed4245]/45 bg-black/25 px-3 py-2.5 sm:col-span-2">
-                      <p className="text-[9px] font-black uppercase tracking-wide text-[#ed4245]">
-                        Removed from your collection
-                      </p>
-                      <p className="mt-0.5 truncate text-sm font-black text-[#f2f3f5]">
-                        {stake.lostName}
-                      </p>
-                      {stake.lostRarity && (
-                        <p
-                          className="mt-0.5 text-[10px] font-black uppercase"
-                          style={{ color: RARITY_TINT[stake.lostRarity] ?? '#949ba4' }}
-                        >
-                          {stake.lostRarity}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                  {stake.outcome === 'draw' && stake.keptName && (
-                    <div className="rounded-xl border-2 border-white/10 bg-black/25 px-3 py-2.5 sm:col-span-2">
-                      <p className="text-[9px] font-black uppercase tracking-wide text-[#949ba4]">
-                        Returned to you
-                      </p>
-                      <p className="mt-0.5 truncate text-sm font-black text-[#f2f3f5]">
-                        {stake.keptName}
-                      </p>
-                    </div>
-                  )}
-                </div>
+                {(stake.outcome === 'win' ? stake.gainedRarity : stake.outcome === 'loss' ? stake.lostRarity : null) && (
+                  <span
+                    className="shrink-0 text-[10px] font-black uppercase tracking-wide"
+                    style={{
+                      color:
+                        RARITY_TINT[
+                          (stake.outcome === 'win' ? stake.gainedRarity : stake.lostRarity) ?? ''
+                        ] ?? '#949ba4',
+                    }}
+                  >
+                    {stake.outcome === 'win' ? stake.gainedRarity : stake.lostRarity}
+                  </span>
+                )}
               </div>
             )}
 
