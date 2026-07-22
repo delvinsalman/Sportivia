@@ -85,26 +85,17 @@ export function CoinBadge({ coins, onClick }: CoinBadgeProps) {
   return <div className={chipClass}>{inner}</div>;
 }
 
-/** Chunky home HUD coin meter — matches the slanted game tabs, not a web pill. */
+/** Clean home coin HUD — icon sits inside a compact gold bar. */
 export function HomeCoinMeter({ coins }: { coins: number }) {
   return (
     <div
-      className="relative flex h-10 shrink-0 items-center sm:h-11"
+      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-xl border-2 border-[#f0b232]/90 bg-gradient-to-b from-[#2a2414] to-[#14110a] px-2.5 shadow-[0_3px_0_#8a6814] sm:h-11 sm:gap-2.5 sm:px-3"
       title={`${coins.toLocaleString()} coins`}
     >
-      {/* Coin sits on top of the bar like a game currency token */}
-      <div
-        className="relative z-20 -mr-2.5 shrink-0 drop-shadow-[0_4px_0_rgba(0,0,0,0.55)]"
-        aria-hidden
-      >
-        <CoinIcon size={44} className="sm:scale-110" />
-      </div>
-
-      <div className="relative z-10 flex h-full min-w-[5.25rem] items-center skew-x-[-12deg] rounded-[0.45rem] border-2 border-[#f0b232] bg-gradient-to-b from-[#2f3038] via-[#1c1d22] to-[#14151a] pl-4 pr-3.5 shadow-[0_0_0_1px_rgba(240,178,50,0.35),0_0_18px_rgba(240,178,50,0.28),0_4px_0_#8a6814] sm:min-w-[6.25rem] sm:pl-5 sm:pr-4">
-        <span className="skew-x-[12deg] font-mono text-[15px] font-black leading-none tracking-tight text-[#ffe08a] drop-shadow-[0_2px_0_rgba(0,0,0,0.5)] sm:text-lg">
-          {coins.toLocaleString()}
-        </span>
-      </div>
+      <CoinIcon size={26} className="sm:scale-110" />
+      <span className="font-mono text-sm font-black tabular-nums leading-none tracking-tight text-[#ffe08a] sm:text-[15px]">
+        {coins.toLocaleString()}
+      </span>
     </div>
   );
 }
