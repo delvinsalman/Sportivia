@@ -1181,7 +1181,7 @@ export function CardPacksScreen({
                       initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05, duration: 0.28 }}
-                      className="game-pack-panel group relative overflow-visible px-5 py-4 sm:px-6 sm:py-4"
+                      className="game-pack-panel group relative overflow-hidden px-5 py-4 sm:px-6 sm:py-4"
                       style={{
                         borderColor: `${accent}55`,
                         background: `linear-gradient(165deg, ${accent}2e 0%, ${deep}b8 42%, rgba(12, 13, 16, 0.72) 100%)`,

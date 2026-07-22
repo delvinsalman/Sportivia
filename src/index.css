@@ -477,13 +477,14 @@ button,
   }
 }
 
-/* Pack store panels — base shell; per-pack tint applied inline */
+/* Pack store panels — scooped top corners (concave), rounded bottom */
 .game-pack-panel {
+  --pack-scoop: 1.35rem;
   display: flex;
   flex-direction: column;
   width: 100%;
   margin-inline: 0;
-  border-radius: 0.45rem;
+  border-radius: 0 0 0.85rem 0.85rem;
   border: 2px solid rgba(255, 255, 255, 0.08);
   background: linear-gradient(
     180deg,
@@ -491,6 +492,27 @@ button,
     rgba(16, 17, 20, 0.4) 100%
   );
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  /* Inverted quarter-circles cut from the top-left and top-right */
+  -webkit-mask-image:
+    radial-gradient(circle var(--pack-scoop) at 0 0, transparent 98%, #000 100%),
+    radial-gradient(circle var(--pack-scoop) at 100% 0, transparent 98%, #000 100%),
+    linear-gradient(#000 0 0);
+  -webkit-mask-size:
+    51% calc(var(--pack-scoop) + 1px),
+    51% calc(var(--pack-scoop) + 1px),
+    100% calc(100% - var(--pack-scoop));
+  -webkit-mask-position: top left, top right, bottom left;
+  -webkit-mask-repeat: no-repeat;
+  mask-image:
+    radial-gradient(circle var(--pack-scoop) at 0 0, transparent 98%, #000 100%),
+    radial-gradient(circle var(--pack-scoop) at 100% 0, transparent 98%, #000 100%),
+    linear-gradient(#000 0 0);
+  mask-size:
+    51% calc(var(--pack-scoop) + 1px),
+    51% calc(var(--pack-scoop) + 1px),
+    100% calc(100% - var(--pack-scoop));
+  mask-position: top left, top right, bottom left;
+  mask-repeat: no-repeat;
   transition:
     border-color 0.2s ease,
     filter 0.2s ease,
@@ -500,6 +522,7 @@ button,
 
 @media (min-width: 640px) {
   .game-pack-panel {
+    --pack-scoop: 1.55rem;
     width: calc(100% + 0.85rem);
     margin-inline: -0.425rem;
   }

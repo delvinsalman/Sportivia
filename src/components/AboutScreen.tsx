@@ -42,7 +42,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
   }
 
   return (
-    <div className="relative min-h-svh overflow-x-hidden">
+    <div className="relative min-h-svh overflow-x-hidden [scrollbar-gutter:stable]">
       <SportBackground sport={sport} />
 
       <div className="relative z-30 sticky top-0 flex items-center justify-between gap-2 px-4 sm:px-6 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-transparent">
@@ -75,7 +75,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
       </div>
 
       <div className="relative z-10 mx-auto w-full max-w-5xl px-4 sm:px-6">
-        {/* Full-page hero */}
+        {/* Full-page hero — fixed character frame so scroll/scrollbar never rescales the 3D view */}
         <section className="flex min-h-[calc(100svh-3.75rem)] flex-col justify-center py-10 md:py-12">
           <div className="grid items-center gap-10 md:grid-cols-2 md:gap-12">
             <motion.div
@@ -112,16 +112,17 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.5, delay: 0.08 }}
-              className="relative"
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.08 }}
+              className="relative flex justify-center md:justify-end"
             >
               <div
                 className="absolute inset-8 rounded-full blur-3xl opacity-40"
                 style={{ background: accent }}
               />
-              <div className="relative w-full max-w-[520px] mx-auto">
+              {/* Locked box size — prevents Canvas aspect from jumping when the scrollbar appears */}
+              <div className="relative h-[420px] w-full max-w-[460px] shrink-0">
                 <CharacterPodium
                   characterId={profile.equippedCharacter}
                   accent={SPORT_PODIUM_ACCENT[sport]}
@@ -129,7 +130,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                   bare
                   hero
                   sport={sport}
-                  className="w-full max-w-[460px] mx-auto"
+                  className="h-full w-full"
                   {...(profile.equippedCharacter === 'creative'
                     ? { creativeLoadout: profile.creativeLoadout }
                     : {})}
@@ -157,10 +158,10 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                     />
                   </div>
                 )}
+                <p className="absolute inset-x-0 -bottom-1 text-center text-xs text-[#949ba4]">
+                  {pet ? `${character.name} · ${pet.name}` : character.name}
+                </p>
               </div>
-              <p className="relative text-center text-xs text-[#949ba4] mt-2">
-                {pet ? `${character.name} · ${pet.name}` : character.name}
-              </p>
             </motion.div>
           </div>
         </section>
