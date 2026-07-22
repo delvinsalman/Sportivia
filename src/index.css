@@ -508,11 +508,11 @@ button,
 }
 
 .game-pack-panel:hover {
-  border-color: var(--pack-line-hot, rgba(255, 255, 255, 0.4));
-  filter: brightness(1.08);
+  border-color: var(--pack-line-hot, rgba(255, 255, 255, 0.55));
+  filter: brightness(1.12);
   box-shadow:
     0 10px 28px rgba(0, 0, 0, 0.34),
-    0 0 0 1px rgba(255, 255, 255, 0.06);
+    0 0 0 1px rgba(255, 255, 255, 0.1);
   transform: translateY(-2px);
 }
 
