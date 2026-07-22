@@ -17,6 +17,9 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
 
+  // Bust Safari’s sticky cache of older HTML/404 responses for these paths.
+  const mediaSrc = src.includes('?') ? src : `${src}?v=2`;
+
   const startPreview = useCallback(() => {
     const video = previewRef.current;
     if (!video || failed) return;
@@ -27,8 +30,17 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
     const video = previewRef.current;
     if (!video) return;
     video.pause();
-    video.currentTime = 0;
+    try {
+      video.currentTime = 0;
+    } catch {
+      /* Safari can throw while media isn’t ready */
+    }
   }, []);
+
+  useEffect(() => {
+    setReady(false);
+    setFailed(false);
+  }, [mediaSrc]);
 
   useEffect(() => {
     if (hovered && !open) startPreview();
@@ -39,7 +51,11 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
     if (!open) return;
     const video = lightboxRef.current;
     if (video) {
-      video.currentTime = 0;
+      try {
+        video.currentTime = 0;
+      } catch {
+        /* ignore */
+      }
       void video.play().catch(() => {});
     }
     const onKey = (e: KeyboardEvent) => {
@@ -61,29 +77,43 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
 
   return (
     <>
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={openLightbox}
+        onKeyDown={e => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            openLightbox();
+          }
+        }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
         onFocus={() => setHovered(true)}
         onBlur={() => setHovered(false)}
         aria-label={`Play demo: ${label}`}
-        className="group relative w-full overflow-hidden rounded-2xl border-[2.5px] border-[#3f4147] bg-[#0c0d10]/80 text-left shadow-[0_3px_0_#1a1b1f] transition-all hover:border-[#5c5e66] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0d10]"
+        className="group relative w-full cursor-pointer overflow-hidden rounded-2xl border-[2.5px] border-[#3f4147] bg-[#0c0d10]/80 text-left shadow-[0_3px_0_#1a1b1f] transition-all hover:border-[#5c5e66] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0d10]"
         style={{ aspectRatio: '16 / 10', ['--tw-ring-color' as string]: accent }}
       >
         {!failed ? (
           <video
             ref={previewRef}
-            src={src}
+            key={mediaSrc}
+            src={mediaSrc}
             muted
             loop
             playsInline
-            preload="metadata"
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
+            className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
               ready ? 'opacity-100' : 'opacity-0'
             }`}
-            onLoadedData={() => setReady(true)}
+            onLoadedData={() => {
+              setReady(true);
+              setFailed(false);
+            }}
+            onCanPlay={() => {
+              setReady(true);
+              setFailed(false);
+            }}
             onError={() => setFailed(true)}
           />
         ) : null}
@@ -106,10 +136,7 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
                   className="rounded-md bg-white/5"
                   style={{
                     animation: hovered ? `guide-demo-pulse 1.2s ease-in-out ${i * 0.08}s infinite` : undefined,
-                    background:
-                      hovered && i % 3 === 0
-                        ? `${accent}55`
-                        : undefined,
+                    background: hovered && i % 3 === 0 ? `${accent}55` : undefined,
                   }}
                 />
               ))}
@@ -131,7 +158,7 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
           </span>
           <Maximize2 className="h-3.5 w-3.5 text-white/70 opacity-0 transition-opacity group-hover:opacity-100" />
         </div>
-      </button>
+      </div>
 
       {open &&
         createPortal(
@@ -164,7 +191,8 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
                 {!failed ? (
                   <video
                     ref={lightboxRef}
-                    src={src}
+                    key={`lightbox-${mediaSrc}`}
+                    src={mediaSrc}
                     muted
                     loop
                     playsInline
@@ -180,10 +208,9 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
                     >
                       <Play className="h-5 w-5 fill-white text-white translate-x-px" />
                     </div>
-                    <p className="text-sm font-bold text-[#f2f3f5]">Demo coming soon</p>
+                    <p className="text-sm font-bold text-[#f2f3f5]">Demo unavailable</p>
                     <p className="max-w-sm text-xs text-[#949ba4] leading-relaxed">
-                      Drop a looping clip at <span className="font-mono text-[#b5bac1]">{src}</span> to
-                      show it here.
+                      Try a private window, or clear Safari cache for this site, then reload.
                     </p>
                   </div>
                 )}

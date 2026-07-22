@@ -110,8 +110,38 @@ const MIME: Record<string, string> = {
   '.fbx': 'application/octet-stream',
   '.mp3': 'audio/mpeg',
   '.wav': 'audio/wav',
+  '.mp4': 'video/mp4',
+  '.m4v': 'video/mp4',
+  '.webm': 'video/webm',
+  '.mov': 'video/quicktime',
   '.map': 'application/json',
 };
+
+/** Extensions that must 404 when missing — never SPA-fallback to index.html. */
+const ASSET_EXTS = new Set([
+  '.js',
+  '.css',
+  '.map',
+  '.png',
+  '.jpg',
+  '.jpeg',
+  '.webp',
+  '.gif',
+  '.svg',
+  '.ico',
+  '.woff',
+  '.woff2',
+  '.glb',
+  '.fbx',
+  '.mp3',
+  '.wav',
+  '.mp4',
+  '.m4v',
+  '.webm',
+  '.mov',
+  '.json',
+]);
+
 
 function makeCode(): string {
   const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -313,20 +343,28 @@ function safeFilePath(urlPath: string): string | null {
   return full;
 }
 
-function serveStatic(reqUrl: string, res: import('http').ServerResponse) {
+function serveStatic(reqUrl: string, res: import('http').ServerResponse, req?: import('http').IncomingMessage) {
   if (!existsSync(DIST)) {
     res.writeHead(503, { 'Content-Type': 'text/plain; charset=utf-8' });
     res.end('Build missing. Run npm run build before starting the server.');
     return;
   }
 
-  let filePath = safeFilePath(reqUrl);
+  const pathOnly = reqUrl.split('?')[0] || '/';
+  let filePath = safeFilePath(pathOnly);
   if (!filePath) {
     res.writeHead(400).end('Bad request');
     return;
   }
 
-  if (!existsSync(filePath) || statSync(filePath).isDirectory()) {
+  const ext = extname(filePath).toLowerCase();
+  const missing = !existsSync(filePath) || statSync(filePath).isDirectory();
+  if (missing) {
+    if (ASSET_EXTS.has(ext)) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+      res.end('Not found');
+      return;
+    }
     filePath = join(DIST, 'index.html');
   }
 
@@ -336,7 +374,55 @@ function serveStatic(reqUrl: string, res: import('http').ServerResponse) {
   }
 
   const type = MIME[extname(filePath).toLowerCase()] ?? 'application/octet-stream';
-  res.writeHead(200, { 'Content-Type': type });
+  const stat = statSync(filePath);
+  const size = stat.size;
+  const isMedia = type.startsWith('video/') || type.startsWith('audio/');
+  const cacheControl = isMedia
+    ? 'public, max-age=31536000, immutable'
+    : extname(filePath).toLowerCase() === '.html'
+      ? 'no-cache'
+      : 'public, max-age=3600';
+
+  const range = req?.headers.range;
+  if (isMedia && range) {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(range);
+    if (!match) {
+      res.writeHead(416, {
+        'Content-Type': type,
+        'Content-Range': `bytes */${size}`,
+      });
+      res.end();
+      return;
+    }
+    const start = match[1] ? Number(match[1]) : 0;
+    const end = match[2] ? Number(match[2]) : size - 1;
+    if (Number.isNaN(start) || Number.isNaN(end) || start > end || start >= size) {
+      res.writeHead(416, {
+        'Content-Type': type,
+        'Content-Range': `bytes */${size}`,
+      });
+      res.end();
+      return;
+    }
+    const cappedEnd = Math.min(end, size - 1);
+    const chunk = cappedEnd - start + 1;
+    res.writeHead(206, {
+      'Content-Type': type,
+      'Content-Length': chunk,
+      'Content-Range': `bytes ${start}-${cappedEnd}/${size}`,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': cacheControl,
+    });
+    createReadStream(filePath, { start, end: cappedEnd }).pipe(res);
+    return;
+  }
+
+  res.writeHead(200, {
+    'Content-Type': type,
+    'Content-Length': size,
+    'Accept-Ranges': isMedia ? 'bytes' : 'none',
+    'Cache-Control': cacheControl,
+  });
   createReadStream(filePath).pipe(res);
 }
 
@@ -410,7 +496,7 @@ const server = createServer((req, res) => {
     return;
   }
 
-  serveStatic(url, res);
+  serveStatic(url, res, req);
 });
 
 function broadcastOnline() {
