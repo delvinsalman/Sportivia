@@ -34,7 +34,7 @@ import {
   type PlayerCardBio,
 } from '../lib/playerFaces';
 import { CardPortrait } from './CardPortrait';
-import { CoinBadge } from './LevelBar';
+import { HomeCoinMeter } from './LevelBar';
 import {
   playCardReveal,
   playMenuBack,
@@ -1144,7 +1144,7 @@ export function CardPacksScreen({
               </div>
             </div>
 
-            <CoinBadge coins={profile.coins} />
+            <HomeCoinMeter coins={profile.coins} />
           </div>
         </header>
 
