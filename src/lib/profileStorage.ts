@@ -566,7 +566,7 @@ export function removeCardFromCollection(cardKey: string): {
   return { ok: true, profile };
 }
 
-/** Apply win/loss card stake. Escrow already removed your card at match start. */
+/** Apply win/loss card stake. Escrow may already have removed your card at match start. */
 export function settleCardWager(
   outcome: 'win' | 'loss' | 'draw',
   agreement: CardWagerAgreement,
@@ -581,23 +581,33 @@ export function settleCardWager(
     return { profile, settlement };
   }
 
-  // Escrow pulled your card at kickoff — restore it on draw or win.
-  if (outcome === 'draw' || outcome === 'win') {
+  if (outcome === 'win') {
+    // Keep yours + take theirs
     if (agreement.yourCard) {
-      const restored = addCardToCollection(agreement.yourCard.cardKey);
-      profile = restored.profile;
+      profile = addCardToCollection(agreement.yourCard.cardKey).profile;
+    }
+    if (agreement.opponentCard) {
+      const added = addCardToCollection(agreement.opponentCard.cardKey);
+      profile = added.profile;
+      if (added.duplicate && settlement.gained) {
+        settlement.message = `You won ${settlement.gained.name} (already owned)`;
+      } else if (settlement.gained) {
+        settlement.message = `You won ${settlement.gained.name}`;
+      }
+    }
+  } else if (outcome === 'draw') {
+    // Return yours if escrowed
+    if (agreement.yourCard) {
+      profile = addCardToCollection(agreement.yourCard.cardKey).profile;
+    }
+  } else if (outcome === 'loss') {
+    // Drop yours (no-op if escrow already removed it)
+    if (agreement.yourCard) {
+      const removed = removeCardFromCollection(agreement.yourCard.cardKey);
+      profile = removed.ok ? removed.profile : profile;
     }
   }
 
-  if (outcome === 'win' && agreement.opponentCard) {
-    const added = addCardToCollection(agreement.opponentCard.cardKey);
-    profile = added.profile;
-    if (added.duplicate && settlement.gained) {
-      settlement.message = `You won ${settlement.gained.name} (already owned) · you keep yours`;
-    }
-  }
-
-  // Loss: leave escrowed card removed (do not re-remove / restore).
   return { profile, settlement };
 }
 

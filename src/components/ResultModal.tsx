@@ -227,13 +227,17 @@ export function ResultModal({
                           : 'text-[#f2f3f5]'
                     }`}
                   >
-                    {stake.outcome === 'win' && stake.gainedName
-                      ? `Won ${stake.gainedName}`
-                      : stake.outcome === 'loss' && stake.lostName
-                        ? `Lost ${stake.lostName}`
-                        : stake.outcome === 'draw' && stake.keptName
-                          ? `Draw · kept ${stake.keptName}`
-                          : stake.message}
+                    {stake.outcome === 'win' && stake.gainedName && stake.keptName
+                      ? `Won ${stake.gainedName} · kept ${stake.keptName}`
+                      : stake.outcome === 'win' && stake.gainedName
+                        ? `Won ${stake.gainedName}`
+                        : stake.outcome === 'win' && stake.keptName
+                          ? `Kept ${stake.keptName}`
+                          : stake.outcome === 'loss' && stake.lostName
+                            ? `Lost ${stake.lostName}`
+                            : stake.outcome === 'draw' && stake.keptName
+                              ? `Draw · kept ${stake.keptName}`
+                              : stake.message}
                   </p>
                 </div>
                 {(stake.outcome === 'win' ? stake.gainedRarity : stake.outcome === 'loss' ? stake.lostRarity : null) && (

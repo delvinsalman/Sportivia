@@ -89,8 +89,24 @@ export function resolveStake(
   };
 }
 
+/** True when at least one side put a card up — winner keeps theirs and takes the other stake. */
 export function isWagerActive(agreement: CardWagerAgreement | null | undefined): boolean {
-  return !!(agreement?.yourCard && agreement?.opponentCard);
+  return !!(agreement?.yourCard || agreement?.opponentCard);
+}
+
+/** Merge local + server stake info; prefer whichever side still has a real card. */
+export function mergeWagerAgreement(
+  ...parts: Array<CardWagerAgreement | null | undefined>
+): CardWagerAgreement | null {
+  let yourCard: CardWagerStake | null = null;
+  let opponentCard: CardWagerStake | null = null;
+  for (const part of parts) {
+    if (!part) continue;
+    if (!yourCard && part.yourCard) yourCard = part.yourCard;
+    if (!opponentCard && part.opponentCard) opponentCard = part.opponentCard;
+  }
+  if (!yourCard && !opponentCard) return null;
+  return { yourCard, opponentCard };
 }
 
 function stakeAsCollectible(stake: CardWagerStake): CollectibleCard {
@@ -129,8 +145,10 @@ export function describeWagerSettlement(
     };
   }
 
-  const yourCard = stakeAsCollectible(agreement.yourCard!);
-  const opponentCard = stakeAsCollectible(agreement.opponentCard!);
+  const yourCard = agreement.yourCard ? stakeAsCollectible(agreement.yourCard) : null;
+  const opponentCard = agreement.opponentCard
+    ? stakeAsCollectible(agreement.opponentCard)
+    : null;
 
   if (outcome === 'draw') {
     return {
@@ -138,17 +156,45 @@ export function describeWagerSettlement(
       outcome: 'draw',
       gained: null,
       lost: null,
-      message: 'Draw — both stakes returned',
+      message: yourCard ? `Draw — ${yourCard.name} returned` : 'Draw — no cards moved',
     };
   }
 
   if (outcome === 'win') {
+    if (opponentCard && yourCard) {
+      return {
+        active: true,
+        outcome: 'win',
+        gained: opponentCard,
+        lost: null,
+        message: `Won ${opponentCard.name} · kept ${yourCard.name}`,
+      };
+    }
+    if (opponentCard) {
+      return {
+        active: true,
+        outcome: 'win',
+        gained: opponentCard,
+        lost: null,
+        message: `You won ${opponentCard.name}`,
+      };
+    }
     return {
       active: true,
       outcome: 'win',
-      gained: opponentCard,
+      gained: null,
       lost: null,
-      message: `You won ${opponentCard.name}`,
+      message: yourCard ? `You kept ${yourCard.name}` : 'No card stake this match',
+    };
+  }
+
+  if (yourCard) {
+    return {
+      active: true,
+      outcome: 'loss',
+      gained: null,
+      lost: yourCard,
+      message: `You lost ${yourCard.name}`,
     };
   }
 
@@ -156,8 +202,8 @@ export function describeWagerSettlement(
     active: true,
     outcome: 'loss',
     gained: null,
-    lost: yourCard,
-    message: `You lost ${yourCard.name}`,
+    lost: null,
+    message: opponentCard ? `They kept ${opponentCard.name}` : 'No card stake this match',
   };
 }
 
