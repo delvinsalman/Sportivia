@@ -1181,11 +1181,11 @@ export function CardPacksScreen({
                       initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05, duration: 0.28 }}
-                      className="game-pack-frame game-pack-scoop group relative"
+                      className="game-pack-frame group relative"
                       style={
                         {
-                          '--pack-line': `${accent}88`,
-                          '--pack-line-hot': `${accent}cc`,
+                          '--pack-line': `${accent}99`,
+                          '--pack-line-hot': `${accent}ee`,
                         } as CSSProperties
                       }
                     >
