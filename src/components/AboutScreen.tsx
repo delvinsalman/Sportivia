@@ -313,8 +313,8 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                     background: `radial-gradient(ellipse 85% 90% at 12% 20%, ${item.glare} 0%, transparent 58%), radial-gradient(ellipse 70% 60% at 92% 80%, ${item.glare} 0%, transparent 50%), rgba(12, 13, 16, 0.28)`,
                   }}
                 >
-                  <div className="relative z-10 grid gap-4 sm:grid-cols-[9.5rem_1fr] sm:gap-10">
-                    <div className="flex flex-col gap-2.5 sm:pt-0.5">
+                  <div className="relative z-10 grid gap-5 sm:grid-cols-[11rem_1fr] sm:gap-8 sm:items-start">
+                    <div className="flex flex-col gap-3 sm:gap-4">
                       <p
                         className="text-[11px] font-bold uppercase tracking-[0.18em]"
                         style={{ color: accent }}
@@ -322,9 +322,9 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                         {item.eyebrow}
                       </p>
                       <Icon
-                        className="h-5 w-5 sm:h-[1.35rem] sm:w-[1.35rem]"
+                        className="h-12 w-12 sm:h-16 sm:w-16"
                         style={{ color: accent }}
-                        strokeWidth={2.25}
+                        strokeWidth={1.75}
                         aria-hidden
                       />
                     </div>
