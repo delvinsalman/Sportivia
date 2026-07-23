@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Lock, Minus, Plus, Search, Sparkles, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { ArrowLeft, Lock, Minus, Plus, Search, Sparkles } from 'lucide-react';
 import { HomeCoinMeter } from './LevelBar';
 import { SportBackground } from './SportBackground';
 import { CharacterPodium } from './3d/CharacterPodium';
@@ -50,7 +50,6 @@ export function CharacterCardsScreen({
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CardCategoryFilter>('all');
   const [pending, setPending] = useState<StatPending>(emptyStatPending);
-  const [cartOpen, setCartOpen] = useState(false);
 
   const character = useMemo(() => getCharacterDef(selectedId), [selectedId]);
   const owned = profile.unlockedCharacters.includes(selectedId);
@@ -64,10 +63,6 @@ export function CharacterCardsScreen({
     () => pendingUpgradeTotal(profile, character, pending),
     [character, pending, profile],
   );
-
-  useEffect(() => {
-    if (queued > 0) setCartOpen(true);
-  }, [queued]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -86,7 +81,6 @@ export function CharacterCardsScreen({
     playMenuSelect();
     setSelectedId(id);
     setPending(emptyStatPending());
-    setCartOpen(false);
   }
 
   function queueStat(stat: CardStatKey) {
@@ -113,7 +107,6 @@ export function CharacterCardsScreen({
   function clearPending() {
     playMenuBack();
     setPending(emptyStatPending());
-    setCartOpen(false);
   }
 
   function confirmPending() {
@@ -126,7 +119,6 @@ export function CharacterCardsScreen({
     const ok = onApplyStatUpgrades(selectedId, pending);
     if (ok) {
       setPending(emptyStatPending());
-      setCartOpen(false);
     }
   }
 
@@ -327,9 +319,67 @@ export function CharacterCardsScreen({
                     )}
                   </button>
                 )}
-                <p className="px-1 text-center text-[10px] font-semibold leading-snug text-[#6d6f78]">
-                  Queue stat upgrades, then pay the total. Unlock looks in Store.
-                </p>
+
+                {owned && queued > 0 && (
+                  <div className="overflow-hidden rounded-2xl border-[2.5px] border-[#23a559]/55 bg-gradient-to-b from-[#15241a] to-[#0f1411] shadow-[0_4px_0_#0a120d]">
+                    <div className="flex items-center justify-between gap-2 border-b border-white/8 px-3 py-2">
+                      <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#4ade80]">
+                        Ready to upgrade
+                      </p>
+                      <p className="font-mono text-sm font-black tabular-nums text-[#f0b232]">
+                        {cart.total.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 px-3 py-2.5">
+                      {cart.lines.map(line => (
+                        <button
+                          key={line.stat}
+                          type="button"
+                          onClick={() => unqueueStat(line.stat)}
+                          title={`Remove one ${CARD_STAT_LABELS[line.stat]}`}
+                          className="inline-flex items-center gap-1 rounded-full border border-[#23a559]/35 bg-[#23a559]/15 px-2 py-1 text-[10px] font-black uppercase tracking-wide text-[#86efac] hover:bg-[#23a559]/25"
+                        >
+                          {CARD_STAT_LABELS[line.stat]} +{line.count}
+                          <Minus className="h-3 w-3 opacity-70" strokeWidth={3} />
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-2 px-3 pb-3">
+                      <button
+                        type="button"
+                        onClick={clearPending}
+                        className="rounded-xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-2 text-xs font-black text-[#b5bac1] hover:text-[#f2f3f5]"
+                      >
+                        Clear
+                      </button>
+                      <button
+                        type="button"
+                        onClick={confirmPending}
+                        disabled={profile.coins < cart.total}
+                        className={`min-w-0 flex-1 rounded-xl border-[2.5px] py-2 text-xs font-black transition-all ${
+                          profile.coins >= cart.total
+                            ? 'border-white/25 bg-[#23a559] text-white shadow-[0_3px_0_#14532d] hover:bg-[#1e8f4c]'
+                            : 'border-[#3f4147] bg-[#2b2d31] text-[#5c5e66] cursor-not-allowed'
+                        }`}
+                      >
+                        {profile.coins >= cart.total
+                          ? `Confirm · ${cart.total.toLocaleString()}`
+                          : `Need ${(cart.total - profile.coins).toLocaleString()}`}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {owned && queued === 0 && (
+                  <p className="px-1 text-center text-[10px] font-semibold leading-snug text-[#6d6f78]">
+                    Tap + on stats to queue upgrades, then confirm.
+                  </p>
+                )}
+                {!owned && (
+                  <p className="px-1 text-center text-[10px] font-semibold leading-snug text-[#6d6f78]">
+                    Unlock this skin to upgrade stats. Looks live in Store.
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -406,76 +456,6 @@ export function CharacterCardsScreen({
           </div>
         </div>
       </div>
-
-      {cartOpen && queued > 0 && (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
-          <div className="pointer-events-auto w-full max-w-md overflow-hidden rounded-2xl border-[3px] border-[#f0b232]/70 bg-[#14110a]/95 shadow-[0_8px_0_#8a6814] backdrop-blur-md">
-            <div className="flex items-start justify-between gap-3 border-b border-white/10 px-4 py-3">
-              <div>
-                <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#f0b232]">
-                  Upgrade total
-                </p>
-                <p className="mt-0.5 text-sm font-semibold text-[#b5bac1]">
-                  {queued} upgrade{queued === 1 ? '' : 's'} queued
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={clearPending}
-                className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#3f4147] bg-[#1e1f22] text-[#b5bac1] hover:text-[#f2f3f5]"
-                aria-label="Clear upgrades"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="space-y-1.5 px-4 py-3">
-              {cart.lines.map(line => (
-                <div
-                  key={line.stat}
-                  className="flex items-center justify-between gap-3 text-sm font-bold"
-                >
-                  <span className="text-[#f2f3f5]">
-                    {CARD_STAT_LABELS[line.stat]}{' '}
-                    <span className="text-[#4ade80]">+{line.count}</span>
-                  </span>
-                  <span className="font-mono text-[#ffe08a]">{line.cost.toLocaleString()}</span>
-                </div>
-              ))}
-              <div className="mt-2 flex items-center justify-between border-t border-white/10 pt-2">
-                <span className="text-sm font-black uppercase tracking-wide text-[#949ba4]">
-                  Total
-                </span>
-                <span className="font-mono text-xl font-black text-[#f0b232]">
-                  {cart.total.toLocaleString()}
-                </span>
-              </div>
-            </div>
-            <div className="flex gap-2 px-4 pb-4">
-              <button
-                type="button"
-                onClick={clearPending}
-                className="flex-1 rounded-xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] py-2.5 text-sm font-black text-[#b5bac1] hover:text-[#f2f3f5]"
-              >
-                Clear
-              </button>
-              <button
-                type="button"
-                onClick={confirmPending}
-                disabled={profile.coins < cart.total}
-                className={`flex-[1.4] rounded-xl border-[2.5px] py-2.5 text-sm font-black transition-all ${
-                  profile.coins >= cart.total
-                    ? 'border-white/30 bg-[#23a559] text-white shadow-[0_4px_0_#14532d] hover:bg-[#1e8f4c]'
-                    : 'border-[#3f4147] bg-[#2b2d31] text-[#5c5e66] cursor-not-allowed'
-                }`}
-              >
-                {profile.coins >= cart.total
-                  ? `Pay · ${cart.total.toLocaleString()}`
-                  : `Need ${(cart.total - profile.coins).toLocaleString()}`}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
