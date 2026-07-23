@@ -13,6 +13,7 @@ import { CoinStakeScreen } from './components/CoinStakeScreen';
 import { AboutScreen } from './components/AboutScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { CareerScreen } from './components/CareerScreen';
+import { UnlockShowcase, type UnlockReveal } from './components/UnlockShowcase';
 import {
   loadProfile,
   equipCharacter,
@@ -41,6 +42,7 @@ import { useDuel } from './hooks/useDuel';
 import { useAmbientMusic } from './hooks/useAmbientMusic';
 import { useOnlineCount } from './hooks/useOnlineCount';
 import { useSettings } from './hooks/useSettings';
+import { playUnlockFanfare } from './lib/menuAudio';
 
 type Screen =
   | 'home'
@@ -71,6 +73,7 @@ export default function App() {
   const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
   const [gameKey, setGameKey] = useState(0);
   const [duelSeed, setDuelSeed] = useState<string | null>(null);
+  const [unlockReveal, setUnlockReveal] = useState<UnlockReveal | null>(null);
   const startedMatchRef = useRef<string | null>(null);
 
   const duel = useDuel({
@@ -217,7 +220,11 @@ export default function App() {
 
   function handlePurchase(id: CharacterId) {
     const { ok, profile: next } = purchaseCharacter(id);
-    if (ok) setProfile(next);
+    if (ok) {
+      setProfile(next);
+      playUnlockFanfare();
+      setUnlockReveal({ kind: 'character', id });
+    }
   }
 
   function handleApplyStatUpgrades(id: CharacterId, pending: StatPending) {
@@ -232,7 +239,11 @@ export default function App() {
 
   function handlePurchasePet(id: PetId) {
     const { ok, profile: next } = purchasePet(id);
-    if (ok) setProfile(next);
+    if (ok) {
+      setProfile(next);
+      playUnlockFanfare();
+      setUnlockReveal({ kind: 'pet', id });
+    }
   }
 
   function handleEquipPet(id: PetId) {
@@ -270,6 +281,8 @@ export default function App() {
   function handleSaveName(name: string) {
     setProfile(updatePlayerName(name));
   }
+
+  const clearUnlockReveal = useCallback(() => setUnlockReveal(null), []);
 
   return (
     <div className="relative min-h-svh overflow-hidden bg-[#0a0a0b]">
@@ -441,6 +454,23 @@ export default function App() {
               onProfileChange={handleProfileChange}
             />
           </PageTransition>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {unlockReveal && (
+          <UnlockShowcase
+            key={`${unlockReveal.kind}-${unlockReveal.id}`}
+            reveal={unlockReveal}
+            sport={sport}
+            creativeLoadout={profile.creativeLoadout}
+            athleteLoadout={profile.athleteLoadout}
+            bobLoadout={profile.bobLoadout}
+            rabbitVariant={profile.rabbitVariant}
+            makoVariant={profile.makoVariant}
+            dogVariant={profile.dogVariant}
+            onDone={clearUnlockReveal}
+          />
         )}
       </AnimatePresence>
     </div>

@@ -79,6 +79,25 @@ export function playMenuConfirm() {
   tone(660, 0.16, { type: 'triangle', gain: 0.04, attack: 0.012, decay: 0.13 });
 }
 
+/** Skin / pet unlock fanfare */
+export function playUnlockFanfare() {
+  if (!canPlayMenuSound()) return;
+  const notes = [523.25, 659.25, 783.99, 1046.5];
+  notes.forEach((freq, i) => {
+    window.setTimeout(() => {
+      tone(freq, 0.22, {
+        type: i === notes.length - 1 ? 'triangle' : 'sine',
+        gain: 0.045 + i * 0.008,
+        attack: 0.01,
+        decay: 0.16 + i * 0.04,
+      });
+    }, i * 90);
+  });
+  window.setTimeout(() => {
+    tone(1318.5, 0.28, { type: 'sine', gain: 0.03, attack: 0.012, decay: 0.24 });
+  }, 380);
+}
+
 /** Back / dismiss */
 export function playMenuBack() {
   tone(480, 0.08, { type: 'sine', gain: 0.035, attack: 0.005, decay: 0.07 });
