@@ -293,6 +293,7 @@ export const CHARACTERS: CharacterDef[] = [
     price: 17_000,
     modelPath: '/models/panda.glb',
     baseOvr: 82,
+    cardImage: '/cards/panda.png',
     accent: '#4ade80',
     footOffsetY: 0,
   },
