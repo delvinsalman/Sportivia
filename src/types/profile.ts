@@ -18,6 +18,7 @@ export type CharacterId =
   | 'ref-bot'
   | 'officer'
   | 'manager'
+  | 'tennis-girl'
   | 'astronaut'
   | 'cosmo'
   | 'panda'
@@ -272,6 +273,18 @@ export const CHARACTERS: CharacterDef[] = [
     footOffsetY: 0,
     targetHeight: 1.72,
     showcaseRestMs: [4200, 7800],
+  },
+  {
+    id: 'tennis-girl',
+    name: 'Court Ace',
+    tagline: 'Baseline fire · match-point energy',
+    price: 8_500,
+    modelPath: '/models/tennis-girl.glb',
+    baseOvr: 78,
+    accent: '#a3e635',
+    footOffsetY: 0,
+    targetHeight: 1.7,
+    showcaseRestMs: [4_000, 7_200],
   },
   {
     id: 'astronaut',
