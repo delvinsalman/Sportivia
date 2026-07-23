@@ -75,7 +75,7 @@ export function CareerScreen({
               </div>
 
               {/* Sport category switcher */}
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-1.5 rounded-2xl border-[2.5px] border-[#3f4147] bg-[#0c0d0f]/85 p-1.5 shadow-[0_3px_0_#0a0a0b]">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-1 rounded-2xl border-[2.5px] border-[#3f4147] bg-[#0c0d0f]/85 p-1 shadow-[0_3px_0_#0a0a0b]">
                 {SPORTS.map(s => {
                   const active = sport === s;
                   return (
@@ -83,7 +83,7 @@ export function CareerScreen({
                       key={s}
                       type="button"
                       onClick={() => switchSport(s)}
-                      className={`box-border flex h-full min-h-11 items-center justify-center gap-1.5 rounded-xl px-2 py-2.5 text-xs font-black leading-none transition-colors ${
+                      className={`box-border flex h-full min-h-10 items-center justify-center gap-1.5 rounded-xl px-1.5 py-2 text-[11px] font-black leading-none transition-colors ${
                         active ? 'text-[#f2f3f5]' : 'text-[#7a7d86] hover:text-[#dbdee1]'
                       }`}
                       style={
@@ -98,8 +98,8 @@ export function CareerScreen({
                             }
                       }
                     >
-                      <SportBall sport={s} size={16} />
-                      <span className="leading-none">{SPORT_LABEL[s]}</span>
+                      <SportBall sport={s} size={14} />
+                      <span className="leading-none truncate">{SPORT_LABEL[s]}</span>
                     </button>
                   );
                 })}

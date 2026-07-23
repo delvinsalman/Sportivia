@@ -16,7 +16,7 @@ function BallImage({ src, size = 40, className = '', style, visualScale = 1 }: B
 
   return (
     <span
-      className={`inline-flex items-center justify-center shrink-0 ${className}`}
+      className={`inline-flex items-center justify-center shrink-0 overflow-hidden ${className}`}
       style={{ width: size, height: size, ...style }}
     >
       <img
@@ -29,6 +29,7 @@ function BallImage({ src, size = 40, className = '', style, visualScale = 1 }: B
         style={{
           width: renderSize,
           height: renderSize,
+          maxWidth: 'none',
           filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.45))',
         }}
       />
