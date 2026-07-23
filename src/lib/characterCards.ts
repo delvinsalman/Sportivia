@@ -152,10 +152,14 @@ export function getCharacterLevel(
   return 1 + total;
 }
 
-/** Coin cost to raise one stat by +1 from its current upgrade level. */
-export function characterStatUpgradeCost(statLevel: number): number {
-  const from = Math.max(0, Math.min(40, Math.floor(statLevel)));
-  return Math.round(80 + from * 45 + from * from * 12);
+/** Coin cost to raise a live rating by +1 from its current value. */
+export function characterStatUpgradeCost(currentValue: number): number {
+  const v = Math.max(40, Math.min(98, Math.floor(currentValue)));
+  // Low cards stay cheap to climb; elite ratings pay a steep premium per point.
+  // ~285 at 64 · ~780 at 75 · ~1.6k at 85 · ~2.2k at 89 · ~3.4k at 95 · ~4.2k at 98
+  const mid = Math.pow(Math.max(0, v - 50), 2) * 1.15;
+  const elite = Math.pow(Math.max(0, v - 80), 2) * 4.5;
+  return Math.round(60 + mid + elite);
 }
 
 export type StatPending = Partial<Record<CardStatKey, number>>;
@@ -212,7 +216,7 @@ export function nextStatUpgradeCost(
   if (preview[stat] >= MAX_STAT_VALUE || level >= max) {
     return { ok: false, cost: 0, level, reason: 'Maxed' };
   }
-  return { ok: true, cost: characterStatUpgradeCost(level), level };
+  return { ok: true, cost: characterStatUpgradeCost(preview[stat]), level };
 }
 
 /** Total coin cost for a pending upgrade cart. */
@@ -223,14 +227,13 @@ export function pendingUpgradeTotal(
 ): { total: number; lines: Array<{ stat: CardStatKey; count: number; cost: number }> } {
   const lines: Array<{ stat: CardStatKey; count: number; cost: number }> = [];
   let total = 0;
+  const live = characterCardStats(character, profile);
   for (const stat of CARD_STAT_KEYS) {
     const count = pending[stat] ?? 0;
     if (count <= 0) continue;
-    const max = maxBonusForStat(character, stat);
-    const saved = getStatLevel(profile, character.id, stat, max);
     let cost = 0;
     for (let i = 0; i < count; i++) {
-      cost += characterStatUpgradeCost(saved + i);
+      cost += characterStatUpgradeCost(live[stat] + i);
     }
     lines.push({ stat, count, cost });
     total += cost;

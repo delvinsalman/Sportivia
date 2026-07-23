@@ -380,6 +380,7 @@ export const CHARACTERS: CharacterDef[] = [
     price: 65_000,
     modelPath: '/models/mako/classic.glb',
     baseOvr: 89,
+    cardImage: '/cards/mako.png',
     accent: '#2dd4bf',
     footOffsetY: 0,
     customizable: true,
