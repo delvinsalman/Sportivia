@@ -233,6 +233,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Whistle for hire · calls favor the bag',
     price: 4_500,
     modelPath: '/models/ref-bot.glb',
+    cardImage: '/cards/ref-bot.png',
     baseOvr: 75,
     accent: '#fbbf24',
     footOffsetY: 0,
