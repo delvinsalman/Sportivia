@@ -209,7 +209,7 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'league-al': { type: 'league', colors: ['#041e42', '#c8102e'], initials: 'AL' },
   'league-nl': { type: 'league', colors: ['#1e3a8a', '#dc2626'], initials: 'NL' },
   'award-mvp': { type: 'trophy', logoUrl: '/icons/trophies/mlb-mvp.png', logoScale: 1.2 },
-  'award-cy-young': { type: 'award', initials: 'CY' },
+  'award-cy-young': { type: 'trophy', logoUrl: '/icons/trophies/mlb-cy-young.png', logoScale: 1.2 },
   'award-world-series': { type: 'trophy', logoUrl: '/icons/trophies/mlb-world-series.png', logoScale: 1.2 },
   'award-allstar': { type: 'allstar', allStarVariant: 'mlb' },
   'award-hof': { type: 'trophy', logoUrl: '/icons/trophies/mlb-hof.png', logoScale: 1.2 },
