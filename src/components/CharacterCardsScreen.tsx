@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ArrowLeft, Lock, Minus, Plus, Search, Sparkles } from 'lucide-react';
 import { HomeCoinMeter } from './LevelBar';
 import { SportBackground } from './SportBackground';
-import { CharacterCardPortrait } from './CharacterCardPortrait';
+import { CharacterPodium } from './3d/CharacterPodium';
 import { CharacterFutCard } from './CharacterFutCard';
 import type { Sport } from '../types';
 import type { CharacterId, PlayerProfile } from '../types/profile';
@@ -171,11 +171,25 @@ export function CharacterCardsScreen({
                     </p>
                   </div>
 
-                  <div className="relative mx-auto mt-0.5 h-[150px] w-full overflow-hidden rounded-xl sm:h-[175px]">
-                    <CharacterCardPortrait
-                      character={character}
-                      owned={owned}
-                      size="featured"
+                  <div className="relative mx-auto mt-0.5 h-[150px] w-full sm:h-[175px]">
+                    <CharacterPodium
+                      characterId={selectedId}
+                      accent={character.accent}
+                      height={175}
+                      bare
+                      hero
+                      sport={sport}
+                      className="h-full w-full"
+                      {...(selectedId === 'creative'
+                        ? { creativeLoadout: profile.creativeLoadout }
+                        : {})}
+                      {...(selectedId === 'athlete'
+                        ? { athleteLoadout: profile.athleteLoadout }
+                        : {})}
+                      {...(selectedId === 'bob' ? { bobLoadout: profile.bobLoadout } : {})}
+                      {...(selectedId === 'bunny'
+                        ? { rabbitVariant: profile.rabbitVariant }
+                        : {})}
                     />
                     {!owned && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40">
