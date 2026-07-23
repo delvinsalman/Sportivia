@@ -64,6 +64,8 @@ export interface CharacterDef {
   modelPath: string;
   /** Flat card art — preferred on Cards screen to avoid WebGL. */
   cardImage?: string;
+  /** Base card overall before upgrades (FIFA-style). */
+  baseOvr: number;
   accent: string;
   /** Per-model foot placement on the podium */
   footOffsetY?: number;
@@ -118,7 +120,7 @@ export interface PlayerProfile {
   rabbitVariant: RabbitVariantId;
   /** Selected breed included with the Dog pet */
   dogVariant: DogVariantId;
-  /** Per-skin per-stat upgrade levels (0–15 each). Overall is derived from the six stats. */
+  /** Per-skin per-stat upgrade bonuses. Overall averages the six live stats (up to 99). */
   characterStatLevels: Partial<Record<CharacterId, Partial<Record<'pac' | 'sho' | 'pas' | 'dri' | 'def' | 'phy', number>>>>;
   stats: PlayerStats;
 }
@@ -140,6 +142,7 @@ export const CHARACTERS: CharacterDef[] = [
     price: 0,
     modelPath: '/models/cube-man.fbx',
     cardImage: '/cards/cube-man.png',
+    baseOvr: 64,
     accent: '#23a559',
     footOffsetY: 0.05,
     poseMode: 'skeletal',
@@ -150,6 +153,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Home opener · free agent',
     price: 0,
     modelPath: '/models/cube-woman.fbx',
+    baseOvr: 64,
     accent: '#f97316',
     footOffsetY: 0.05,
     poseMode: 'skeletal',
@@ -160,6 +164,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Quick first step · free roster',
     price: 0,
     modelPath: '/models/ava.glb',
+    baseOvr: 65,
     accent: '#e879f9',
     footOffsetY: 0,
   },
@@ -169,6 +174,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Practice squad · earn the reps',
     price: 200,
     modelPath: '/models/citizen-1.glb',
+    baseOvr: 65,
     accent: '#94a3b8',
     footOffsetY: 0,
   },
@@ -178,6 +184,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Crowd energy · local legend',
     price: 500,
     modelPath: '/models/citizen-2.glb',
+    baseOvr: 66,
     accent: '#a78bfa',
     footOffsetY: 0,
   },
@@ -187,6 +194,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Always in the mix · game day',
     price: 1_000,
     modelPath: '/models/citizen-3.glb',
+    baseOvr: 67,
     accent: '#67e8f9',
     footOffsetY: 0,
   },
@@ -196,6 +204,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Pitch ready · first touch',
     price: 1_800,
     modelPath: '/models/soccer-boy.glb',
+    baseOvr: 70,
     accent: '#23a559',
     footOffsetY: 0,
     targetHeight: 1.72,
@@ -206,6 +215,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Film room grind · next-gen IQ',
     price: 3_000,
     modelPath: '/models/nerd-player.glb',
+    baseOvr: 72,
     accent: '#818cf8',
     footOffsetY: 0,
     targetHeight: 1.65,
@@ -216,6 +226,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Whistle for hire · calls favor the bag',
     price: 4_500,
     modelPath: '/models/ref-bot.glb',
+    baseOvr: 75,
     accent: '#fbbf24',
     footOffsetY: 0,
     targetHeight: 1.68,
@@ -226,6 +237,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Keeps order · no funny business',
     price: 6_500,
     modelPath: '/models/officer.glb',
+    baseOvr: 76,
     accent: '#3b82f6',
     footOffsetY: 0,
     targetHeight: 1.7,
@@ -236,6 +248,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Sideline boss · clipboard energy',
     price: 7_500,
     modelPath: '/models/manager.glb',
+    baseOvr: 78,
     accent: '#f59e0b',
     footOffsetY: 0,
     targetHeight: 1.72,
@@ -247,6 +260,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Out-of-this-world range · rare pick',
     price: 9_000,
     modelPath: '/models/astronaut.glb',
+    baseOvr: 79,
     accent: '#60a5fa',
     footOffsetY: -0.1,
   },
@@ -256,6 +270,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Last-second energy · mission mode',
     price: 12_500,
     modelPath: '/models/cosmo.glb',
+    baseOvr: 80,
     accent: '#93c5fd',
     footOffsetY: 0,
   },
@@ -265,6 +280,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Paint presence · chill dominance',
     price: 17_000,
     modelPath: '/models/panda.glb',
+    baseOvr: 82,
     accent: '#4ade80',
     footOffsetY: 0,
   },
@@ -274,6 +290,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Unlock once · customize forever',
     price: 18_000,
     modelPath: '/models/creative.glb',
+    baseOvr: 82,
     accent: '#f472b6',
     footOffsetY: 0,
     targetHeight: 1.72,
@@ -287,6 +304,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Jersey kits · build your look',
     price: 20_000,
     modelPath: '/models/athlete.glb',
+    baseOvr: 83,
     accent: '#22c55e',
     footOffsetY: 0,
     targetHeight: 1.7,
@@ -300,6 +318,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Pick a color · customize anytime',
     price: 23_000,
     modelPath: '/models/bob.glb',
+    baseOvr: 84,
     accent: '#38bdf8',
     footOffsetY: 0,
     customizable: true,
@@ -312,6 +331,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Five looks included · customize anytime',
     price: 36_000,
     modelPath: '/models/rabbit/base.glb',
+    baseOvr: 85,
     accent: '#67e8f9',
     footOffsetY: 0,
     customizable: true,
@@ -323,6 +343,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Lockdown D · silent pick',
     price: 45_000,
     modelPath: '/models/ninja.glb',
+    baseOvr: 87,
     accent: '#a78bfa',
     footOffsetY: 0,
   },
@@ -332,6 +353,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Shark in the paint · ice cold',
     price: 65_000,
     modelPath: '/models/mako.glb',
+    baseOvr: 89,
     accent: '#2dd4bf',
     footOffsetY: 0,
   },

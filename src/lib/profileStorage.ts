@@ -24,7 +24,7 @@ import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult, grantDuelWinAchievement } from './seasonMeta';
 import { pickRandomPlayerName } from './playerNames';
-import { pendingUpgradeTotal, type CardStatKey } from './characterCards';
+import { maxBonusForStat, pendingUpgradeTotal, type CardStatKey } from './characterCards';
 
 const PROFILE_KEY = 'gridiq-profile-v4';
 const PAID_SKINS_MIGRATION_KEY = 'gridiq-paid-skins-v1';
@@ -132,7 +132,7 @@ export function loadProfile(): PlayerProfile {
           for (const stat of STAT_KEYS) {
             const raw = (value as Record<string, unknown>)[stat];
             if (typeof raw !== 'number') continue;
-            next[stat] = Math.max(0, Math.min(15, Math.floor(raw)));
+            next[stat] = Math.max(0, Math.min(40, Math.floor(raw)));
           }
           characterStatLevels[id] = next;
         }
@@ -369,8 +369,9 @@ export function applyCharacterStatUpgrades(
   for (const key of ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const) {
     const add = cleaned[key] ?? 0;
     if (add <= 0) continue;
-    const current = Math.max(0, Math.min(15, Math.floor(draftLevels[key] ?? 0)));
-    if (current + add > 15) {
+    const max = maxBonusForStat(def, key);
+    const current = Math.max(0, Math.min(max, Math.floor(draftLevels[key] ?? 0)));
+    if (current + add > max) {
       return { ok: false, profile, error: `${key.toUpperCase()} would exceed max` };
     }
   }
@@ -386,7 +387,8 @@ export function applyCharacterStatUpgrades(
   for (const key of ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const) {
     const add = cleaned[key] ?? 0;
     if (add <= 0) continue;
-    nextLevels[key] = Math.max(0, Math.min(15, Math.floor(nextLevels[key] ?? 0) + add));
+    const max = maxBonusForStat(def, key);
+    nextLevels[key] = Math.max(0, Math.min(max, Math.floor(nextLevels[key] ?? 0) + add));
   }
   profile.characterStatLevels = { ...profile.characterStatLevels, [id]: nextLevels };
   saveProfile(profile);
