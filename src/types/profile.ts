@@ -153,6 +153,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Home opener · free agent',
     price: 0,
     modelPath: '/models/cube-woman.fbx',
+    cardImage: '/cards/cube-woman.png',
     baseOvr: 64,
     accent: '#f97316',
     footOffsetY: 0.05,
