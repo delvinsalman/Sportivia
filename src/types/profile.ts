@@ -198,6 +198,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Always in the mix · game day',
     price: 1_000,
     modelPath: '/models/citizen-3.glb',
+    cardImage: '/cards/citizen-3.png',
     baseOvr: 67,
     accent: '#67e8f9',
     footOffsetY: 0,
