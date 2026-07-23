@@ -8,7 +8,7 @@ interface CharacterCardPortraitProps {
   className?: string;
 }
 
-/** Flat card art (or letter fallback) — no WebGL. */
+/** Flat card art (or letter fallback) — no WebGL, no lightbox plate. */
 export function CharacterCardPortrait({
   character,
   owned = true,
@@ -19,10 +19,7 @@ export function CharacterCardPortrait({
 
   return (
     <div
-      className={`relative h-full w-full overflow-hidden ${owned ? '' : 'opacity-50 grayscale'} ${className}`}
-      style={{
-        background: `radial-gradient(ellipse 70% 65% at 50% 35%, ${character.accent}40 0%, transparent 68%), linear-gradient(180deg, #1a1c22 0%, #0c0d10 100%)`,
-      }}
+      className={`relative h-full w-full overflow-hidden bg-transparent ${owned ? '' : 'opacity-50 grayscale'} ${className}`}
     >
       {character.cardImage ? (
         <img
@@ -30,7 +27,7 @@ export function CharacterCardPortrait({
           alt=""
           draggable={false}
           className={`absolute inset-0 h-full w-full object-contain object-bottom select-none ${
-            featured ? 'scale-[1.05] p-1' : 'p-0.5'
+            featured ? 'scale-[1.05]' : 'scale-105'
           }`}
         />
       ) : (

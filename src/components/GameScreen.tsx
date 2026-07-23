@@ -16,7 +16,7 @@ import type { DuelMatchResult } from '../lib/duelTypes';
 import { Swords } from 'lucide-react';
 import { getSettings } from '../lib/settings';
 import { BOT_DIFFICULTIES, botName, nextBotDelay, rollBotPoints } from '../lib/botOpponent';
-import { grantDuelWin, settleLockedCoinStake } from '../lib/profileStorage';
+import { grantDuelWin, recordPvpOutcome, settleLockedCoinStake } from '../lib/profileStorage';
 import type { PlayerProfile } from '../types/profile';
 import type { StakeOutcome } from '../lib/coinStake';
 import { assetUrl } from '../lib/assetUrl';
@@ -89,6 +89,7 @@ export function GameScreen({
   const [botScore, setBotScore] = useState(0);
   const botScoreRef = useRef(0);
   const stakeSettledRef = useRef(false);
+  const pvpRecordedRef = useRef(false);
   const [stakeInfo, setStakeInfo] = useState<{
     amount: number;
     label: string;
@@ -121,12 +122,24 @@ export function GameScreen({
     };
   }, [mode, botDifficulty, game.phase]);
 
-  // Unlock duelist achievement once the match result confirms a win.
+  // Persist PvP W-L-T + duelist achievement once the match result is known.
   useEffect(() => {
-    if (mode !== 'duel' || !duelResult) return;
-    if (duelResult.winnerId !== duelResult.you.id) return;
-    const { profile, granted } = grantDuelWin();
-    if (granted) onProfileChange?.(profile);
+    if (mode !== 'duel' || !duelResult || pvpRecordedRef.current) return;
+    pvpRecordedRef.current = true;
+
+    const outcome: StakeOutcome =
+      duelResult.winnerId === 'draw'
+        ? 'draw'
+        : duelResult.winnerId === duelResult.you.id
+          ? 'win'
+          : 'loss';
+
+    let next = recordPvpOutcome(outcome);
+    if (outcome === 'win') {
+      const { profile, granted } = grantDuelWin();
+      if (granted) next = profile;
+    }
+    onProfileChange?.(next);
   }, [duelResult, mode, onProfileChange]);
 
   // Settle coin stake once outcome is known (bot immediately; duel after server result).

@@ -1,5 +1,5 @@
 import type { GameResult, Sport } from '../types';
-import type { CharacterId, DogVariantId, MakoVariantId, PetId, PlayerProfile, RabbitVariantId } from '../types/profile';
+import type { CharacterId, DogVariantId, MakoVariantId, PetId, PlayerProfile, PvpRecord, RabbitVariantId } from '../types/profile';
 import {
   CHARACTERS,
   DEFAULT_ATHLETE_LOADOUT,
@@ -10,6 +10,7 @@ import {
   DEFAULT_MAKO_VARIANT,
   DEFAULT_RABBIT_VARIANT,
   DOG_VARIANTS,
+  EMPTY_PVP_RECORD,
   MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
@@ -230,6 +231,7 @@ function defaultProfile(): PlayerProfile {
     makoVariant: DEFAULT_MAKO_VARIANT,
     dogVariant: DEFAULT_DOG_VARIANT,
     characterStatLevels: {},
+    pvpRecord: { ...EMPTY_PVP_RECORD },
     stats: loadStats(),
   };
 }
@@ -316,6 +318,7 @@ export function loadProfile(): PlayerProfile {
       makoVariant,
       dogVariant,
       characterStatLevels,
+      pvpRecord: normalizePvpRecord((parsed as { pvpRecord?: unknown }).pvpRecord),
       stats: loadStats(),
     };
 
@@ -370,6 +373,36 @@ export function saveProfile(profile: PlayerProfile): void {
   } catch {
     /* quota / private mode — keep in-memory play going */
   }
+}
+
+function normalizePvpRecord(raw: unknown): PvpRecord {
+  if (!raw || typeof raw !== 'object') return { ...EMPTY_PVP_RECORD };
+  const src = raw as Record<string, unknown>;
+  const clamp = (n: unknown) =>
+    typeof n === 'number' && Number.isFinite(n) ? Math.max(0, Math.floor(n)) : 0;
+  return {
+    wins: clamp(src.wins),
+    losses: clamp(src.losses),
+    ties: clamp(src.ties),
+  };
+}
+
+export function formatPvpRecord(record: PvpRecord): string {
+  return `${record.wins}-${record.losses}-${record.ties}`;
+}
+
+/** Bump lifetime 1v1 W-L-T after a resolved duel. */
+export function recordPvpOutcome(
+  outcome: 'win' | 'loss' | 'draw',
+): PlayerProfile {
+  const profile = loadProfile();
+  const next = { ...normalizePvpRecord(profile.pvpRecord) };
+  if (outcome === 'win') next.wins += 1;
+  else if (outcome === 'loss') next.losses += 1;
+  else next.ties += 1;
+  profile.pvpRecord = next;
+  saveProfile(profile);
+  return profile;
 }
 
 /** Apply duelist achievement + coin bonus after a confirmed online win. */

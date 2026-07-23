@@ -12,10 +12,14 @@ import {
   CARD_STAT_KEYS,
   CARD_STAT_LABELS,
   canUpgradeCharacterStat,
+  cardTierColors,
+  cardTierLabel,
   characterCardStatsWithPending,
   characterOverallWithPending,
   emptyStatPending,
   getCharacterLevel,
+  isCardIcon,
+  isCardMaxed,
   matchesCardCategory,
   pendingCount,
   pendingUpgradeTotal,
@@ -58,6 +62,11 @@ export function CharacterCardsScreen({
   const level = getCharacterLevel(profile, selectedId);
   const stats = characterCardStatsWithPending(character, profile, pending);
   const ovr = characterOverallWithPending(character, profile, pending);
+  const tier = cardTierColors(ovr);
+  const tierLabel = owned ? cardTierLabel(ovr) : 'Locked';
+  const iconTier = owned && isCardIcon(ovr);
+  const maxed = owned && isCardMaxed(ovr);
+  const previewAccent = iconTier ? tier.border : character.accent;
   const canAfford = character.price <= 0 || profile.coins >= character.price;
   const queued = pendingCount(pending);
   const cart = useMemo(
@@ -183,37 +192,76 @@ export function CharacterCardsScreen({
                 className="card-snake-ring"
                 style={
                   {
-                    ['--snake-c1' as string]: character.accent,
-                    ['--snake-c2' as string]: '#ffffff',
+                    ['--snake-c1' as string]: previewAccent,
+                    ['--snake-c2' as string]: maxed ? '#fff8dc' : '#ffffff',
                   } as CSSProperties
                 }
               >
-                <div className="relative z-[1] overflow-hidden rounded-[1.3rem] border border-white/10 bg-[#12141a] shadow-none">
+                <div
+                  className={`relative z-[1] overflow-hidden rounded-[1.3rem] border shadow-none ${
+                    maxed ? 'card-max-99 border-[#ffe08a]/80' : iconTier ? 'card-icon-gold border-[#f0b232]/70' : 'border-white/10'
+                  }`}
+                  style={{
+                    background: iconTier
+                      ? `linear-gradient(165deg, ${tier.glow} 0%, #12141a 42%, #0c0d10 100%)`
+                      : '#12141a',
+                    boxShadow: maxed
+                      ? '0 0 22px rgba(255,224,138,0.45)'
+                      : iconTier
+                        ? '0 0 18px rgba(240,178,50,0.35)'
+                        : undefined,
+                  }}
+                >
+                {maxed && (
+                  <div className="pointer-events-none absolute inset-0 card-max-99-shine" aria-hidden />
+                )}
                 <div
                   className="pointer-events-none absolute inset-0 opacity-40"
                   style={{
-                    background: `radial-gradient(ellipse 80% 55% at 50% 20%, ${character.accent}55 0%, transparent 65%)`,
+                    background: `radial-gradient(ellipse 80% 55% at 50% 20%, ${previewAccent}55 0%, transparent 65%)`,
                   }}
                 />
                 <div className="relative px-4 pt-3.5">
                   <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="font-mono text-4xl font-black leading-none tracking-tight text-[#f8fafc]">
+                      <p
+                        className="font-mono text-4xl font-black leading-none tracking-tight"
+                        style={{
+                          color: iconTier ? (maxed ? '#ffe08a' : '#f0b232') : '#f8fafc',
+                          textShadow: iconTier
+                            ? `0 0 14px ${maxed ? 'rgba(255,224,138,0.65)' : 'rgba(240,178,50,0.5)'}`
+                            : undefined,
+                        }}
+                      >
                         {owned ? ovr : '—'}
                       </p>
                       <p className="mt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/50">
                         Overall · Lv {owned ? level + queued : 0}
                       </p>
                     </div>
-                    <p className="max-w-[9rem] text-right text-[10px] font-bold uppercase tracking-wide text-[#949ba4]">
-                      {character.tagline}
-                    </p>
+                    <div className="flex max-w-[9rem] flex-col items-end gap-1.5">
+                      <span
+                        className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[8px] font-black uppercase tracking-wider ${
+                          maxed ? 'text-[#1a1408]' : iconTier ? 'text-[#0c0d10]' : 'text-[#0c0d10]'
+                        }`}
+                        style={{
+                          background: owned ? tier.badge : '#64748b',
+                          boxShadow: maxed ? '0 0 10px rgba(255,224,138,0.55)' : undefined,
+                        }}
+                      >
+                        {maxed && <Sparkles className="h-2.5 w-2.5" strokeWidth={2.75} />}
+                        {tierLabel}
+                      </span>
+                      <p className="text-right text-[10px] font-bold uppercase tracking-wide text-[#949ba4]">
+                        {character.tagline}
+                      </p>
+                    </div>
                   </div>
 
                   <div className="relative mx-auto mt-0.5 h-[150px] w-full sm:h-[175px]">
                     <CharacterPodium
                       characterId={selectedId}
-                      accent={character.accent}
+                      accent={previewAccent}
                       height={175}
                       bare
                       hero
@@ -264,7 +312,17 @@ export function CharacterCardsScreen({
                                   <span className="ml-1 text-[#4ade80]">+{queuedForStat}</span>
                                 ) : null}
                               </p>
-                              <p className="font-mono text-base font-black leading-none text-[#f2f3f5]">
+                              <p
+                                className="font-mono text-base font-black leading-none"
+                                style={{
+                                  color:
+                                    owned && stats[key] >= 99
+                                      ? '#ffe08a'
+                                      : iconTier
+                                        ? '#f5e6b8'
+                                        : '#f2f3f5',
+                                }}
+                              >
                                 {owned ? stats[key] : '—'}
                               </p>
                             </div>

@@ -1,5 +1,5 @@
 import type { Sport } from '../types';
-import type { CharacterId } from '../types/profile';
+import type { CharacterId, PvpRecord } from '../types/profile';
 import type { CharacterStatLevels } from './characterCards';
 
 export type DuelRoomStatus = 'lobby' | 'playing' | 'finished';
@@ -19,6 +19,8 @@ export interface DuelPlayerInfo {
   wagerCoins?: number;
   /** Per-stat upgrade levels for the equipped skin card. */
   cardLevels?: CharacterStatLevels;
+  /** Lifetime 1v1 W-L-T at lobby join. */
+  pvpRecord?: PvpRecord;
 }
 
 export interface DuelLobbyState {
@@ -85,6 +87,7 @@ export interface CreateDuelPayload {
   characterId: CharacterId;
   sport: Sport;
   cardLevels?: CharacterStatLevels;
+  pvpRecord?: PvpRecord;
 }
 
 export interface JoinDuelPayload {
@@ -92,6 +95,7 @@ export interface JoinDuelPayload {
   name: string;
   characterId: CharacterId;
   cardLevels?: CharacterStatLevels;
+  pvpRecord?: PvpRecord;
 }
 
 export function duelWsUrl(): string {

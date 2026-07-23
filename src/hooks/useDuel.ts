@@ -200,6 +200,7 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
           characterId,
           sport,
           cardLevels: cardLevelsForCharacter(profile, characterId),
+          pvpRecord: profile.pvpRecord ?? { wins: 0, losses: 0, ties: 0 },
         }),
       );
     } catch {
@@ -218,6 +219,7 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
             name: playerName,
             characterId,
             cardLevels: cardLevelsForCharacter(profile, characterId),
+            pvpRecord: profile.pvpRecord ?? { wins: 0, losses: 0, ties: 0 },
           }),
         );
       } catch {

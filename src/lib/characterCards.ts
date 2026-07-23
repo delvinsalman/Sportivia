@@ -267,16 +267,38 @@ export function canUpgradeCharacterStat(
 }
 
 /** FIFA-style rarity from live overall. */
-export function cardTierLabel(ovr: number): 'Common' | 'Rare' | 'Epic' | 'Icon' {
+export function cardTierLabel(ovr: number): 'Common' | 'Rare' | 'Epic' | 'Icon' | '99' {
+  if (ovr >= 99) return '99';
   if (ovr >= 95) return 'Icon';
   if (ovr >= 84) return 'Epic';
   if (ovr >= 73) return 'Rare';
   return 'Common';
 }
 
+export function isCardIcon(ovr: number): boolean {
+  return ovr >= 95;
+}
+
+export function isCardMaxed(ovr: number): boolean {
+  return ovr >= 99;
+}
+
 export function cardTierColors(ovr: number): { border: string; glow: string; badge: string } {
-  // 95–99 gold · 84–94 purple · 73–83 blue · 64–72 grey
-  if (ovr >= 95) return { border: '#f0b232', glow: 'rgba(240,178,50,0.4)', badge: '#fbbf24' };
+  // 99 — maxed gold · 95–98 Icon gold · 84–94 purple · 73–83 blue · 64–72 grey
+  if (ovr >= 99) {
+    return {
+      border: '#ffe08a',
+      glow: 'rgba(255, 224, 138, 0.58)',
+      badge: '#ffe08a',
+    };
+  }
+  if (ovr >= 95) {
+    return {
+      border: '#f0b232',
+      glow: 'rgba(240, 178, 50, 0.48)',
+      badge: '#fbbf24',
+    };
+  }
   if (ovr >= 84) return { border: '#a855f7', glow: 'rgba(168,85,247,0.32)', badge: '#c084fc' };
   if (ovr >= 73) return { border: '#38bdf8', glow: 'rgba(56,189,248,0.3)', badge: '#7dd3fc' };
   return { border: '#94a3b8', glow: 'rgba(148,163,184,0.22)', badge: '#cbd5e1' };
@@ -292,6 +314,8 @@ export function matchesCardCategory(
   if (category === 'owned') return owned;
   if (category === 'locked') return !owned;
   const ovr = characterOverall(character, profile);
-  const tier = cardTierLabel(ovr).toLowerCase() as 'common' | 'rare' | 'epic' | 'icon';
+  const label = cardTierLabel(ovr);
+  if (category === 'icon') return label === 'Icon' || label === '99';
+  const tier = label.toLowerCase() as 'common' | 'rare' | 'epic';
   return tier === category;
 }

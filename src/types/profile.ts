@@ -131,8 +131,18 @@ export interface PlayerProfile {
   dogVariant: DogVariantId;
   /** Per-skin per-stat upgrade bonuses. Overall averages the six live stats (up to 99). */
   characterStatLevels: Partial<Record<CharacterId, Partial<Record<'pac' | 'sho' | 'pas' | 'dri' | 'def' | 'phy', number>>>>;
+  /** Lifetime 1v1 duel record — wins / losses / ties. */
+  pvpRecord: PvpRecord;
   stats: PlayerStats;
 }
+
+export interface PvpRecord {
+  wins: number;
+  losses: number;
+  ties: number;
+}
+
+export const EMPTY_PVP_RECORD: PvpRecord = { wins: 0, losses: 0, ties: 0 };
 
 export interface GameRewards {
   coinsEarned: number;

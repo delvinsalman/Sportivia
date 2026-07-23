@@ -1,4 +1,4 @@
-import { Lock } from 'lucide-react';
+import { Lock, Sparkles } from 'lucide-react';
 import type { CharacterDef, CharacterId, PlayerProfile } from '../types/profile';
 import { CharacterCardPortrait } from './CharacterCardPortrait';
 import {
@@ -9,6 +9,8 @@ import {
   characterCardStats,
   characterOverall,
   getCharacterLevel,
+  isCardIcon,
+  isCardMaxed,
 } from '../lib/characterCards';
 
 interface CharacterFutCardProps {
@@ -36,6 +38,9 @@ export function CharacterFutCard({
   const tier = cardTierColors(ovr);
   const ring = accent ?? character.accent;
   const label = owned ? cardTierLabel(ovr) : 'Locked';
+  const iconTier = owned && isCardIcon(ovr);
+  const maxed = owned && isCardMaxed(ovr);
+  const ovrColor = iconTier ? (maxed ? '#ffe08a' : '#f0b232') : '#f8fafc';
 
   return (
     <button
@@ -48,22 +53,36 @@ export function CharacterFutCard({
       <div
         className={`relative overflow-hidden border-[3px] shadow-[0_4px_0_rgba(0,0,0,0.45)] ${
           compact ? 'rounded-xl' : 'rounded-2xl'
-        }`}
+        } ${maxed ? 'card-max-99' : iconTier ? 'card-icon-gold' : ''}`}
         style={{
           borderColor: selected ? ring : tier.border,
           background: `linear-gradient(165deg, ${tier.glow} 0%, #12141a 42%, #0c0d10 100%)`,
           boxShadow: selected
             ? `0 4px 0 rgba(0,0,0,0.45), 0 0 0 2px ${ring}aa, 0 0 16px ${ring}55`
-            : `0 4px 0 rgba(0,0,0,0.45), 0 0 14px ${tier.glow}`,
+            : maxed
+              ? `0 4px 0 rgba(0,0,0,0.45), 0 0 22px rgba(255,224,138,0.55), 0 0 0 1px rgba(255,224,138,0.35)`
+              : `0 4px 0 rgba(0,0,0,0.45), 0 0 14px ${tier.glow}`,
         }}
       >
+        {maxed && (
+          <div
+            className="pointer-events-none absolute inset-0 card-max-99-shine"
+            aria-hidden
+          />
+        )}
         <div className={`relative ${compact ? 'px-2 pt-2 pb-1.5' : 'px-2.5 pt-2.5 pb-2'}`}>
           <div className="flex items-start justify-between gap-1">
             <div className="flex flex-col leading-none">
               <span
-                className={`font-black text-[#f8fafc] font-mono tracking-tight ${
+                className={`font-black font-mono tracking-tight ${
                   compact ? 'text-xl' : 'text-[1.65rem]'
                 }`}
+                style={{
+                  color: ovrColor,
+                  textShadow: iconTier
+                    ? `0 0 12px ${maxed ? 'rgba(255,224,138,0.65)' : 'rgba(240,178,50,0.45)'}`
+                    : undefined,
+                }}
               >
                 {owned ? ovr : '—'}
               </span>
@@ -72,16 +91,22 @@ export function CharacterFutCard({
               </span>
             </div>
             <div
-              className="rounded-md px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wider text-[#0c0d10]"
-              style={{ background: tier.badge }}
+              className={`inline-flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-[7px] font-black uppercase tracking-wider ${
+                maxed ? 'text-[#1a1408]' : 'text-[#0c0d10]'
+              }`}
+              style={{
+                background: tier.badge,
+                boxShadow: maxed ? '0 0 10px rgba(255,224,138,0.55)' : undefined,
+              }}
             >
+              {maxed && <Sparkles className="h-2.5 w-2.5" strokeWidth={2.75} />}
               {label}
             </div>
           </div>
 
           <div
-            className={`relative mx-auto mt-1 w-full overflow-hidden rounded-lg ${
-              compact ? 'h-[4.25rem]' : 'h-[7.5rem] rounded-xl'
+            className={`relative mx-auto mt-1 w-full overflow-hidden ${
+              compact ? 'h-[4.25rem]' : 'h-[7.5rem]'
             }`}
           >
             <CharacterCardPortrait character={character} owned={owned} size="compact" />
@@ -113,7 +138,15 @@ export function CharacterFutCard({
                   {CARD_STAT_LABELS[key]}
                 </span>
                 <span
-                  className={`font-mono font-black text-[#f2f3f5] ${compact ? 'text-[10px]' : 'text-[11px]'}`}
+                  className={`font-mono font-black ${compact ? 'text-[10px]' : 'text-[11px]'}`}
+                  style={{
+                    color:
+                      owned && stats[key] >= 99
+                        ? '#ffe08a'
+                        : iconTier
+                          ? '#f5e6b8'
+                          : '#f2f3f5',
+                  }}
                 >
                   {owned ? stats[key] : '—'}
                 </span>

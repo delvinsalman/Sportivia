@@ -11,6 +11,8 @@ import { PAGE_SPRING } from '../lib/pageTransitions';
 import { formatCoins } from '../lib/coinStake';
 import { CoinIcon } from './CoinIcon';
 import { getSettings } from '../lib/settings';
+import { formatPvpRecord } from '../lib/profileStorage';
+import { sanitizePvpRecord } from '../lib/duelCard';
 
 interface DuelVersusScreenProps {
   sport: Sport;
@@ -55,6 +57,8 @@ export function DuelVersusScreen({
   const oppDef = duelCharacterDef(opponent);
   const youStake = you.wagerCoins ?? 0;
   const oppStake = opponent.wagerCoins ?? 0;
+  const youRecord = formatPvpRecord(sanitizePvpRecord(you.pvpRecord ?? profile.pvpRecord));
+  const oppRecord = formatPvpRecord(sanitizePvpRecord(opponent.pvpRecord));
 
   const slide = reduceMotion ? 0 : 36;
   const spring = reduceMotion
@@ -107,8 +111,14 @@ export function DuelVersusScreen({
                 onSelect={() => {}}
               />
             </div>
+            <p className="mt-1.5 font-mono text-[10px] font-black tabular-nums tracking-wide text-white/70 sm:mt-2 sm:text-[11px]">
+              {youRecord}
+              <span className="ml-1 text-[8px] font-bold uppercase tracking-[0.14em] text-white/35">
+                PvP
+              </span>
+            </p>
             {youStake > 0 && (
-              <p className="mt-1.5 flex items-center gap-1 text-[10px] font-black text-[#f0b232] sm:mt-2">
+              <p className="mt-1 flex items-center gap-1 text-[10px] font-black text-[#f0b232]">
                 <CoinIcon size={12} />
                 {formatCoins(youStake)}
               </p>
@@ -152,8 +162,14 @@ export function DuelVersusScreen({
                 onSelect={() => {}}
               />
             </div>
+            <p className="mt-1.5 font-mono text-[10px] font-black tabular-nums tracking-wide text-white/70 sm:mt-2 sm:text-[11px]">
+              {oppRecord}
+              <span className="ml-1 text-[8px] font-bold uppercase tracking-[0.14em] text-white/35">
+                PvP
+              </span>
+            </p>
             {oppStake > 0 && (
-              <p className="mt-1.5 flex items-center gap-1 text-[10px] font-black text-[#f0b232] sm:mt-2">
+              <p className="mt-1 flex items-center gap-1 text-[10px] font-black text-[#f0b232]">
                 <CoinIcon size={12} />
                 {formatCoins(oppStake)}
               </p>

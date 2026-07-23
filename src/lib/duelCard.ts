@@ -1,8 +1,13 @@
-import type { CharacterId, PlayerProfile } from '../types/profile';
+import type { CharacterId, PlayerProfile, PvpRecord } from '../types/profile';
+import {
+  CHARACTERS,
+  DEFAULT_CHARACTER,
+  EMPTY_PVP_RECORD,
+  getCharacterDef,
+} from '../types/profile';
 import type { CharacterStatLevels, CardStatKey } from './characterCards';
 import { CARD_STAT_KEYS } from './characterCards';
 import type { DuelPlayerInfo } from './duelTypes';
-import { CHARACTERS, DEFAULT_CHARACTER, getCharacterDef } from '../types/profile';
 
 export function sanitizeCardLevels(raw: unknown): CharacterStatLevels {
   if (!raw || typeof raw !== 'object') return {};
@@ -14,6 +19,18 @@ export function sanitizeCardLevels(raw: unknown): CharacterStatLevels {
     out[key as CardStatKey] = Math.max(0, Math.min(99, Math.floor(n)));
   }
   return out;
+}
+
+export function sanitizePvpRecord(raw: unknown): PvpRecord {
+  if (!raw || typeof raw !== 'object') return { ...EMPTY_PVP_RECORD };
+  const src = raw as Record<string, unknown>;
+  const clamp = (n: unknown) =>
+    typeof n === 'number' && Number.isFinite(n) ? Math.max(0, Math.min(99999, Math.floor(n))) : 0;
+  return {
+    wins: clamp(src.wins),
+    losses: clamp(src.losses),
+    ties: clamp(src.ties),
+  };
 }
 
 export function cardLevelsForCharacter(
@@ -44,6 +61,7 @@ export function duelDisplayProfile(
     characterStatLevels: {
       [characterId]: sanitizeCardLevels(player.cardLevels),
     },
+    pvpRecord: sanitizePvpRecord(player.pvpRecord),
   };
 }
 

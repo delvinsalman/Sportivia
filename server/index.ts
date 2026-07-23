@@ -26,6 +26,7 @@ interface ClientMsg {
   maxStreak?: number;
   coins?: number;
   cardLevels?: Record<string, number>;
+  pvpRecord?: { wins?: number; losses?: number; ties?: number };
 }
 
 const CARD_STAT_KEYS = ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const;
@@ -42,6 +43,18 @@ function sanitizeCardLevels(raw: unknown): Record<string, number> {
   return out;
 }
 
+function sanitizePvpRecord(raw: unknown): { wins: number; losses: number; ties: number } {
+  if (!raw || typeof raw !== 'object') return { wins: 0, losses: 0, ties: 0 };
+  const src = raw as Record<string, unknown>;
+  const clamp = (n: unknown) =>
+    typeof n === 'number' && Number.isFinite(n) ? Math.max(0, Math.min(99999, Math.floor(n))) : 0;
+  return {
+    wins: clamp(src.wins),
+    losses: clamp(src.losses),
+    ties: clamp(src.ties),
+  };
+}
+
 interface PlayerInfo {
   id: string;
   name: string;
@@ -55,6 +68,7 @@ interface PlayerInfo {
   wagerDecided: boolean;
   wagerCoins: number;
   cardLevels: Record<string, number>;
+  pvpRecord: { wins: number; losses: number; ties: number };
 }
 
 interface Player extends PlayerInfo {
@@ -187,6 +201,7 @@ function publicPlayers(room: Room): PlayerInfo[] {
     wagerDecided: p.wagerDecided,
     wagerCoins: p.wagerCoins,
     cardLevels: p.cardLevels ?? {},
+    pvpRecord: p.pvpRecord ?? { wins: 0, losses: 0, ties: 0 },
   }));
 }
 
@@ -653,6 +668,7 @@ wss.on('connection', ws => {
         wagerDecided: false,
         wagerCoins: 0,
         cardLevels: sanitizeCardLevels(msg.cardLevels),
+        pvpRecord: sanitizePvpRecord(msg.pvpRecord),
         ws,
         alive: true,
       };
@@ -702,6 +718,7 @@ wss.on('connection', ws => {
         wagerDecided: false,
         wagerCoins: 0,
         cardLevels: sanitizeCardLevels(msg.cardLevels),
+        pvpRecord: sanitizePvpRecord(msg.pvpRecord),
         ws,
         alive: true,
       };
