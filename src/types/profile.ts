@@ -165,6 +165,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Quick first step · free roster',
     price: 0,
     modelPath: '/models/ava.glb',
+    cardImage: '/cards/ava.png',
     baseOvr: 65,
     accent: '#e879f9',
     footOffsetY: 0,
