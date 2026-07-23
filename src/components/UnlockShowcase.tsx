@@ -145,7 +145,7 @@ export function UnlockShowcase({
         initial={{ opacity: 0, scale: 0.78, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.12 }}
-        className="absolute left-1/2 top-1/2 z-10 w-[min(92vw,420px)] -translate-x-[38%] -translate-y-1/2"
+        className="absolute left-1/2 top-[52%] z-10 w-[min(96vw,480px)] -translate-x-1/2 -translate-y-1/2"
         onClick={(e) => e.stopPropagation()}
       >
         {isPet ? (
@@ -154,7 +154,7 @@ export function UnlockShowcase({
             accent={accent}
             bare
             hero
-            height={400}
+            height={460}
             className="w-full pointer-events-none"
             sport={sport}
             {...(petId === 'dog' && dogVariant ? { dogVariant } : {})}
@@ -165,7 +165,7 @@ export function UnlockShowcase({
             accent={accent}
             bare
             hero
-            height={420}
+            height={480}
             className="w-full pointer-events-none"
             sport={sport}
             {...(characterId === 'creative' && creativeLoadout
