@@ -145,7 +145,7 @@ export function UnlockShowcase({
         initial={{ opacity: 0, scale: 0.78, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.12 }}
-        className="absolute left-1/2 top-1/2 z-10 w-[min(92vw,420px)] -translate-x-[34%] -translate-y-1/2"
+        className="absolute left-1/2 top-1/2 z-10 w-[min(92vw,420px)] -translate-x-[38%] -translate-y-1/2"
         onClick={(e) => e.stopPropagation()}
       >
         {isPet ? (
