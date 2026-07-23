@@ -360,6 +360,7 @@ export const CHARACTERS: CharacterDef[] = [
     price: 45_000,
     modelPath: '/models/ninja.glb',
     baseOvr: 87,
+    cardImage: '/cards/ninja.png',
     accent: '#a78bfa',
     footOffsetY: 0,
   },
