@@ -256,18 +256,20 @@ export function HomeScreen({
           <Medal className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
           <span className="hidden sm:inline">Career</span>
         </button>
-        <button
-          type="button"
-          onClick={() => {
-            playMenuClick();
-            onOpenCards();
-          }}
-          className="game-nav-tab"
-          aria-label="Cards"
-        >
-          <LayoutGrid className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
-          <span className="hidden sm:inline">Cards</span>
-        </button>
+        <div className="cards-nav-snake-ring">
+          <button
+            type="button"
+            onClick={() => {
+              playMenuClick();
+              onOpenCards();
+            }}
+            className="game-nav-tab game-nav-tab-cards"
+            aria-label="Cards"
+          >
+            <LayoutGrid className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
+            <span className="hidden sm:inline">Cards</span>
+          </button>
+        </div>
         <button
           type="button"
           onClick={() => {
