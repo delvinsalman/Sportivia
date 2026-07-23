@@ -209,6 +209,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Pitch ready · first touch',
     price: 1_800,
     modelPath: '/models/soccer-boy.glb',
+    cardImage: '/cards/soccer-boy.png',
     baseOvr: 70,
     accent: '#23a559',
     footOffsetY: 0,
