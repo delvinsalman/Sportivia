@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
-import type { CSSProperties } from 'react';
+import { Info } from 'lucide-react';
+import { useState, type CSSProperties } from 'react';
 import type { Sport } from '../types';
 import { SportBall } from './SportBall';
 import {
@@ -19,11 +20,48 @@ interface SportPickerProps {
 
 export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPickerProps) {
   const rail = layout === 'rail';
+  const [showSportInfo, setShowSportInfo] = useState(false);
 
   if (rail) {
     return (
-      <div className="flex flex-col items-stretch gap-2 sm:gap-2.5" role="tablist" aria-label="Choose sport">
-      <p className="game-sport-rail-label hidden sm:block">Sports</p>
+      <div className="relative flex flex-col items-stretch gap-2 sm:gap-2.5" role="tablist" aria-label="Choose sport">
+        <div className="relative flex items-center gap-1 px-0.5 sm:px-0">
+          <p className="game-sport-rail-label hidden sm:block !pb-0">Sports</p>
+          <button
+            type="button"
+            aria-label="About sports"
+            aria-expanded={showSportInfo}
+            onClick={() => {
+              playMenuClick();
+              setShowSportInfo(v => !v);
+            }}
+            className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-all sm:h-[1.05rem] sm:w-[1.05rem] ${
+              showSportInfo
+                ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232]'
+                : 'border-[#3f4147]/90 bg-[#1e1f22]/80 text-[#6d6f78] hover:border-[#5c5e66] hover:text-[#b5bac1]'
+            }`}
+          >
+            <Info className="h-2.5 w-2.5" strokeWidth={2.5} />
+          </button>
+          {showSportInfo && (
+            <>
+              <button
+                type="button"
+                aria-label="Dismiss sports info"
+                className="fixed inset-0 z-40 cursor-default bg-transparent"
+                onClick={() => setShowSportInfo(false)}
+              />
+              <div className="absolute left-full top-0 z-50 ml-2.5 w-[min(15.5rem,calc(100vw-5.5rem))] rounded-2xl border-[2.5px] border-[#3f4147] bg-[#121316]/98 p-3 text-left shadow-[0_8px_0_#0a0a0b,0_18px_40px_rgba(0,0,0,0.45)]">
+                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#f0b232]">
+                  Same game · any sport
+                </p>
+                <p className="mt-1.5 text-[11px] font-semibold leading-snug text-[#b5bac1]">
+                  Every sport is the same trivia idea — match stars to categories on a 3×3 board — just with that sport’s players and categories. Switch anytime from this rail and pick up a run whenever you want.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
         {SPORTS.map(sp => {
           const active = sport === sp;
           const label = SPORT_LABEL[sp];
@@ -111,26 +149,24 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
           </button>
         );
       })}
-
     </div>
   );
 }
 
 export function SportBadge({ sport, size = 30 }: { sport: Sport; size?: number }) {
   const accent = SPORT_ACCENT[sport];
-
   return (
     <div
-      className="inline-flex items-center justify-center rounded-full border-[3px] shrink-0 shadow-[0_3px_0_rgba(0,0,0,0.35)]"
-      aria-label={SPORT_LABEL[sport]}
+      className="inline-flex items-center gap-2 rounded-full border-[2.5px] px-3 py-1.5"
       style={{
-        width: size + 14,
-        height: size + 14,
-        background: `linear-gradient(145deg, ${accent}33, ${accent}12)`,
-        borderColor: `${accent}88`,
+        background: `${accent}22`,
+        borderColor: `${accent}66`,
       }}
     >
-      <SportBall sport={sport} size={size} />
+      <SportBall sport={sport} size={size * 0.7} />
+      <span className="text-xs font-black uppercase tracking-wide" style={{ color: accent }}>
+        {SPORT_LABEL[sport]}
+      </span>
     </div>
   );
 }

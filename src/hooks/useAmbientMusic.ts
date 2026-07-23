@@ -3,9 +3,14 @@ import { effectiveMusicVolume, subscribeSettings } from '../lib/settings';
 import { getAmbientDuck, subscribeAmbientDuck } from '../lib/ambientControl';
 import { assetUrl } from '../lib/assetUrl';
 
-const TRACK = assetUrl('/audio/starlight-strut.mp3');
-const PLAYBACK_RATE = 0.82;
-const FADE_MS = 1100;
+const MENU_TRACK = assetUrl('/audio/starlight-strut.mp3');
+const CARDS_TRACK = assetUrl('/audio/playing-games.mp3');
+
+const MENU_RATE = 0.82;
+/** Slightly slower + softer bed for the Cards screen. */
+const CARDS_RATE = 0.76;
+const CARDS_GAIN = 0.72;
+const FADE_MS = 1_250;
 
 type AmbientScreen =
   | 'home'
@@ -20,6 +25,8 @@ type AmbientScreen =
   | 'intro'
   | 'game';
 
+type BedId = 'menu' | 'cards' | 'none';
+
 function isMenuScreen(screen: AmbientScreen) {
   return (
     screen === 'home' ||
@@ -30,6 +37,11 @@ function isMenuScreen(screen: AmbientScreen) {
     screen === 'career' ||
     screen === 'bot-stake'
   );
+}
+
+function bedForScreen(screen: AmbientScreen): BedId {
+  if (!isMenuScreen(screen)) return 'none';
+  return screen === 'cards' ? 'cards' : 'menu';
 }
 
 function fadeVolume(
@@ -54,6 +66,7 @@ function fadeVolume(
   const tick = (now: number) => {
     if (cancelled) return;
     const t = Math.min(1, (now - start) / durationMs);
+    // Smoothstep — gentle ease in/out for bed swaps
     const eased = t * t * (3 - 2 * t);
     audio.volume = clamp(from + (target - from) * eased);
     if (t < 1) {
@@ -71,86 +84,89 @@ function fadeVolume(
   };
 }
 
-/** Loops menu music on home/store/settings; fades out in lobby/intro/game. */
+/**
+ * Menu beds: default strut on most menus, a lighter/slower track on Cards.
+ * Crossfades between beds and keeps each track’s playhead so returning
+ * doesn’t restart from the top.
+ */
 export function useAmbientMusic(screen: AmbientScreen) {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const cancelFadeRef = useRef<(() => void) | null>(null);
-  const wantsMusicRef = useRef(isMenuScreen(screen));
-  const playMenuRef = useRef<() => void>(() => {});
-  const fadeOutRef = useRef<() => void>(() => {});
+  const menuRef = useRef<HTMLAudioElement | null>(null);
+  const cardsRef = useRef<HTMLAudioElement | null>(null);
+  const cancelFadesRef = useRef<Array<() => void>>([]);
+  const bedRef = useRef<BedId>(bedForScreen(screen));
+  const applyBedRef = useRef<(bed: BedId) => void>(() => {});
   const syncVolumeRef = useRef<() => void>(() => {});
 
-  wantsMusicRef.current = isMenuScreen(screen);
+  bedRef.current = bedForScreen(screen);
 
   useEffect(() => {
-    const audio = new Audio(TRACK);
-    audio.loop = true;
-    audio.preload = 'auto';
-    audio.volume = 0;
-    audio.playbackRate = PLAYBACK_RATE;
-    audioRef.current = audio;
+    const menu = new Audio(MENU_TRACK);
+    menu.loop = true;
+    menu.preload = 'auto';
+    menu.volume = 0;
+    menu.playbackRate = MENU_RATE;
 
-    const stopFade = () => {
-      cancelFadeRef.current?.();
-      cancelFadeRef.current = null;
+    const cards = new Audio(CARDS_TRACK);
+    cards.loop = true;
+    cards.preload = 'auto';
+    cards.volume = 0;
+    cards.playbackRate = CARDS_RATE;
+
+    menuRef.current = menu;
+    cardsRef.current = cards;
+
+    const stopFades = () => {
+      cancelFadesRef.current.forEach(c => c());
+      cancelFadesRef.current = [];
     };
 
-    const fadeTo = (to: number, onDone?: () => void) => {
-      stopFade();
-      cancelFadeRef.current = fadeVolume(audio, to, FADE_MS, onDone);
+    const fadeEl = (audio: HTMLAudioElement, to: number, onDone?: () => void) => {
+      const cancel = fadeVolume(audio, to, FADE_MS, onDone);
+      cancelFadesRef.current.push(cancel);
     };
 
-    const targetVol = () => effectiveMusicVolume() * getAmbientDuck();
+    const targetFor = (bed: 'menu' | 'cards') => {
+      const base = effectiveMusicVolume() * getAmbientDuck();
+      if (base <= 0) return 0;
+      return bed === 'cards' ? base * CARDS_GAIN : base;
+    };
 
-    const playMenu = () => {
-      if (!wantsMusicRef.current) return;
-      const to = targetVol();
-      if (to <= 0) {
-        fadeTo(0, () => audio.pause());
-        return;
-      }
+    const ensurePlaying = (audio: HTMLAudioElement) => {
+      if (!audio.paused) return Promise.resolve();
+      // Resume mid-track — never reset currentTime.
+      return audio.play().then(() => undefined).catch(() => undefined);
+    };
 
-      const startFade = () => fadeTo(to);
+    const applyBed = (bed: BedId) => {
+      stopFades();
+      const menuTarget = bed === 'menu' ? targetFor('menu') : 0;
+      const cardsTarget = bed === 'cards' ? targetFor('cards') : 0;
 
-      if (audio.paused) {
-        audio.volume = 0;
-        void audio.play().then(startFade).catch(() => {
-          // Autoplay blocked — gesture listener will retry
-        });
+      const settleMenu = () => {
+        if (menuTarget <= 0 && menu.volume < 0.02) menu.pause();
+      };
+      const settleCards = () => {
+        if (cardsTarget <= 0 && cards.volume < 0.02) cards.pause();
+      };
+
+      if (bed === 'menu' && menuTarget > 0) {
+        void ensurePlaying(menu).then(() => fadeEl(menu, menuTarget));
       } else {
-        startFade();
+        fadeEl(menu, 0, settleMenu);
       }
-    };
 
-    const fadeOut = () => {
-      fadeTo(0, () => audio.pause());
+      if (bed === 'cards' && cardsTarget > 0) {
+        void ensurePlaying(cards).then(() => fadeEl(cards, cardsTarget));
+      } else {
+        fadeEl(cards, 0, settleCards);
+      }
     };
 
     const syncVolume = () => {
-      if (!wantsMusicRef.current) return;
-      const to = targetVol();
-      if (to <= 0) {
-        // Duck / mute: keep playing quietly, or pause only if music is off
-        if (effectiveMusicVolume() <= 0) {
-          fadeTo(0, () => audio.pause());
-          return;
-        }
-        if (audio.paused) {
-          void audio.play().then(() => fadeTo(to)).catch(() => {});
-        } else {
-          fadeTo(to);
-        }
-        return;
-      }
-      if (audio.paused) {
-        playMenu();
-      } else {
-        fadeTo(to);
-      }
+      applyBed(bedRef.current);
     };
 
-    playMenuRef.current = playMenu;
-    fadeOutRef.current = fadeOut;
+    applyBedRef.current = applyBed;
     syncVolumeRef.current = syncVolume;
 
     const detachGestures = () => {
@@ -160,11 +176,12 @@ export function useAmbientMusic(screen: AmbientScreen) {
     };
 
     const onGesture = () => {
-      if (!wantsMusicRef.current) return;
-      if (targetVol() <= 0 && effectiveMusicVolume() <= 0) return;
-      audio.volume = 0;
-      void audio.play().then(() => {
-        fadeTo(targetVol());
+      if (bedRef.current === 'none') return;
+      if (effectiveMusicVolume() <= 0) return;
+      const active = bedRef.current === 'cards' ? cards : menu;
+      active.volume = 0;
+      void active.play().then(() => {
+        applyBed(bedRef.current);
         detachGestures();
       }).catch(() => {
         // Keep listening until a gesture succeeds
@@ -178,24 +195,23 @@ export function useAmbientMusic(screen: AmbientScreen) {
     const unsub = subscribeSettings(() => syncVolumeRef.current());
     const unsubDuck = subscribeAmbientDuck(() => syncVolumeRef.current());
 
-    playMenu();
+    applyBed(bedRef.current);
 
     return () => {
-      stopFade();
+      stopFades();
       detachGestures();
       unsub();
       unsubDuck();
-      audio.pause();
-      audio.src = '';
-      audioRef.current = null;
+      menu.pause();
+      cards.pause();
+      menu.src = '';
+      cards.src = '';
+      menuRef.current = null;
+      cardsRef.current = null;
     };
   }, []);
 
   useEffect(() => {
-    if (isMenuScreen(screen)) {
-      playMenuRef.current();
-    } else {
-      fadeOutRef.current();
-    }
+    applyBedRef.current(bedForScreen(screen));
   }, [screen]);
 }

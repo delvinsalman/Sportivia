@@ -144,7 +144,7 @@ export function CharacterCardsScreen({
               Skin cards
             </p>
             <HomeCoinMeter coins={profile.coins} />
-            <div className="relative">
+          <div className="relative mt-1.5 sm:mt-2">
               <button
                 type="button"
                 onClick={() => {
@@ -162,7 +162,7 @@ export function CharacterCardsScreen({
                 <Info className="h-4 w-4" />
               </button>
               {showDisclaimer && (
-                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-[min(18.5rem,calc(100vw-1.5rem))] rounded-2xl border-[2.5px] border-[#3f4147] bg-[#121316]/98 p-3.5 shadow-[0_8px_0_#0a0a0b,0_18px_40px_rgba(0,0,0,0.45)]">
+                <div className="absolute right-0 top-[calc(100%+0.85rem)] z-30 w-[min(18.5rem,calc(100vw-1.5rem))] rounded-2xl border-[2.5px] border-[#3f4147] bg-[#121316]/98 p-3.5 shadow-[0_8px_0_#0a0a0b,0_18px_40px_rgba(0,0,0,0.45)]">
                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#f0b232]">
                     Disclaimer
                   </p>

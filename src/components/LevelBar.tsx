@@ -184,7 +184,7 @@ export function LevelCorner({ profile, accent = '#5865f2' }: LevelCornerProps) {
   const remaining = Math.max(0, needed - current);
 
   return (
-    <div className="game-panel flex w-[168px] flex-col gap-1.5 px-3 py-2.5 sm:w-[196px]">
+    <div className="flex w-[168px] flex-col gap-1.5 rounded-xl border-[2.5px] border-[#3f4147] bg-gradient-to-b from-[#2a2c33] to-[#14151a] px-3 py-2.5 shadow-[0_4px_0_#0c0d0f] sm:w-[196px]">
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
           <span className="text-[9px] font-bold uppercase tracking-wide text-[#949ba4]">Level</span>
@@ -197,7 +197,7 @@ export function LevelCorner({ profile, accent = '#5865f2' }: LevelCornerProps) {
           {current}/{needed}
         </span>
       </div>
-      <div className="h-2 w-full overflow-hidden rounded-full bg-black/40">
+      <div className="h-2 w-full overflow-hidden rounded-full border border-[#3f4147] bg-[#0c0d10] shadow-[inset_0_1px_2px_rgba(0,0,0,0.55)]">
         <div
           className="h-full rounded-full transition-all duration-500"
           style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${accent}, ${accent}cc)` }}
