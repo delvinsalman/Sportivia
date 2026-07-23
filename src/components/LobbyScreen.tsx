@@ -88,24 +88,27 @@ export function LobbyScreen({
       <SportBackground sport={sport} />
 
       <div className="relative z-10 flex h-svh flex-col">
-        <header className="relative z-20 flex shrink-0 items-center justify-between gap-2 bg-transparent px-3 pb-2 pt-[max(1rem,env(safe-area-inset-top))] sm:px-5">
+        <header className="relative z-20 flex shrink-0 items-center justify-between gap-1.5 bg-transparent px-2.5 pb-2 pt-[max(1rem,env(safe-area-inset-top))] sm:gap-2 sm:px-5">
           <button
             type="button"
             onClick={handleBack}
             className={`${headerBtn} border-[#3f4147] bg-[#1e1f22] text-[#b5bac1] hover:text-[#f2f3f5]`}
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            <span className="max-[360px]:hidden">Back</span>
           </button>
 
-          <div className="absolute left-1/2 top-[max(1rem,env(safe-area-inset-top))] flex -translate-x-1/2 items-center gap-2 pt-0.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border-[3px] border-[#ff8a8c] bg-[#ed4245] shadow-[0_3px_0_#8f1e22]">
-              <Swords className="h-4 w-4 text-white" />
+          <div className="pointer-events-none absolute left-1/2 top-[max(1rem,env(safe-area-inset-top))] flex -translate-x-1/2 items-center gap-1.5 pt-0.5 sm:gap-2">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border-[3px] border-[#ff8a8c] bg-[#ed4245] shadow-[0_3px_0_#8f1e22] sm:h-9 sm:w-9">
+              <Swords className="h-3.5 w-3.5 text-white sm:h-4 sm:w-4" />
             </div>
-            <h1 className="text-lg font-black text-[#f2f3f5]">1v1 Duel</h1>
+            <h1 className="text-base font-black text-[#f2f3f5] sm:text-lg">
+              <span className="sm:hidden">Duel</span>
+              <span className="hidden sm:inline">1v1 Duel</span>
+            </h1>
           </div>
 
-          <div className="relative flex items-center gap-2">
+          <div className="relative flex items-center gap-1.5 sm:gap-2">
             <button
               type="button"
               aria-label="PvP and stake info"
@@ -116,14 +119,22 @@ export function LobbyScreen({
               <Info className="h-4 w-4" />
             </button>
             {showDisclaimer && (
-              <div className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-[min(18rem,calc(100vw-1.5rem))] rounded-2xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] p-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
-                <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#f2f3f5]">
-                  Live PvP
-                </p>
-                <p className="mt-1.5 text-xs font-semibold leading-snug text-[#949ba4]">
-                  Real-time 1v1. Optional coin stakes lock when the match starts. Winner keeps theirs and takes the other stake — no refunds after tip-off.
-                </p>
-              </div>
+              <>
+                <button
+                  type="button"
+                  aria-label="Dismiss info"
+                  className="fixed inset-0 z-20 cursor-default bg-transparent"
+                  onClick={() => setShowDisclaimer(false)}
+                />
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-[min(18rem,calc(100vw-1.25rem))] rounded-2xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] p-3 text-left shadow-[0_8px_24px_rgba(0,0,0,0.45)]">
+                  <p className="text-[11px] font-black uppercase tracking-[0.12em] text-[#f2f3f5]">
+                    Live PvP
+                  </p>
+                  <p className="mt-1.5 text-xs font-semibold leading-snug text-[#949ba4]">
+                    Real-time 1v1. Optional coin stakes lock when the match starts. Winner keeps theirs and takes the other stake — no refunds after tip-off.
+                  </p>
+                </div>
+              </>
             )}
             <div
               className={`${headerBtn} shrink-0 ${
@@ -137,7 +148,7 @@ export function LobbyScreen({
               ) : (
                 <WifiOff className="h-4 w-4" />
               )}
-              <span>
+              <span className="hidden min-[400px]:inline">
                 {status === 'connected' ? 'Live' : status === 'connecting' ? 'Connecting…' : 'Offline'}
               </span>
             </div>
@@ -177,7 +188,15 @@ export function LobbyScreen({
                     onChange={e => setJoinCode(e.target.value.toUpperCase())}
                     placeholder="CODE"
                     maxLength={6}
-                    className="min-w-0 flex-1 rounded-2xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-3 text-center font-mono text-sm font-black tracking-[0.2em] text-[#f2f3f5] outline-none"
+                    autoCapitalize="characters"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    inputMode="text"
+                    enterKeyHint="go"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') onJoin(joinCode.trim());
+                    }}
+                    className="min-w-0 flex-1 rounded-2xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-3 text-center font-mono text-base font-black tracking-[0.2em] text-[#f2f3f5] outline-none sm:text-sm"
                   />
                   <button
                     type="button"
@@ -199,7 +218,7 @@ export function LobbyScreen({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex max-h-[min(36rem,calc(100svh-5.5rem))] w-full max-w-3xl flex-col overflow-hidden rounded-[28px] border-[3px] border-[#ed4245]/70 bg-[#121316]/95 shadow-[0_9px_0_#8f1e22] backdrop-blur-md"
+              className="flex max-h-[min(36rem,calc(100svh-5.5rem))] w-full max-w-3xl flex-col overflow-hidden rounded-[22px] border-[3px] border-[#ed4245]/70 bg-[#121316]/95 shadow-[0_9px_0_#8f1e22] backdrop-blur-md sm:rounded-[28px]"
             >
               <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-white/10 px-4 py-3 sm:px-5">
                 <div className="min-w-0">
@@ -321,7 +340,7 @@ export function LobbyScreen({
                             playMenuClick();
                             lockStake(amount);
                           }}
-                          className={`min-w-0 rounded-xl border-[2.5px] px-1 py-2.5 text-[10px] font-black tabular-nums transition-all disabled:cursor-not-allowed disabled:opacity-35 sm:rounded-2xl sm:px-1.5 sm:py-3 sm:text-[11px] ${
+                          className={`min-w-0 touch-manipulation rounded-xl border-[2.5px] px-1 py-2.5 text-[10px] font-black tabular-nums transition-all disabled:cursor-not-allowed disabled:opacity-35 sm:rounded-2xl sm:px-1.5 sm:py-3 sm:text-[11px] ${
                             active
                               ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232] shadow-[0_3px_0_#8a6814]'
                               : 'border-[#3f4147] bg-[#1e1f22] text-[#949ba4] hover:text-[#f2f3f5]'
@@ -344,7 +363,7 @@ export function LobbyScreen({
                       value={draftStake || ''}
                       placeholder="Custom amount"
                       onChange={e => setDraftStake(Number(e.target.value) || 0)}
-                      className="min-w-0 flex-1 bg-transparent font-mono text-sm font-black text-[#f0b232] outline-none placeholder:text-[#5c5e66]"
+                      className="min-w-0 flex-1 bg-transparent font-mono text-base font-black text-[#f0b232] outline-none placeholder:text-[#5c5e66] sm:text-sm"
                     />
                     <button
                       type="button"

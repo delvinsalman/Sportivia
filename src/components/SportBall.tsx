@@ -30,7 +30,6 @@ function BallImage({ src, size = 40, className = '', style, visualScale = 1 }: B
           width: renderSize,
           height: renderSize,
           maxWidth: 'none',
-          filter: 'drop-shadow(0 4px 8px rgba(0,0,0,0.45))',
         }}
       />
     </span>

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Maximize2, Play, X } from 'lucide-react';
+import { assetUrl } from '../lib/assetUrl';
 
 interface GuideDemoTileProps {
   src: string;
@@ -11,18 +12,21 @@ interface GuideDemoTileProps {
 export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
   const previewRef = useRef<HTMLVideoElement>(null);
   const lightboxRef = useRef<HTMLVideoElement>(null);
+  const tileRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const [open, setOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
+  const [inView, setInView] = useState(false);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(!src.trim());
 
   // Bust Safari’s sticky cache of older HTML/404 responses for these paths.
-  const mediaSrc = !src.trim()
+  const resolved = src.trim() ? assetUrl(src.trim()) : '';
+  const mediaSrc = !resolved
     ? ''
-    : src.includes('?')
-      ? src
-      : `${src}?v=2`;
+    : resolved.includes('?')
+      ? resolved
+      : `${resolved}?v=3`;
 
   const startPreview = useCallback(() => {
     const video = previewRef.current;
@@ -46,10 +50,23 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
     setFailed(!src.trim());
   }, [mediaSrc, src]);
 
+  // Mobile has no hover — autoplay muted preview while the tile is on screen.
   useEffect(() => {
-    if (hovered && !open) startPreview();
-    else if (!open) stopPreview();
-  }, [hovered, open, startPreview, stopPreview]);
+    const el = tileRef.current;
+    if (!el || failed || !mediaSrc) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setInView(Boolean(entry?.isIntersecting)),
+      { threshold: 0.45, rootMargin: '0px 0px -8% 0px' },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [failed, mediaSrc]);
+
+  useEffect(() => {
+    if (open) return;
+    if (hovered || inView) startPreview();
+    else stopPreview();
+  }, [hovered, inView, open, startPreview, stopPreview]);
 
   useEffect(() => {
     if (!open) return;
@@ -82,6 +99,7 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
   return (
     <>
       <div
+        ref={tileRef}
         role="button"
         tabIndex={0}
         onClick={openLightbox}
@@ -96,7 +114,7 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
         onFocus={() => setHovered(true)}
         onBlur={() => setHovered(false)}
         aria-label={`Play demo: ${label}`}
-        className="group relative w-full cursor-pointer overflow-hidden rounded-2xl border-[2.5px] border-[#3f4147] bg-[#0c0d10]/80 text-left shadow-[0_3px_0_#1a1b1f] transition-all hover:border-[#5c5e66] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0d10]"
+        className="group relative w-full cursor-pointer overflow-hidden rounded-2xl border-[2.5px] border-[#3f4147] bg-[#0c0d10]/80 text-left shadow-[0_3px_0_#1a1b1f] transition-all hover:border-[#5c5e66] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0c0d10] touch-manipulation"
         style={{ aspectRatio: '16 / 10', ['--tw-ring-color' as string]: accent }}
       >
         {!failed ? (
@@ -107,6 +125,7 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
             muted
             loop
             playsInline
+            preload="metadata"
             className={`pointer-events-none absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${
               ready ? 'opacity-100' : 'opacity-0'
             }`}
@@ -145,7 +164,7 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
             {failed ? 'Coming soon' : 'Demo'}
           </span>
           {!failed && (
-            <Maximize2 className="h-3.5 w-3.5 text-white/70 opacity-0 transition-opacity group-hover:opacity-100" />
+            <Maximize2 className="h-3.5 w-3.5 text-white/70 opacity-100 sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100" />
           )}
         </div>
       </div>
@@ -156,7 +175,7 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="fixed inset-0 z-[80] flex items-center justify-center p-4 sm:p-8"
+            className="fixed inset-0 z-[80] flex items-center justify-center p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-8"
             onClick={() => setOpen(false)}
           >
             <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
@@ -171,13 +190,13 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] text-[#b5bac1] hover:text-[#f2f3f5] hover:border-[#5c5e66] transition-colors"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#1e1f22] border-[2.5px] border-[#3f4147] text-[#b5bac1] hover:text-[#f2f3f5] hover:border-[#5c5e66] transition-colors touch-manipulation"
                   aria-label="Close demo"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
-              <div className="relative aspect-video bg-black">
+              <div className="relative aspect-video max-h-[min(70svh,100%)] bg-black">
                 {!failed ? (
                   <video
                     ref={lightboxRef}
@@ -188,6 +207,7 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
                     playsInline
                     autoPlay
                     controls
+                    preload="auto"
                     className="absolute inset-0 h-full w-full object-contain"
                   />
                 ) : (

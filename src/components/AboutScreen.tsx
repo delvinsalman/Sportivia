@@ -53,7 +53,7 @@ const GUIDE: Array<{
     body: 'A player drops in. Tap the cell that fits — club, country, award, era, and more — before the clock runs out. Streaks multiply your score. Fill the board, then it refreshes.',
     Icon: LayoutGrid,
     glare: 'rgba(88, 101, 242, 0.16)',
-    demo: '',
+    demo: '/demos/match-stars.mp4',
   },
   {
     eyebrow: 'Five sports',
@@ -199,14 +199,14 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                 {SPORTS.map(s => (
                   <span
                     key={s}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-black border-[2.5px] shadow-[0_3px_0_rgba(0,0,0,0.35)]"
+                    className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-black border-[2.5px] shadow-[0_3px_0_rgba(0,0,0,0.35)]"
                     style={{
                       background: SPORT_ACCENT[s],
                       color: onAccentFg(SPORT_ACCENT[s]),
                       borderColor: 'rgba(255,255,255,0.35)',
                     }}
                   >
-                    <SportBall sport={s} size={16} />
+                    <SportBall sport={s} size={15} />
                     {SPORT_LABEL[s]}
                   </span>
                 ))}
@@ -343,7 +343,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                         </p>
                       </div>
                     </div>
-                    <div className="w-full max-w-[16rem] justify-self-start lg:max-w-none lg:w-auto lg:justify-self-stretch">
+                    <div className="w-full max-w-none justify-self-stretch sm:max-w-[16rem] sm:justify-self-start lg:max-w-none lg:w-auto lg:justify-self-stretch">
                       <GuideDemoTile src={item.demo} label={item.title} accent={accent} />
                     </div>
                   </div>
