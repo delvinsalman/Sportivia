@@ -313,6 +313,7 @@ export const CHARACTERS: CharacterDef[] = [
     price: 18_000,
     modelPath: '/models/creative.glb',
     baseOvr: 82,
+    cardImage: '/cards/creative.png',
     accent: '#f472b6',
     footOffsetY: 0,
     targetHeight: 1.72,
