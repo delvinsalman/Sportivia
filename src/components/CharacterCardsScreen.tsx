@@ -1,5 +1,5 @@
 import { useMemo, useState, type CSSProperties } from 'react';
-import { ArrowLeft, Lock, Minus, Plus, Search, Sparkles } from 'lucide-react';
+import { ArrowLeft, Info, Lock, Minus, Plus, Search, Sparkles } from 'lucide-react';
 import { HomeCoinMeter } from './LevelBar';
 import { SportBackground } from './SportBackground';
 import { CharacterPodium } from './3d/CharacterPodium';
@@ -50,6 +50,7 @@ export function CharacterCardsScreen({
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<CardCategoryFilter>('all');
   const [pending, setPending] = useState<StatPending>(emptyStatPending);
+  const [showDisclaimer, setShowDisclaimer] = useState(false);
 
   const character = useMemo(() => getCharacterDef(selectedId), [selectedId]);
   const owned = profile.unlockedCharacters.includes(selectedId);
@@ -126,7 +127,7 @@ export function CharacterCardsScreen({
     <div className="relative h-svh overflow-hidden text-[#f2f3f5]">
       <SportBackground sport={sport} />
       <div className="relative z-10 flex h-full flex-col">
-        <header className="flex shrink-0 items-center justify-between gap-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 sm:px-5">
+        <header className="relative z-20 flex shrink-0 items-center justify-between gap-3 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2 sm:px-5">
           <button
             type="button"
             onClick={() => {
@@ -138,11 +139,40 @@ export function CharacterCardsScreen({
             <ArrowLeft className="w-4 h-4" />
             Back
           </button>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <p className="hidden sm:block text-[11px] font-black uppercase tracking-[0.18em] text-[#949ba4]">
               Skin cards
             </p>
             <HomeCoinMeter coins={profile.coins} />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => {
+                  playMenuClick();
+                  setShowDisclaimer(open => !open);
+                }}
+                className={`flex h-9 w-9 items-center justify-center rounded-full border-[2.5px] transition-all ${
+                  showDisclaimer
+                    ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232] shadow-[0_3px_0_#8a6814]'
+                    : 'border-[#3f4147] bg-[#1e1f22] text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] hover:border-[#5c5e66] hover:text-[#f2f3f5]'
+                }`}
+                aria-label="Card disclaimer"
+                aria-expanded={showDisclaimer}
+              >
+                <Info className="h-4 w-4" />
+              </button>
+              {showDisclaimer && (
+                <div className="absolute right-0 top-[calc(100%+0.5rem)] z-30 w-[min(18.5rem,calc(100vw-1.5rem))] rounded-2xl border-[2.5px] border-[#3f4147] bg-[#121316]/98 p-3.5 shadow-[0_8px_0_#0a0a0b,0_18px_40px_rgba(0,0,0,0.45)]">
+                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#f0b232]">
+                    Disclaimer
+                  </p>
+                  <p className="mt-2 text-xs font-semibold leading-relaxed text-[#b5bac1]">
+                    Skin cards are fictional Sportivia collectibles for entertainment only. Not
+                    affiliated with EA, FIFA, Ultimate Team, or any league, club, or athlete.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 
@@ -468,11 +498,6 @@ export function CharacterCardsScreen({
             </div>
           </div>
         </div>
-
-        <p className="shrink-0 px-3 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-1 text-center text-[10px] font-semibold leading-snug text-[#6d6f78] sm:px-5">
-          Disclaimer: Skin cards are fictional Sportivia collectibles for entertainment only. Not
-          affiliated with EA, FIFA, Ultimate Team, or any league, club, or athlete.
-        </p>
       </div>
     </div>
   );
