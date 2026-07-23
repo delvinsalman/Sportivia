@@ -468,6 +468,11 @@ export function CharacterCardsScreen({
             </div>
           </div>
         </div>
+
+        <p className="shrink-0 px-3 pb-[max(0.65rem,env(safe-area-inset-bottom))] pt-1 text-center text-[10px] font-semibold leading-snug text-[#6d6f78] sm:px-5">
+          Disclaimer: Skin cards are fictional Sportivia collectibles for entertainment only. Not
+          affiliated with EA, FIFA, Ultimate Team, or any league, club, or athlete.
+        </p>
       </div>
     </div>
   );
