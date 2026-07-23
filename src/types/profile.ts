@@ -187,6 +187,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Crowd energy · local legend',
     price: 500,
     modelPath: '/models/citizen-2.glb',
+    cardImage: '/cards/citizen-2.png',
     baseOvr: 66,
     accent: '#a78bfa',
     footOffsetY: 0,
