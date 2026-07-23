@@ -181,7 +181,8 @@ export function ResultModal({
                   {waitingForOpponent ? ' · waiting…' : ''}
                 </p>
               )}
-              {result.coinStake && result.coinStake.amount > 0 && (
+              {result.coinStake &&
+                result.coinStake.label !== 'No stake' && (
                 <p
                   className={`mt-2 text-sm font-black ${
                     result.coinStake.net > 0

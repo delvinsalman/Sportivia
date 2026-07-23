@@ -132,7 +132,7 @@ export function LobbyScreen({
               </div>
               <h2 className="text-2xl font-black text-[#f2f3f5]">Find a rival</h2>
               <p className="mt-1 text-sm font-semibold text-[#949ba4]">
-                Optional coin stakes — winner takes the matched pot.
+                Optional coin stakes — winner takes whatever was put up.
               </p>
 
               <button
@@ -261,7 +261,7 @@ export function LobbyScreen({
                     Your stake · optional
                   </p>
                   <p className="mt-1 text-xs font-semibold text-[#949ba4]">
-                    Pick an amount below. Winner takes the matched pot.
+                    Pick an amount below. Winner keeps theirs and takes the other stake.
                   </p>
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {presets.map(amount => {

@@ -48,14 +48,6 @@ export function clampDuelStake(amount: number): number {
   return Math.max(0, Math.min(DUEL_STAKE_MAX, n));
 }
 
-/** Matched pot size when both players put coins on the line. */
-export function matchedDuelStake(yourStake: number, opponentStake: number): number {
-  const a = clampDuelStake(yourStake);
-  const b = clampDuelStake(opponentStake);
-  if (a <= 0 || b <= 0) return 0;
-  return Math.min(a, b);
-}
-
 export function botWinPayout(stake: number, difficulty: BotDifficulty): number {
   const rules = BOT_STAKE_RULES[difficulty];
   const s = clampBotStake(difficulty, stake);
@@ -85,34 +77,44 @@ export function settleBotStakeDelta(
 
 /**
  * Net coin delta after a duel stake is resolved (your escrow already deducted).
- * Winner takes the matched pot; loser forfeits; draw returns escrow.
+ * Winner keeps their stake and takes the opponent's full stake; loser forfeits;
+ * draw returns your escrow. Works when only one side put coins up.
  */
 export function settleDuelStakeDelta(
   yourStake: number,
   opponentStake: number,
   outcome: StakeOutcome,
-): { delta: number; matched: number; label: string } {
+): { delta: number; pot: number; label: string } {
   const yours = clampDuelStake(yourStake);
-  const matched = matchedDuelStake(yours, opponentStake);
-  const refundUnmatched = Math.max(0, yours - matched);
+  const opp = clampDuelStake(opponentStake);
+  const pot = yours + opp;
 
-  if (matched <= 0) {
-    return { delta: yours, matched: 0, label: 'No stake' };
+  if (pot <= 0) {
+    return { delta: 0, pot: 0, label: 'No stake' };
   }
   if (outcome === 'draw') {
-    return { delta: yours, matched, label: 'Stakes returned' };
+    return {
+      delta: yours,
+      pot,
+      label: yours > 0 ? 'Stake returned' : 'No stake',
+    };
   }
   if (outcome === 'win') {
     return {
-      delta: refundUnmatched + matched * 2,
-      matched,
-      label: `Won +${matched.toLocaleString()}`,
+      delta: yours + opp,
+      pot,
+      label:
+        opp > 0
+          ? `Won +${opp.toLocaleString()}`
+          : yours > 0
+            ? 'Stake kept'
+            : 'No stake',
     };
   }
   return {
-    delta: refundUnmatched,
-    matched,
-    label: `Lost −${matched.toLocaleString()}`,
+    delta: 0,
+    pot,
+    label: yours > 0 ? `Lost −${yours.toLocaleString()}` : 'No stake',
   };
 }
 

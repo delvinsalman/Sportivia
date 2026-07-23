@@ -1276,20 +1276,23 @@ function PodiumRig({
   const group = useRef<Group>(null);
   const targetHeight = def.targetHeight ?? TARGET_HEIGHT;
   const faceYaw = PODIUM_FACE_Y + (('yawOffset' in def ? def.yawOffset : 0) ?? 0);
-  const proceduralOnly = 'poseMode' in def && def.poseMode === 'procedural';
   const skeletalIdle = 'poseMode' in def && def.poseMode === 'skeletal';
-  const animTimeScale = 'animTimeScale' in def ? def.animTimeScale ?? 1 : 1;
-  const { scale, position } = useMemo(
-    () => fitModel(scene, def.footOffsetY ?? 0, targetHeight),
-    [scene, def.footOffsetY, targetHeight],
-  );
-  const baseY = useRef(position[1]);
   const isNaturalPet =
     petId === 'wolf' ||
     petId === 'alpaca' ||
     petId === 'horse' ||
     petId === 'deer' ||
     petId === 'dog';
+  // Static / T-pose GLBs (no clips) get bob + hop flourishes instead of freezing.
+  const proceduralOnly =
+    ('poseMode' in def && def.poseMode === 'procedural') ||
+    (animations.length === 0 && !skeletalIdle && !isNaturalPet);
+  const animTimeScale = 'animTimeScale' in def ? def.animTimeScale ?? 1 : 1;
+  const { scale, position } = useMemo(
+    () => fitModel(scene, def.footOffsetY ?? 0, targetHeight),
+    [scene, def.footOffsetY, targetHeight],
+  );
+  const baseY = useRef(position[1]);
   const isStarterSkeletal =
     skeletalIdle && (characterId === 'cube-man' || characterId === 'cube-woman');
   const isCreativeSkeletal = skeletalIdle && characterId === 'creative';
@@ -1428,23 +1431,62 @@ function PodiumRig({
 
     if (!showcase) {
       if (proceduralOnly) {
-        group.current.position.y = baseY.current + Math.sin(t * 1.1) * 0.012;
-        group.current.rotation.x = 0;
-        group.current.rotation.z = Math.sin(t * 0.65) * 0.01;
+        const proc = procedural.current;
+        let y = baseY.current + Math.sin(t * 1.25) * 0.018;
+        let rotX = Math.sin(t * 0.9) * 0.012;
+        let rotZ = Math.sin(t * 0.7) * 0.016;
+        let s = scale;
+
+        if (proc.move) {
+          const elapsed = performance.now() / 1000 - proc.start;
+          const u = Math.min(1, elapsed / proc.duration);
+          const ease = Math.sin(u * Math.PI);
+          switch (proc.move) {
+            case 'hop':
+              y += Math.sin(u * Math.PI) * 0.16;
+              s = scale * (1 + Math.sin(u * Math.PI) * 0.03);
+              break;
+            case 'lean':
+              rotZ += Math.sin(u * Math.PI * 2) * 0.14;
+              break;
+            case 'celebrate':
+              y += ease * 0.1;
+              s = scale * (1 + ease * 0.06);
+              rotX -= ease * 0.05;
+              break;
+            case 'nod':
+              rotX += Math.sin(u * Math.PI * 2) * 0.16;
+              break;
+            case 'doubleHop':
+              y += Math.abs(Math.sin(u * Math.PI * 2)) * 0.14;
+              break;
+            case 'spin':
+              group.current.rotation.y = faceYaw + u * Math.PI * 2;
+              break;
+          }
+          if (u >= 1) procedural.current.move = null;
+        }
+
+        group.current.position.y = y;
+        group.current.rotation.x = rotX;
+        group.current.rotation.z = rotZ;
+        group.current.scale.setScalar(s);
       } else if (skeletalIdle) {
         group.current.position.y = baseY.current + Math.sin(t * 1.5) * 0.008;
         group.current.rotation.x = 0;
         group.current.rotation.z = 0;
+        group.current.scale.setScalar(scale);
       } else if (petId === 'dog') {
         group.current.position.y = baseY.current + Math.sin(t * 1.6) * 0.014;
         group.current.rotation.x = Math.sin(t * 1.1) * 0.01;
         group.current.rotation.z = Math.sin(t * 0.85) * 0.016;
+        group.current.scale.setScalar(scale);
       } else {
         group.current.position.y = baseY.current;
         group.current.rotation.x = 0;
         group.current.rotation.z = 0;
+        group.current.scale.setScalar(scale);
       }
-      group.current.scale.setScalar(scale);
       return;
     }
 

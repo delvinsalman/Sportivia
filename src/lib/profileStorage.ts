@@ -80,7 +80,18 @@ function readEscrow(): CoinStakeEscrow | null {
 
 function writeEscrow(escrow: CoinStakeEscrow | null) {
   try {
-    if (!escrow || escrow.amount <= 0) {
+    if (!escrow) {
+      localStorage.removeItem(COIN_STAKE_ESCROW_KEY);
+      return;
+    }
+    // Duel can escrow 0 on your side when only the opponent staked —
+    // still persist so the winner can collect their coins.
+    if (escrow.mode === 'duel') {
+      if (escrow.amount <= 0 && escrow.opponentAmount <= 0) {
+        localStorage.removeItem(COIN_STAKE_ESCROW_KEY);
+        return;
+      }
+    } else if (escrow.amount <= 0) {
       localStorage.removeItem(COIN_STAKE_ESCROW_KEY);
       return;
     }
@@ -110,17 +121,16 @@ export function lockCoinStake(input: CoinStakeEscrow): {
     profile.coins += prior.amount;
   }
   if (amount > 0) profile.coins -= amount;
-  writeEscrow(
-    amount > 0
-      ? input.mode === 'bot'
-        ? { mode: 'bot', amount, difficulty: input.difficulty }
-        : {
-            mode: 'duel',
-            amount,
-            opponentAmount: clampDuelStake(input.opponentAmount),
-          }
-      : null,
-  );
+  if (input.mode === 'bot') {
+    writeEscrow(amount > 0 ? { mode: 'bot', amount, difficulty: input.difficulty } : null);
+  } else {
+    const opponentAmount = clampDuelStake(input.opponentAmount);
+    writeEscrow(
+      amount > 0 || opponentAmount > 0
+        ? { mode: 'duel', amount, opponentAmount }
+        : null,
+    );
+  }
   saveProfile(profile);
   return { ok: true, profile };
 }
@@ -147,7 +157,11 @@ export function settleLockedCoinStake(outcome: StakeOutcome): {
 } {
   const profile = loadProfile();
   const escrow = readEscrow();
-  if (!escrow || escrow.amount <= 0) {
+  const duelEmpty =
+    escrow?.mode === 'duel' &&
+    escrow.amount <= 0 &&
+    escrow.opponentAmount <= 0;
+  if (!escrow || (escrow.mode === 'bot' && escrow.amount <= 0) || duelEmpty) {
     writeEscrow(null);
     return { profile, stakeDelta: 0, stakeLabel: 'No stake', stakeAmount: 0 };
   }
