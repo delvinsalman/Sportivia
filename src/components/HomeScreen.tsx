@@ -350,24 +350,26 @@ export function HomeScreen({
           </div>
 
           <div className="flex flex-col items-center mt-1 sm:mt-2 shrink-0">
-            <motion.button
-              type="button"
-              whileHover={{
-                scale: 1.04,
-                y: -2,
-                transition: { type: 'spring', stiffness: 420, damping: 18 },
-              }}
-              whileTap={{ scale: 0.97, y: 2 }}
-              onClick={() => {
-                playMenuClick();
-                setShowBotDifficulties(false);
-                setShowModes(true);
-              }}
-              className="group/play flex items-center gap-2.5 rounded-2xl border-[3px] border-white/30 bg-gradient-to-b from-[#ffe08a] via-[#f0b232] to-[#d4921a] px-9 py-3.5 text-sm font-black text-[#3a2600] shadow-[0_5px_0_#a5711a] transition-all hover:brightness-105 sm:px-11 sm:py-4 sm:text-base"
-            >
-              <Play className="h-5 w-5 fill-current drop-shadow-sm transition-transform duration-300 ease-out group-hover/play:scale-110 group-hover/play:-rotate-12" />
-              <span className="tracking-wide">Play</span>
-            </motion.button>
+            <div className="play-snake-ring">
+              <motion.button
+                type="button"
+                whileHover={{
+                  scale: 1.04,
+                  y: -2,
+                  transition: { type: 'spring', stiffness: 420, damping: 18 },
+                }}
+                whileTap={{ scale: 0.97, y: 2 }}
+                onClick={() => {
+                  playMenuClick();
+                  setShowBotDifficulties(false);
+                  setShowModes(true);
+                }}
+                className="group/play relative z-[1] flex items-center gap-2.5 rounded-[0.9rem] border-[3px] border-white/20 bg-gradient-to-b from-[#ffe08a] via-[#f0b232] to-[#d4921a] px-9 py-3.5 text-sm font-black text-[#3a2600] shadow-[0_5px_0_#a5711a] transition-all hover:brightness-105 sm:px-11 sm:py-4 sm:text-base"
+              >
+                <Play className="h-5 w-5 fill-current drop-shadow-sm transition-transform duration-300 ease-out group-hover/play:scale-110 group-hover/play:-rotate-12" />
+                <span className="tracking-wide">Play</span>
+              </motion.button>
+            </div>
           </div>
         </motion.div>
       </div>

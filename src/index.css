@@ -378,6 +378,59 @@ button,
   cursor: not-allowed;
 }
 
+/* Home Play — moving snake-light border */
+@property --snake-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes play-snake-spin {
+  to {
+    --snake-angle: 360deg;
+  }
+}
+
+.play-snake-ring {
+  --snake-angle: 0deg;
+  position: relative;
+  display: inline-flex;
+  border-radius: 1.05rem;
+  padding: 3px;
+  isolation: isolate;
+  background: conic-gradient(
+    from var(--snake-angle),
+    transparent 0deg,
+    transparent 250deg,
+    rgba(255, 248, 220, 0.15) 280deg,
+    rgba(255, 255, 255, 0.55) 300deg,
+    #fff8dc 318deg,
+    #ffe08a 332deg,
+    #f0b232 348deg,
+    transparent 360deg
+  );
+  box-shadow:
+    0 0 18px rgba(240, 178, 50, 0.28),
+    0 0 0 1px rgba(255, 224, 138, 0.18);
+  animation: play-snake-spin 2.4s linear infinite;
+}
+
+.play-snake-ring::before {
+  content: '';
+  position: absolute;
+  inset: 3px;
+  z-index: 0;
+  border-radius: 0.9rem;
+  background: #0a0a0b;
+  pointer-events: none;
+}
+
+.play-snake-ring:hover {
+  box-shadow:
+    0 0 26px rgba(240, 178, 50, 0.45),
+    0 0 0 1px rgba(255, 224, 138, 0.35);
+}
+
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
