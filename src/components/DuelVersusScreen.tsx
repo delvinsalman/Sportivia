@@ -90,7 +90,7 @@ export function DuelVersusScreen({
           Matchup
         </motion.p>
 
-        <div className="grid w-full max-w-3xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1.5 sm:gap-4">
+        <div className="grid w-full max-w-3xl grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end gap-1.5 sm:items-center sm:gap-4">
           <motion.div
             initial={{ opacity: 0, x: -slide }}
             animate={{ opacity: 1, x: 0 }}
@@ -101,12 +101,11 @@ export function DuelVersusScreen({
               {you.name}
               <span className="text-white/40"> · you</span>
             </p>
-            <div className="pointer-events-none w-full max-w-[9.25rem] sm:max-w-[13.5rem]">
+            <div className="pointer-events-none w-[8.6rem] shrink-0 sm:w-[10.75rem]">
               <CharacterFutCard
                 character={youDef}
                 profile={youProfile}
                 selected
-                compact
                 accent={accent}
                 onSelect={() => {}}
               />
@@ -129,7 +128,7 @@ export function DuelVersusScreen({
             initial={{ opacity: 0, scale: reduceMotion ? 1 : 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={reduceMotion ? { duration: 0.2 } : { ...PAGE_SPRING, delay: 0.12 }}
-            className="relative flex shrink-0 flex-col items-center justify-center px-0.5 sm:px-1"
+            className="relative mb-16 flex shrink-0 flex-col items-center justify-center px-0.5 sm:mb-0 sm:px-1"
           >
             <div
               className="absolute h-12 w-12 rounded-full blur-2xl sm:h-20 sm:w-20"
@@ -154,11 +153,10 @@ export function DuelVersusScreen({
             <p className="mb-1.5 max-w-full truncate px-0.5 text-center text-[11px] font-black text-[#f2f3f5] sm:mb-2 sm:text-sm">
               {opponent.name}
             </p>
-            <div className="pointer-events-none w-full max-w-[9.25rem] sm:max-w-[13.5rem]">
+            <div className="pointer-events-none w-[8.6rem] shrink-0 sm:w-[10.75rem]">
               <CharacterFutCard
                 character={oppDef}
                 profile={oppProfile}
-                compact
                 onSelect={() => {}}
               />
             </div>
