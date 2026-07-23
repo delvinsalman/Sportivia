@@ -282,6 +282,7 @@ export const CHARACTERS: CharacterDef[] = [
     price: 12_500,
     modelPath: '/models/cosmo.glb',
     baseOvr: 80,
+    cardImage: '/cards/cosmo.png',
     accent: '#93c5fd',
     footOffsetY: 0,
   },
