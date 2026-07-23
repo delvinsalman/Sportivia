@@ -245,6 +245,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Keeps order · no funny business',
     price: 6_500,
     modelPath: '/models/officer.glb',
+    cardImage: '/cards/officer.png',
     baseOvr: 76,
     accent: '#3b82f6',
     footOffsetY: 0,
