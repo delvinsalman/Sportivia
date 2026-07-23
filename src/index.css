@@ -431,6 +431,33 @@ button,
     0 0 0 1px rgba(255, 224, 138, 0.35);
 }
 
+/* Featured skin card — same snake border, tinted by --snake-c1 */
+.card-snake-ring {
+  --snake-angle: 0deg;
+  --snake-c1: #f0b232;
+  --snake-c2: #ffffff;
+  position: relative;
+  display: block;
+  width: 100%;
+  border-radius: 1.45rem;
+  padding: 3px;
+  isolation: isolate;
+  background: conic-gradient(
+    from var(--snake-angle),
+    transparent 0deg,
+    transparent 250deg,
+    color-mix(in srgb, var(--snake-c1) 25%, transparent) 280deg,
+    color-mix(in srgb, var(--snake-c2) 70%, transparent) 300deg,
+    var(--snake-c2) 318deg,
+    var(--snake-c1) 338deg,
+    transparent 360deg
+  );
+  box-shadow:
+    0 6px 0 #0a0b0d,
+    0 0 22px color-mix(in srgb, var(--snake-c1) 35%, transparent);
+  animation: play-snake-spin 2.4s linear infinite;
+}
+
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;

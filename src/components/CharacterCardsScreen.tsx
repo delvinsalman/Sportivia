@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { ArrowLeft, Lock, Minus, Plus, Search, Sparkles } from 'lucide-react';
 import { HomeCoinMeter } from './LevelBar';
 import { SportBackground } from './SportBackground';
@@ -149,7 +149,16 @@ export function CharacterCardsScreen({
         <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col items-center justify-center gap-3 overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 lg:flex-row lg:items-center lg:gap-6">
           <div className="flex w-full shrink-0 flex-col items-center justify-center lg:w-[22.5rem] xl:w-[24rem]">
             <div className="w-full max-w-[20rem] sm:max-w-[22rem]">
-              <div className="relative overflow-hidden rounded-[1.35rem] border-[3px] border-[#3f4147] bg-[#12141a]/90 shadow-[0_6px_0_#0a0b0d]">
+              <div
+                className="card-snake-ring"
+                style={
+                  {
+                    ['--snake-c1' as string]: character.accent,
+                    ['--snake-c2' as string]: '#ffffff',
+                  } as CSSProperties
+                }
+              >
+                <div className="relative z-[1] overflow-hidden rounded-[1.3rem] border border-white/10 bg-[#12141a] shadow-none">
                 <div
                   className="pointer-events-none absolute inset-0 opacity-40"
                   style={{
@@ -262,6 +271,7 @@ export function CharacterCardsScreen({
                       })}
                     </div>
                   </div>
+                </div>
                 </div>
               </div>
 
