@@ -246,9 +246,20 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
 
   const setWager = useCallback(
     (stake: { coins: number }) => {
+      const coins = Math.max(0, Math.min(50_000, Math.floor(stake.coins || 0)));
+      // Optimistic UI so the picker updates even before the server round-trip.
+      setLobby(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          players: prev.players.map(p =>
+            p.id === prev.youId ? { ...p, wagerDecided: true, wagerCoins: coins } : p,
+          ),
+        };
+      });
       send({
         type: 'wager',
-        coins: Math.max(0, Math.floor(stake.coins || 0)),
+        coins,
       });
     },
     [send],
