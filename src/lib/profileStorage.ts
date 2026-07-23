@@ -24,10 +24,11 @@ import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult, grantDuelWinAchievement } from './seasonMeta';
 import { pickRandomPlayerName } from './playerNames';
-import { canUpgradeCharacterStat, type CardStatKey } from './characterCards';
+import { pendingUpgradeTotal, type CardStatKey } from './characterCards';
 
 const PROFILE_KEY = 'gridiq-profile-v4';
 const PAID_SKINS_MIGRATION_KEY = 'gridiq-paid-skins-v1';
+const CARD_STATS_DEFAULT_RESET_KEY = 'gridiq-card-stats-default-v1';
 
 function migrateCharacterId(id?: string): CharacterId | undefined {
   if (id === 'cool-banana-guy') return 'bunny';
@@ -119,40 +120,27 @@ export function loadProfile(): PlayerProfile {
       : DEFAULT_DOG_VARIANT;
 
     const STAT_KEYS = ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const;
-    const characterStatLevels: PlayerProfile['characterStatLevels'] = {};
-    const parsedStatLevels = (parsed as { characterStatLevels?: unknown }).characterStatLevels;
-    if (parsedStatLevels && typeof parsedStatLevels === 'object') {
-      for (const [key, value] of Object.entries(parsedStatLevels as Record<string, unknown>)) {
-        const id = migrateCharacterId(key);
-        if (!id || !value || typeof value !== 'object') continue;
-        const next: Partial<Record<(typeof STAT_KEYS)[number], number>> = {};
-        for (const stat of STAT_KEYS) {
-          const raw = (value as Record<string, unknown>)[stat];
-          if (typeof raw !== 'number') continue;
-          next[stat] = Math.max(0, Math.min(15, Math.floor(raw)));
+    let characterStatLevels: PlayerProfile['characterStatLevels'] = {};
+    const resetDone = localStorage.getItem(CARD_STATS_DEFAULT_RESET_KEY) === '1';
+    if (resetDone) {
+      const parsedStatLevels = (parsed as { characterStatLevels?: unknown }).characterStatLevels;
+      if (parsedStatLevels && typeof parsedStatLevels === 'object') {
+        for (const [key, value] of Object.entries(parsedStatLevels as Record<string, unknown>)) {
+          const id = migrateCharacterId(key);
+          if (!id || !value || typeof value !== 'object') continue;
+          const next: Partial<Record<(typeof STAT_KEYS)[number], number>> = {};
+          for (const stat of STAT_KEYS) {
+            const raw = (value as Record<string, unknown>)[stat];
+            if (typeof raw !== 'number') continue;
+            next[stat] = Math.max(0, Math.min(15, Math.floor(raw)));
+          }
+          characterStatLevels[id] = next;
         }
-        characterStatLevels[id] = next;
       }
-    }
-    // Migrate old overall levels into a balanced per-stat bonus so progress isn't lost.
-    const legacyLevels = (parsed as { characterLevels?: unknown }).characterLevels;
-    if (legacyLevels && typeof legacyLevels === 'object') {
-      for (const [key, value] of Object.entries(legacyLevels as Record<string, unknown>)) {
-        const id = migrateCharacterId(key);
-        if (!id || typeof value !== 'number') continue;
-        if (characterStatLevels[id]) continue;
-        const overall = Math.max(1, Math.min(15, Math.floor(value)));
-        const bonus = Math.max(0, overall - 1);
-        if (bonus <= 0) continue;
-        characterStatLevels[id] = {
-          pac: bonus,
-          sho: bonus,
-          pas: bonus,
-          dri: bonus,
-          def: bonus,
-          phy: bonus,
-        };
-      }
+    } else {
+      // Wipe glitched / legacy overall→stat migrations so every card starts at base defaults.
+      characterStatLevels = {};
+      localStorage.setItem(CARD_STATS_DEFAULT_RESET_KEY, '1');
     }
 
     const profile: PlayerProfile = {
@@ -190,6 +178,7 @@ export function loadProfile(): PlayerProfile {
     const rabbitChanged = parsed.rabbitVariant !== rabbitVariant;
     const dogChanged = parsed.dogVariant !== dogVariant;
     const hadLegacyCards = 'cardCollection' in parsed;
+    const cardStatsReset = !resetDone;
 
     if (
       equippedMigrated ||
@@ -197,7 +186,8 @@ export function loadProfile(): PlayerProfile {
       petsChanged ||
       rabbitChanged ||
       dogChanged ||
-      hadLegacyCards
+      hadLegacyCards ||
+      cardStatsReset
     ) {
       saveProfile(profile);
     }
@@ -350,21 +340,57 @@ export function upgradeCharacterStat(
   id: CharacterId,
   stat: CardStatKey,
 ): { ok: boolean; profile: PlayerProfile; error?: string } {
+  return applyCharacterStatUpgrades(id, { [stat]: 1 });
+}
+
+/** Apply a queued multi-stat upgrade cart in one payment. */
+export function applyCharacterStatUpgrades(
+  id: CharacterId,
+  pending: Partial<Record<CardStatKey, number>>,
+): { ok: boolean; profile: PlayerProfile; error?: string; total?: number } {
   const profile = loadProfile();
   const def = CHARACTERS.find(c => c.id === id);
   if (!def) return { ok: false, profile, error: 'Unknown character' };
-  const check = canUpgradeCharacterStat(profile, def, stat);
-  if (!check.ok) {
-    return { ok: false, profile, error: check.reason ?? 'Cannot upgrade' };
+  if (!profile.unlockedCharacters.includes(id)) {
+    return { ok: false, profile, error: 'Unlock this skin first' };
   }
-  profile.coins -= check.cost;
-  const prev = profile.characterStatLevels?.[id] ?? {};
-  profile.characterStatLevels = {
-    ...profile.characterStatLevels,
-    [id]: { ...prev, [stat]: check.level + 1 },
-  };
+
+  const cleaned: Partial<Record<CardStatKey, number>> = {};
+  for (const key of ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const) {
+    const n = pending[key];
+    if (typeof n === 'number' && n > 0) cleaned[key] = Math.floor(n);
+  }
+  if (Object.keys(cleaned).length === 0) {
+    return { ok: false, profile, error: 'Nothing to upgrade' };
+  }
+
+  // Validate each queued step stays under caps.
+  const draftLevels = { ...(profile.characterStatLevels?.[id] ?? {}) };
+  for (const key of ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const) {
+    const add = cleaned[key] ?? 0;
+    if (add <= 0) continue;
+    const current = Math.max(0, Math.min(15, Math.floor(draftLevels[key] ?? 0)));
+    if (current + add > 15) {
+      return { ok: false, profile, error: `${key.toUpperCase()} would exceed max` };
+    }
+  }
+
+  const { total } = pendingUpgradeTotal(profile, def, cleaned);
+  if (total <= 0) return { ok: false, profile, error: 'Nothing to upgrade' };
+  if (profile.coins < total) {
+    return { ok: false, profile, error: `Need ${total - profile.coins} more coins` };
+  }
+
+  profile.coins -= total;
+  const nextLevels = { ...(profile.characterStatLevels?.[id] ?? {}) };
+  for (const key of ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const) {
+    const add = cleaned[key] ?? 0;
+    if (add <= 0) continue;
+    nextLevels[key] = Math.max(0, Math.min(15, Math.floor(nextLevels[key] ?? 0) + add));
+  }
+  profile.characterStatLevels = { ...profile.characterStatLevels, [id]: nextLevels };
   saveProfile(profile);
-  return { ok: true, profile };
+  return { ok: true, profile, total };
 }
 
 export function purchasePet(id: PetId): { ok: boolean; profile: PlayerProfile; error?: string } {

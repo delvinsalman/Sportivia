@@ -128,30 +128,113 @@ export function getCharacterLevel(
   return 1 + total;
 }
 
-/** Coin cost to raise one stat by +1. */
+/** Coin cost to raise one stat by +1 from its current upgrade level. */
 export function characterStatUpgradeCost(statLevel: number): number {
   const from = Math.max(0, Math.min(MAX_STAT_LEVEL - 1, statLevel));
-  return Math.round(55 + from * 28 + from * from * 4);
+  // Steeper curve so stacking one stat gets expensive fast.
+  return Math.round(80 + from * 45 + from * from * 12);
+}
+
+export type StatPending = Partial<Record<CardStatKey, number>>;
+
+export function emptyStatPending(): StatPending {
+  return {};
+}
+
+export function pendingCount(pending: StatPending): number {
+  return CARD_STAT_KEYS.reduce((acc, key) => acc + (pending[key] ?? 0), 0);
+}
+
+/** Stats after applying queued (unpaid) upgrades on top of saved progress. */
+export function characterCardStatsWithPending(
+  character: CharacterDef,
+  profile: Pick<PlayerProfile, 'characterStatLevels' | 'unlockedCharacters'>,
+  pending: StatPending = {},
+): CharacterCardStats {
+  const base = characterBaseStats(character);
+  if (!profile.unlockedCharacters.includes(character.id)) return base;
+
+  const next = { ...base };
+  for (const key of CARD_STAT_KEYS) {
+    const bonus = getStatLevel(profile, character.id, key) + (pending[key] ?? 0);
+    next[key] = Math.min(MAX_STAT_VALUE, base[key] + bonus);
+  }
+  return next;
+}
+
+export function characterOverallWithPending(
+  character: CharacterDef,
+  profile: Pick<PlayerProfile, 'characterStatLevels' | 'unlockedCharacters'>,
+  pending: StatPending = {},
+): number {
+  return characterOverallFromStats(characterCardStatsWithPending(character, profile, pending));
+}
+
+/** Cost of one more +1 on a stat, including already-queued pending levels. */
+export function nextStatUpgradeCost(
+  profile: PlayerProfile,
+  character: CharacterDef,
+  stat: CardStatKey,
+  pending: StatPending = {},
+): { ok: boolean; cost: number; level: number; reason?: string } {
+  if (!profile.unlockedCharacters.includes(character.id)) {
+    return { ok: false, cost: 0, level: 0, reason: 'Locked' };
+  }
+  const saved = getStatLevel(profile, character.id, stat);
+  const queued = pending[stat] ?? 0;
+  const level = saved + queued;
+  const preview = characterCardStatsWithPending(character, profile, pending);
+  if (preview[stat] >= MAX_STAT_VALUE || level >= MAX_STAT_LEVEL) {
+    return { ok: false, cost: 0, level, reason: 'Maxed' };
+  }
+  return { ok: true, cost: characterStatUpgradeCost(level), level };
+}
+
+/** Total coin cost for a pending upgrade cart. */
+export function pendingUpgradeTotal(
+  profile: PlayerProfile,
+  character: CharacterDef,
+  pending: StatPending,
+): { total: number; lines: Array<{ stat: CardStatKey; count: number; cost: number }> } {
+  const lines: Array<{ stat: CardStatKey; count: number; cost: number }> = [];
+  let total = 0;
+  for (const stat of CARD_STAT_KEYS) {
+    const count = pending[stat] ?? 0;
+    if (count <= 0) continue;
+    const saved = getStatLevel(profile, character.id, stat);
+    let cost = 0;
+    for (let i = 0; i < count; i++) {
+      cost += characterStatUpgradeCost(saved + i);
+    }
+    lines.push({ stat, count, cost });
+    total += cost;
+  }
+  return { total, lines };
 }
 
 export function canUpgradeCharacterStat(
   profile: PlayerProfile,
   character: CharacterDef,
   stat: CardStatKey,
+  pending: StatPending = {},
 ): { ok: boolean; cost: number; level: number; nextValue: number; reason?: string } {
-  if (!profile.unlockedCharacters.includes(character.id)) {
-    return { ok: false, cost: 0, level: 0, nextValue: 0, reason: 'Locked' };
+  const next = nextStatUpgradeCost(profile, character, stat, pending);
+  const preview = characterCardStatsWithPending(character, profile, pending);
+  if (!next.ok) {
+    return {
+      ok: false,
+      cost: next.cost,
+      level: next.level,
+      nextValue: preview[stat],
+      reason: next.reason,
+    };
   }
-  const level = getStatLevel(profile, character.id, stat);
-  const live = characterCardStats(character, profile);
-  if (live[stat] >= MAX_STAT_VALUE || level >= MAX_STAT_LEVEL) {
-    return { ok: false, cost: 0, level, nextValue: live[stat], reason: 'Maxed' };
-  }
-  const cost = characterStatUpgradeCost(level);
-  if (profile.coins < cost) {
-    return { ok: false, cost, level, nextValue: live[stat] + 1, reason: 'Need more coins' };
-  }
-  return { ok: true, cost, level, nextValue: live[stat] + 1 };
+  return {
+    ok: true,
+    cost: next.cost,
+    level: next.level,
+    nextValue: Math.min(MAX_STAT_VALUE, preview[stat] + 1),
+  };
 }
 
 export function cardTierLabel(ovr: number): 'Common' | 'Rare' | 'Epic' | 'Icon' {

@@ -17,7 +17,7 @@ import {
   equipPet,
   unequipPet,
   purchaseCharacter,
-  upgradeCharacterStat,
+  applyCharacterStatUpgrades,
   purchasePet,
   updatePlayerName,
   saveCreativeLoadout,
@@ -28,7 +28,7 @@ import {
 } from './lib/profileStorage';
 import type { PlayerProfile } from './types/profile';
 import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from './types/profile';
-import type { CardStatKey } from './lib/characterCards';
+import type { StatPending } from './lib/characterCards';
 import type { CreativeLoadout } from './types/creativeCharacter';
 import type { AthleteLoadout } from './types/athleteCharacter';
 import type { BobLoadout } from './types/bobCharacter';
@@ -168,9 +168,10 @@ export default function App() {
     if (ok) setProfile(next);
   }
 
-  function handleUpgradeCharacterStat(id: CharacterId, stat: CardStatKey) {
-    const { ok, profile: next } = upgradeCharacterStat(id, stat);
+  function handleApplyStatUpgrades(id: CharacterId, pending: StatPending) {
+    const { ok, profile: next } = applyCharacterStatUpgrades(id, pending);
     if (ok) setProfile(next);
+    return ok;
   }
 
   function handleEquip(id: CharacterId) {
@@ -283,7 +284,7 @@ export default function App() {
               profile={profile}
               onBack={() => setScreen('home')}
               onPurchaseCharacter={handlePurchase}
-              onUpgradeCharacterStat={handleUpgradeCharacterStat}
+              onApplyStatUpgrades={handleApplyStatUpgrades}
               onEquipCharacter={handleEquip}
             />
           </PageTransition>
