@@ -214,7 +214,7 @@ export const CATEGORY_VISUALS: Record<string, VisualMeta> = {
   'award-allstar': { type: 'allstar', allStarVariant: 'mlb' },
   'award-hof': { type: 'trophy', logoUrl: '/icons/trophies/mlb-hof.png', logoScale: 1.2 },
   'award-gold-glove': { type: 'trophy', logoUrl: '/icons/trophies/mlb-gold-glove.png', logoScale: 1.2 },
-  'batting-title': { type: 'award', initials: 'AVG' },
+  'batting-title': { type: 'trophy', logoUrl: '/icons/trophies/mlb-batting-title.png', logoScale: 1.25 },
   'decade-80s': { type: 'era', initials: '80' },
 
   // NFL
