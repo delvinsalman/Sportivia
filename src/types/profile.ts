@@ -271,6 +271,7 @@ export const CHARACTERS: CharacterDef[] = [
     price: 9_000,
     modelPath: '/models/astronaut.glb',
     baseOvr: 79,
+    cardImage: '/cards/astronaut.png',
     accent: '#60a5fa',
     footOffsetY: -0.1,
   },
