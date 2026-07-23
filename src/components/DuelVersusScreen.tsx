@@ -22,7 +22,7 @@ interface DuelVersusScreenProps {
   onComplete: () => void;
 }
 
-const SHOW_MS = 3_400;
+const SHOW_MS = 4_600;
 
 export function DuelVersusScreen({
   sport,
@@ -101,7 +101,7 @@ export function DuelVersusScreen({
               {you.name}
               <span className="text-white/40"> · you</span>
             </p>
-            <div className="pointer-events-none w-[8.6rem] shrink-0 sm:w-[10.75rem]">
+            <div className="pointer-events-none w-[9.75rem] shrink-0 sm:w-[12rem]">
               <CharacterFutCard
                 character={youDef}
                 profile={youProfile}
@@ -153,7 +153,7 @@ export function DuelVersusScreen({
             <p className="mb-1.5 max-w-full truncate px-0.5 text-center text-[11px] font-black text-[#f2f3f5] sm:mb-2 sm:text-sm">
               {opponent.name}
             </p>
-            <div className="pointer-events-none w-[8.6rem] shrink-0 sm:w-[10.75rem]">
+            <div className="pointer-events-none w-[9.75rem] shrink-0 sm:w-[12rem]">
               <CharacterFutCard
                 character={oppDef}
                 profile={oppProfile}
