@@ -1,6 +1,6 @@
 import { Lock } from 'lucide-react';
 import type { CharacterDef, CharacterId, PlayerProfile } from '../types/profile';
-import { CharacterPodium } from './3d/CharacterPodium';
+import { CharacterCardPortrait } from './CharacterCardPortrait';
 import {
   CARD_STAT_KEYS,
   CARD_STAT_LABELS,
@@ -10,10 +10,6 @@ import {
   characterOverall,
   getCharacterLevel,
 } from '../lib/characterCards';
-import type { CreativeLoadout } from '../types/creativeCharacter';
-import type { AthleteLoadout } from '../types/athleteCharacter';
-import type { BobLoadout } from '../types/bobCharacter';
-import type { RabbitVariantId } from '../types/profile';
 
 interface CharacterFutCardProps {
   character: CharacterDef;
@@ -21,13 +17,7 @@ interface CharacterFutCardProps {
   selected?: boolean;
   /** Tighter layout for the collection grid (one-page Cards screen). */
   compact?: boolean;
-  /** Mount a live 3D model — only use on one card at a time (WebGL limit). */
-  liveModel?: boolean;
   accent?: string;
-  creativeLoadout?: CreativeLoadout;
-  athleteLoadout?: AthleteLoadout;
-  bobLoadout?: BobLoadout;
-  rabbitVariant?: RabbitVariantId;
   onSelect: (id: CharacterId) => void;
 }
 
@@ -36,12 +26,7 @@ export function CharacterFutCard({
   profile,
   selected = false,
   compact = false,
-  liveModel = false,
   accent,
-  creativeLoadout,
-  athleteLoadout,
-  bobLoadout,
-  rabbitVariant,
   onSelect,
 }: CharacterFutCardProps) {
   const owned = profile.unlockedCharacters.includes(character.id);
@@ -96,45 +81,10 @@ export function CharacterFutCard({
 
           <div
             className={`relative mx-auto mt-1 w-full overflow-hidden rounded-lg ${
-              compact ? 'h-[3.6rem]' : 'h-[7.5rem] rounded-xl'
+              compact ? 'h-[4.25rem]' : 'h-[7.5rem] rounded-xl'
             }`}
           >
-            {liveModel && owned ? (
-              <div className="h-full w-full">
-                <CharacterPodium
-                  characterId={character.id}
-                  accent={character.accent}
-                  height={compact ? 90 : 150}
-                  bare
-                  hidePodium
-                  className="h-full w-full"
-                  {...(character.id === 'creative' && creativeLoadout
-                    ? { creativeLoadout }
-                    : {})}
-                  {...(character.id === 'athlete' && athleteLoadout
-                    ? { athleteLoadout }
-                    : {})}
-                  {...(character.id === 'bob' && bobLoadout ? { bobLoadout } : {})}
-                  {...(character.id === 'bunny' && rabbitVariant
-                    ? { rabbitVariant }
-                    : {})}
-                />
-              </div>
-            ) : (
-              <div
-                className={`absolute inset-0 flex items-center justify-center ${owned ? '' : 'opacity-50 grayscale'}`}
-                style={{
-                  background: `radial-gradient(ellipse 70% 65% at 50% 40%, ${character.accent}55 0%, transparent 70%), linear-gradient(180deg, #1a1c22 0%, #0c0d10 100%)`,
-                }}
-              >
-                <span
-                  className={`font-black tracking-tight ${compact ? 'text-2xl' : 'text-4xl'}`}
-                  style={{ color: character.accent, textShadow: '0 2px 0 rgba(0,0,0,0.45)' }}
-                >
-                  {character.name.slice(0, 1)}
-                </span>
-              </div>
-            )}
+            <CharacterCardPortrait character={character} owned={owned} size="compact" />
             {!owned && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/35">
                 <div

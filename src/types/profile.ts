@@ -62,6 +62,8 @@ export interface CharacterDef {
   tagline: string;
   price: number;
   modelPath: string;
+  /** Flat card art — preferred on Cards screen to avoid WebGL. */
+  cardImage?: string;
   accent: string;
   /** Per-model foot placement on the podium */
   footOffsetY?: number;
@@ -137,6 +139,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Starter kit · first whistle',
     price: 0,
     modelPath: '/models/cube-man.fbx',
+    cardImage: '/cards/cube-man.png',
     accent: '#23a559',
     footOffsetY: 0.05,
     poseMode: 'skeletal',
