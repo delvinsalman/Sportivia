@@ -221,6 +221,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Film room grind · next-gen IQ',
     price: 3_000,
     modelPath: '/models/nerd-player.glb',
+    cardImage: '/cards/nerd-player.png',
     baseOvr: 72,
     accent: '#818cf8',
     footOffsetY: 0,
