@@ -154,8 +154,8 @@ export function CharacterCardsScreen({
           </div>
         </header>
 
-        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col gap-3 overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 lg:flex-row lg:items-start lg:gap-6">
-          <div className="flex w-full shrink-0 flex-col items-center justify-start lg:w-[22.5rem] xl:w-[24rem]">
+        <div className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col items-center justify-center gap-3 overflow-hidden px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5 lg:flex-row lg:items-center lg:gap-6">
+          <div className="flex w-full shrink-0 flex-col items-center justify-center lg:w-[22.5rem] xl:w-[24rem]">
             <div className="w-full max-w-[20rem] sm:max-w-[22rem]">
               <div className="relative overflow-hidden rounded-[1.35rem] border-[3px] border-[#3f4147] bg-[#12141a]/90 shadow-[0_6px_0_#0a0b0d]">
                 <div
