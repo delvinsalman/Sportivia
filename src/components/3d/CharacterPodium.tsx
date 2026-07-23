@@ -392,17 +392,19 @@ function useHomeShowcase(
       }, randBetween(restMin, restMax));
     };
 
-    const startIdle = () => {
+    const returnToIdle = () => {
       if (cancelled) return;
       if (idleAction) {
         Object.values(actions).forEach(a => {
-          if (a && a !== idleAction) a.fadeOut(0.25);
+          if (a && a !== idleAction) a.fadeOut(0.4);
         });
-        idleAction.reset();
+        // Keep ambient idle mid-cycle — never reset() here or the pose snaps.
         idleAction.setLoop(LoopRepeat, Infinity);
         idleAction.clampWhenFinished = false;
         idleAction.timeScale = (onlyGenericClip ? 0.9 : 1) * timeScale;
-        idleAction.fadeIn(0.3).play();
+        idleAction.enabled = true;
+        if (!idleAction.isRunning()) idleAction.play();
+        idleAction.fadeIn(0.45);
       }
       scheduleNextFlourish();
     };
@@ -441,22 +443,36 @@ function useHomeShowcase(
           return;
         }
 
-        if (idleAction) idleAction.fadeOut(0.2);
+        // Soft handoff: idle keeps running under weight 0 so return is seamless.
+        if (idleAction) idleAction.fadeOut(0.28);
         Object.values(actions).forEach(a => {
-          if (a && a !== action && a !== idleAction) a.stop();
+          if (a && a !== action && a !== idleAction) a.fadeOut(0.2);
         });
 
         action.reset();
         action.setLoop(LoopOnce, 1);
         action.clampWhenFinished = true;
         action.timeScale = randBetween(0.95, 1.15) * timeScale;
-        action.fadeIn(0.2).play();
+        action.fadeIn(0.28).play();
 
-        const durationMs = (action.getClip().duration / action.timeScale) * 1000 + 200;
-        endTimerRef.current = setTimeout(() => {
-          if (cancelled) return;
-          startIdle();
-        }, durationMs);
+        const mixer = action.getMixer();
+        let settled = false;
+        const settle = () => {
+          if (settled || cancelled) return;
+          settled = true;
+          mixer.removeEventListener('finished', onFinished);
+          clearTimeout(endTimerRef.current);
+          endTimerRef.current = undefined;
+          returnToIdle();
+        };
+        const onFinished = (e: { action?: AnimationAction }) => {
+          if (e.action !== action) return;
+          settle();
+        };
+        mixer.addEventListener('finished', onFinished);
+
+        const durationMs = (action.getClip().duration / action.timeScale) * 1000 + 350;
+        endTimerRef.current = setTimeout(settle, durationMs);
         return;
       }
 
@@ -531,18 +547,19 @@ function useRabbitShowcase(
       }, randBetween(restMs[0], restMs[1]));
     };
 
-    const startIdle = () => {
+    const returnToIdle = () => {
       if (cancelled) return;
       if (idleAction) {
         Object.values(actions).forEach(a => {
-          if (a && a !== idleAction) a.fadeOut(0.2);
+          if (a && a !== idleAction) a.fadeOut(0.4);
         });
-        idleAction.reset();
+        // Keep ambient idle mid-cycle — never reset() here or the pose snaps.
         idleAction.setLoop(LoopRepeat, Infinity);
         idleAction.clampWhenFinished = false;
-        // Slightly peppier than other skins
         idleAction.timeScale = 1.12;
-        idleAction.fadeIn(0.25).play();
+        idleAction.enabled = true;
+        if (!idleAction.isRunning()) idleAction.play();
+        idleAction.fadeIn(0.4);
       }
       scheduleNext();
     };
@@ -567,21 +584,35 @@ function useRabbitShowcase(
           return;
         }
 
-        if (idleAction) idleAction.fadeOut(0.18);
+        if (idleAction) idleAction.fadeOut(0.25);
         Object.values(actions).forEach(a => {
-          if (a && a !== action && a !== idleAction) a.stop();
+          if (a && a !== action && a !== idleAction) a.fadeOut(0.2);
         });
 
         action.reset();
         action.setLoop(LoopOnce, 1);
         action.clampWhenFinished = true;
         action.timeScale = randBetween(1.0, 1.2);
-        action.fadeIn(0.15).play();
+        action.fadeIn(0.22).play();
 
-        const durationMs = (action.getClip().duration / action.timeScale) * 1000 + 180;
-        endTimerRef.current = setTimeout(() => {
-          if (!cancelled) startIdle();
-        }, durationMs);
+        const mixer = action.getMixer();
+        let settled = false;
+        const settle = () => {
+          if (settled || cancelled) return;
+          settled = true;
+          mixer.removeEventListener('finished', onFinished);
+          clearTimeout(endTimerRef.current);
+          endTimerRef.current = undefined;
+          returnToIdle();
+        };
+        const onFinished = (e: { action?: AnimationAction }) => {
+          if (e.action !== action) return;
+          settle();
+        };
+        mixer.addEventListener('finished', onFinished);
+
+        const durationMs = (action.getClip().duration / action.timeScale) * 1000 + 320;
+        endTimerRef.current = setTimeout(settle, durationMs);
         return;
       }
 
