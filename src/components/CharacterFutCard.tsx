@@ -41,7 +41,7 @@ export function CharacterFutCard({
     <button
       type="button"
       onClick={() => onSelect(character.id)}
-      className={`relative w-full text-left transition-transform ${selected ? 'scale-[1.02]' : 'hover:scale-[1.01]'}`}
+      className="relative w-full text-left transition-[filter,box-shadow] duration-150 hover:brightness-110"
       aria-pressed={selected}
       aria-label={`${character.name}${owned ? '' : ' locked'}`}
     >
@@ -53,8 +53,8 @@ export function CharacterFutCard({
           borderColor: selected ? ring : tier.border,
           background: `linear-gradient(165deg, ${tier.glow} 0%, #12141a 42%, #0c0d10 100%)`,
           boxShadow: selected
-            ? `0 4px 0 rgba(0,0,0,0.45), 0 0 0 2px ${ring}88`
-            : `0 4px 0 rgba(0,0,0,0.45), 0 0 18px ${tier.glow}`,
+            ? `0 4px 0 rgba(0,0,0,0.45), 0 0 0 2px ${ring}aa, 0 0 16px ${ring}55`
+            : `0 4px 0 rgba(0,0,0,0.45), 0 0 14px ${tier.glow}`,
         }}
       >
         <div className={`relative ${compact ? 'px-2 pt-2 pb-1.5' : 'px-2.5 pt-2.5 pb-2'}`}>
