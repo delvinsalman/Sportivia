@@ -176,6 +176,7 @@ export const CHARACTERS: CharacterDef[] = [
     tagline: 'Practice squad · earn the reps',
     price: 200,
     modelPath: '/models/citizen-1.glb',
+    cardImage: '/cards/citizen-1.png',
     baseOvr: 65,
     accent: '#94a3b8',
     footOffsetY: 0,
