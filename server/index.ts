@@ -25,6 +25,21 @@ interface ClientMsg {
   wrong?: number;
   maxStreak?: number;
   coins?: number;
+  cardLevels?: Record<string, number>;
+}
+
+const CARD_STAT_KEYS = ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const;
+
+function sanitizeCardLevels(raw: unknown): Record<string, number> {
+  if (!raw || typeof raw !== 'object') return {};
+  const out: Record<string, number> = {};
+  const src = raw as Record<string, unknown>;
+  for (const key of CARD_STAT_KEYS) {
+    const n = Number(src[key]);
+    if (!Number.isFinite(n) || n <= 0) continue;
+    out[key] = Math.max(0, Math.min(99, Math.floor(n)));
+  }
+  return out;
 }
 
 interface PlayerInfo {
@@ -39,6 +54,7 @@ interface PlayerInfo {
   maxStreak: number;
   wagerDecided: boolean;
   wagerCoins: number;
+  cardLevels: Record<string, number>;
 }
 
 interface Player extends PlayerInfo {
@@ -170,6 +186,7 @@ function publicPlayers(room: Room): PlayerInfo[] {
     maxStreak: p.maxStreak,
     wagerDecided: p.wagerDecided,
     wagerCoins: p.wagerCoins,
+    cardLevels: p.cardLevels ?? {},
   }));
 }
 
@@ -635,6 +652,7 @@ wss.on('connection', ws => {
         maxStreak: 0,
         wagerDecided: false,
         wagerCoins: 0,
+        cardLevels: sanitizeCardLevels(msg.cardLevels),
         ws,
         alive: true,
       };
@@ -683,6 +701,7 @@ wss.on('connection', ws => {
         maxStreak: 0,
         wagerDecided: false,
         wagerCoins: 0,
+        cardLevels: sanitizeCardLevels(msg.cardLevels),
         ws,
         alive: true,
       };

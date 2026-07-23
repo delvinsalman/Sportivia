@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowLeft, Swords } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import type { BotDifficulty, Sport } from '../types';
 import type { PlayerProfile } from '../types/profile';
 import { SportBackground } from './SportBackground';
@@ -13,6 +13,7 @@ import {
   formatCoins,
 } from '../lib/coinStake';
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
+import { assetUrl } from '../lib/assetUrl';
 
 interface CoinStakeScreenProps {
   sport: Sport;
@@ -72,10 +73,14 @@ export function CoinStakeScreen({
           <div className="w-full max-w-md rounded-[28px] border-[3px] border-[#3f4147] bg-[#121316]/95 p-5 shadow-[0_8px_0_#0a0a0b] backdrop-blur-md sm:p-6">
             <div className="mb-4 flex items-center gap-3">
               <div
-                className="flex h-12 w-12 items-center justify-center rounded-2xl border-[3px] border-white/15 shadow-[0_3px_0_rgba(0,0,0,0.35)]"
-                style={{ background: `${config.color}33` }}
+                className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl border-[3px] border-white/15 bg-[#1a1b1f] shadow-[0_3px_0_rgba(0,0,0,0.35)]"
               >
-                <Swords className="h-5 w-5" style={{ color: config.color }} />
+                <img
+                  src={assetUrl('/icons/modes/bot.png')}
+                  alt=""
+                  className="h-10 w-10 object-contain"
+                  draggable={false}
+                />
               </div>
               <div>
                 <p className="text-lg font-black text-[#f2f3f5]">Vs {config.label}</p>

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Sport } from '../types';
-import type { CharacterId } from '../types/profile';
+import type { CharacterId, PlayerProfile } from '../types/profile';
 import {
   duelWsUrl,
   type DuelLobbyState,
@@ -8,6 +8,7 @@ import {
   type DuelMatchStart,
   type DuelServerMessage,
 } from '../lib/duelTypes';
+import { cardLevelsForCharacter } from '../lib/duelCard';
 
 export type DuelConnectionStatus = 'idle' | 'connecting' | 'connected' | 'error';
 
@@ -15,9 +16,10 @@ interface UseDuelOptions {
   playerName: string;
   characterId: CharacterId;
   sport: Sport;
+  profile: PlayerProfile;
 }
 
-export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
+export function useDuel({ playerName, characterId, sport, profile }: UseDuelOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const youIdRef = useRef<string>('');
   const intentionalCloseRef = useRef(false);
@@ -197,12 +199,13 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
           name: playerName,
           characterId,
           sport,
+          cardLevels: cardLevelsForCharacter(profile, characterId),
         }),
       );
     } catch {
       /* error state set in connect */
     }
-  }, [connect, playerName, characterId, sport]);
+  }, [connect, playerName, characterId, sport, profile]);
 
   const joinLobby = useCallback(
     async (code: string) => {
@@ -214,13 +217,14 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
             code: code.toUpperCase().trim(),
             name: playerName,
             characterId,
+            cardLevels: cardLevelsForCharacter(profile, characterId),
           }),
         );
       } catch {
         /* error state set in connect */
       }
     },
-    [connect, playerName, characterId],
+    [connect, playerName, characterId, profile],
   );
 
   const setReady = useCallback(

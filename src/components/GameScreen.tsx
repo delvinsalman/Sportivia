@@ -13,12 +13,13 @@ import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
 import type { DuelMatchResult } from '../lib/duelTypes';
-import { Bot, Swords } from 'lucide-react';
+import { Swords } from 'lucide-react';
 import { getSettings } from '../lib/settings';
 import { BOT_DIFFICULTIES, botName, nextBotDelay, rollBotPoints } from '../lib/botOpponent';
 import { grantDuelWin, settleLockedCoinStake } from '../lib/profileStorage';
 import type { PlayerProfile } from '../types/profile';
 import type { StakeOutcome } from '../lib/coinStake';
+import { assetUrl } from '../lib/assetUrl';
 
 interface GameScreenProps {
   sport: Sport;
@@ -260,9 +261,16 @@ export function GameScreen({
       {versusMode && (
         <div className="relative z-20 flex justify-center px-4 -mt-1 mb-0.5 shrink-0">
           <div className="inline-flex items-center gap-3 rounded-full border border-[#2b2d31]/80 bg-[#121316]/90 backdrop-blur-md px-3 py-1.5 text-xs">
-            {mode === 'bot'
-              ? <Bot className="w-3.5 h-3.5 text-[#a855f7]" />
-              : <Swords className="w-3.5 h-3.5 text-[#ed4245]" />}
+            {mode === 'bot' ? (
+              <img
+                src={assetUrl('/icons/modes/bot.png')}
+                alt=""
+                className="h-5 w-5 object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.45)]"
+                draggable={false}
+              />
+            ) : (
+              <Swords className="w-3.5 h-3.5 text-[#ed4245]" />
+            )}
             <span className="font-bold text-[#f2f3f5]">{game.score}</span>
             <span className="text-[#5c5e66]">vs</span>
             <span className="font-bold text-[#f0b232]">{versusScore}</span>

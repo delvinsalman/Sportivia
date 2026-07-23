@@ -1,5 +1,6 @@
 import type { Sport } from '../types';
 import type { CharacterId } from '../types/profile';
+import type { CharacterStatLevels } from './characterCards';
 
 export type DuelRoomStatus = 'lobby' | 'playing' | 'finished';
 
@@ -16,6 +17,8 @@ export interface DuelPlayerInfo {
   wagerDecided?: boolean;
   /** Coins put on the line (0 = no stake). */
   wagerCoins?: number;
+  /** Per-stat upgrade levels for the equipped skin card. */
+  cardLevels?: CharacterStatLevels;
 }
 
 export interface DuelLobbyState {
@@ -81,12 +84,14 @@ export interface CreateDuelPayload {
   name: string;
   characterId: CharacterId;
   sport: Sport;
+  cardLevels?: CharacterStatLevels;
 }
 
 export interface JoinDuelPayload {
   code: string;
   name: string;
   characterId: CharacterId;
+  cardLevels?: CharacterStatLevels;
 }
 
 export function duelWsUrl(): string {

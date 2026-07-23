@@ -5,6 +5,7 @@ import { PageTransition } from './components/PageTransition';
 import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
 import { BallRainIntro } from './components/BallRainIntro';
+import { DuelVersusScreen } from './components/DuelVersusScreen';
 import { StoreScreen } from './components/StoreScreen';
 import { CharacterCardsScreen } from './components/CharacterCardsScreen';
 import { LobbyScreen } from './components/LobbyScreen';
@@ -50,6 +51,7 @@ type Screen =
   | 'career'
   | 'lobby'
   | 'bot-stake'
+  | 'duel-versus'
   | 'intro'
   | 'game';
 
@@ -75,6 +77,7 @@ export default function App() {
     playerName: profile.playerName,
     characterId: profile.equippedCharacter,
     sport,
+    profile,
   });
 
   const online = useOnlineCount();
@@ -116,7 +119,7 @@ export default function App() {
     });
     setProfile(locked.profile);
 
-    setScreen('intro');
+    setScreen('duel-versus');
   }, [duel.match, duel.lobby?.youId, duel.you?.id]);
 
   // Joiners inherit the host's sport so boards match the room.
@@ -126,7 +129,8 @@ export default function App() {
 
   // Kick back to lobby only if the match was abandoned — keep results visible after finish.
   useEffect(() => {
-    if (mode !== 'duel' || screen !== 'game') return;
+    if (mode !== 'duel') return;
+    if (screen !== 'game' && screen !== 'duel-versus' && screen !== 'intro') return;
     if (duel.duelResult) return;
     if (duel.lobby?.status === 'lobby' || (!duel.lobby && duel.status === 'idle')) {
       startedMatchRef.current = null;
@@ -180,6 +184,10 @@ export default function App() {
   const handleIntroComplete = useCallback(() => {
     setGameKey(k => k + 1);
     setScreen('game');
+  }, []);
+
+  const handleVersusComplete = useCallback(() => {
+    setScreen('intro');
   }, []);
 
   function handleReplay() {
@@ -380,6 +388,18 @@ export default function App() {
               profile={profile}
               onBack={() => setScreen('home')}
               onConfirm={handleBotStakeConfirm}
+            />
+          </PageTransition>
+        )}
+
+        {screen === 'duel-versus' && duel.match && (
+          <PageTransition key="duel-versus" variant="play" className="fixed inset-0 z-50">
+            <DuelVersusScreen
+              sport={sport}
+              profile={profile}
+              match={duel.match}
+              youId={duel.lobby?.youId ?? duel.you?.id ?? duel.match.players[0]?.id ?? ''}
+              onComplete={handleVersusComplete}
             />
           </PageTransition>
         )}

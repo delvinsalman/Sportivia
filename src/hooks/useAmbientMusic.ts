@@ -16,6 +16,7 @@ type AmbientScreen =
   | 'career'
   | 'lobby'
   | 'bot-stake'
+  | 'duel-versus'
   | 'intro'
   | 'game';
 
