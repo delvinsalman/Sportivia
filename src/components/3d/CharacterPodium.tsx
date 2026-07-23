@@ -1970,7 +1970,7 @@ interface CharacterPodiumProps {
   athleteLoadout?: AthleteLoadout;
   /** Body tint for Boxscore Bob */
   bobLoadout?: BobLoadout;
-  /** Appearance included with the Rabbit skin */
+  /** Appearance included with the Lane Hopper skin */
   rabbitVariant?: RabbitVariantId;
   /** Breed included with the Street Dog pet */
   dogVariant?: DogVariantId;
