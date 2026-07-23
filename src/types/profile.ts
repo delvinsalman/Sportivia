@@ -116,7 +116,7 @@ export interface PlayerProfile {
   athleteLoadout: AthleteLoadout;
   /** Body tint for Boxscore Bob */
   bobLoadout: BobLoadout;
-  /** Selected look included with the Rabbit skin bundle */
+  /** Selected look included with the Lane Hopper skin bundle */
   rabbitVariant: RabbitVariantId;
   /** Selected breed included with the Dog pet */
   dogVariant: DogVariantId;
@@ -342,11 +342,12 @@ export const CHARACTERS: CharacterDef[] = [
   },
   {
     id: 'bunny',
-    name: 'Rabbit',
+    name: 'Lane Hopper',
     tagline: 'Five looks included · customize anytime',
     price: 36_000,
     modelPath: '/models/rabbit/base.glb',
     baseOvr: 85,
+    cardImage: '/cards/bunny.png',
     accent: '#67e8f9',
     footOffsetY: 0,
     customizable: true,

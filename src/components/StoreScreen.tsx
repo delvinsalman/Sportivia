@@ -848,7 +848,7 @@ export function StoreScreen({
                   >
                     <Check className="w-4 h-4" />
                     {isRabbitPreview
-                      ? 'Save Rabbit'
+                      ? 'Save Lane Hopper'
                       : isDogPreview
                         ? 'Save Breed'
                         : isAthletePreview
@@ -871,7 +871,7 @@ export function StoreScreen({
                       >
                         <SlidersHorizontal className="w-4 h-4 text-[#f472b6]" />
                         {isRabbitPreview
-                          ? 'Choose Rabbit Look'
+                          ? 'Choose Lane Hopper Look'
                           : isDogPreview
                             ? 'Choose Dog Breed'
                             : isAthletePreview
