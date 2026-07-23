@@ -438,9 +438,9 @@ export function CharacterCardsScreen({
             </div>
 
             <div
-              className="overflow-y-auto overscroll-contain pr-0.5 [scrollbar-width:thin]"
+              className="overflow-y-auto overscroll-contain px-1 pt-1 pb-1 pr-1.5 [scrollbar-width:thin]"
               style={{
-                maxHeight: 'calc(2 * 12.75rem + 0.625rem)',
+                maxHeight: 'calc(2 * 12.75rem + 0.625rem + 0.5rem)',
               }}
             >
               {filtered.length === 0 ? (
