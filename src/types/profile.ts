@@ -333,6 +333,7 @@ export const CHARACTERS: CharacterDef[] = [
     price: 23_000,
     modelPath: '/models/bob.glb',
     baseOvr: 84,
+    cardImage: '/cards/bob.png',
     accent: '#38bdf8',
     footOffsetY: 0,
     customizable: true,
