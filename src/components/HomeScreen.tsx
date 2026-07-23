@@ -270,18 +270,20 @@ export function HomeScreen({
             <span className="hidden sm:inline">Cards</span>
           </button>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            playMenuClick();
-            onOpenStore();
-          }}
-          className="game-nav-tab"
-          aria-label="Store"
-        >
-          <ShoppingBag className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
-          <span className="hidden sm:inline">Store</span>
-        </button>
+        <div className="store-nav-snake-ring">
+          <button
+            type="button"
+            onClick={() => {
+              playMenuClick();
+              onOpenStore();
+            }}
+            className="game-nav-tab game-nav-tab-store"
+            aria-label="Store"
+          >
+            <ShoppingBag className="h-4 w-4 sm:h-[1.05rem] sm:w-[1.05rem]" />
+            <span className="hidden sm:inline">Store</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* Level — bottom right alone */}
