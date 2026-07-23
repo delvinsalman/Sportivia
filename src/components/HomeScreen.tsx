@@ -524,10 +524,10 @@ export function HomeScreen({
                                     </p>
                           <p className="mt-1 text-[8px] font-bold leading-tight text-[#7a7d86]">
                             {difficulty === 'beginner'
-                              ? 'Min 100'
+                              ? 'Stake optional'
                               : difficulty === 'pro'
-                                ? 'Min 1K · 1.75×'
-                                : 'Min 3K · 2.5×'}
+                                ? 'Optional · 1.75×'
+                                : 'Optional · 2.5×'}
                           </p>
                                   </button>
                                 );

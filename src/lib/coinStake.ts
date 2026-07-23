@@ -10,34 +10,36 @@ export interface BotStakeRules {
   blurb: string;
 }
 
-/** Required mins + payout curve per AI difficulty. */
+/** Optional mins when staking + payout curve per AI difficulty. */
 export const BOT_STAKE_RULES: Record<BotDifficulty, BotStakeRules> = {
   beginner: {
     min: 100,
     max: 2_500,
     winMult: 1,
-    blurb: 'Low risk · even money',
+    blurb: 'Optional · even money if you stake',
   },
   pro: {
     min: 1_000,
     max: 12_000,
     winMult: 1.75,
-    blurb: 'Min 1,000 · 1.75× payout',
+    blurb: 'Optional · stake 1,000+ for 1.75×',
   },
   expert: {
     min: 3_000,
     max: 30_000,
     winMult: 2.5,
-    blurb: 'Min 3,000 · 2.5× payout',
+    blurb: 'Optional · stake 3,000+ for 2.5×',
   },
 };
 
 export const DUEL_STAKE_PRESETS = [0, 250, 500, 1_000, 2_500, 5_000, 10_000] as const;
 export const DUEL_STAKE_MAX = 50_000;
 
+/** 0 = no stake; otherwise clamp into the difficulty band. */
 export function clampBotStake(difficulty: BotDifficulty, amount: number): number {
   const rules = BOT_STAKE_RULES[difficulty];
   const n = Math.floor(Number(amount) || 0);
+  if (n <= 0) return 0;
   return Math.max(rules.min, Math.min(rules.max, n));
 }
 
@@ -57,6 +59,7 @@ export function matchedDuelStake(yourStake: number, opponentStake: number): numb
 export function botWinPayout(stake: number, difficulty: BotDifficulty): number {
   const rules = BOT_STAKE_RULES[difficulty];
   const s = clampBotStake(difficulty, stake);
+  if (s <= 0) return 0;
   return Math.max(0, Math.round(s * rules.winMult));
 }
 
@@ -67,6 +70,9 @@ export function settleBotStakeDelta(
   outcome: StakeOutcome,
 ): { delta: number; label: string } {
   const s = clampBotStake(difficulty, stake);
+  if (s <= 0) {
+    return { delta: 0, label: 'No stake' };
+  }
   if (outcome === 'draw') {
     return { delta: s, label: 'Stake returned' };
   }

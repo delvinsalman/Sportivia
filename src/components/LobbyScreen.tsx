@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Copy, Check, Swords, Wifi, WifiOff } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import type { Sport } from '../types';
 import type { DuelLobbyState, DuelPlayerInfo } from '../lib/duelTypes';
 import type { DuelConnectionStatus } from '../hooks/useDuel';
@@ -9,7 +9,7 @@ import { SportBackground } from './SportBackground';
 import { SportBall } from './SportBall';
 import { CoinIcon } from './CoinIcon';
 import { SPORT_ACCENT, SPORT_LABEL } from '../lib/sportTheme';
-import { DUEL_STAKE_PRESETS, clampDuelStake, formatCoins } from '../lib/coinStake';
+import { DUEL_STAKE_PRESETS, DUEL_STAKE_MAX, clampDuelStake, formatCoins } from '../lib/coinStake';
 import { playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 
 interface LobbyScreenProps {
@@ -57,10 +57,7 @@ export function LobbyScreen({
 
   const liveDraft = clampDuelStake(draftStake);
   const canAfford = liveDraft <= profile.coins;
-  const presets = useMemo(
-    () => DUEL_STAKE_PRESETS.filter(n => n === 0 || n <= profile.coins),
-    [profile.coins],
-  );
+  const presets = DUEL_STAKE_PRESETS;
 
   async function copyCode() {
     if (!lobby?.code) return;
@@ -264,22 +261,24 @@ export function LobbyScreen({
                     Your stake · optional
                   </p>
                   <p className="mt-1 text-xs font-semibold text-[#949ba4]">
-                    Winner takes the matched amount. Skip with No stake.
+                    Pick an amount below. Winner takes the matched pot.
                   </p>
-                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                     {presets.map(amount => {
                       const active = you?.wagerDecided && (you.wagerCoins ?? 0) === amount;
+                      const lockedOut = amount > profile.coins;
                       return (
                         <button
                           key={amount}
                           type="button"
+                          disabled={lockedOut}
                           onClick={() => {
                             playMenuClick();
                             lockStake(amount);
                           }}
-                          className={`rounded-full border-[2.5px] px-2.5 py-1.5 text-[10px] font-black transition-all ${
+                          className={`rounded-2xl border-[2.5px] px-2.5 py-3 text-xs font-black transition-all disabled:cursor-not-allowed disabled:opacity-35 ${
                             active
-                              ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232]'
+                              ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232] shadow-[0_3px_0_#8a6814]'
                               : 'border-[#3f4147] bg-[#1e1f22] text-[#949ba4] hover:text-[#f2f3f5]'
                           }`}
                         >
@@ -287,6 +286,30 @@ export function LobbyScreen({
                         </button>
                       );
                     })}
+                  </div>
+                  <div className="mt-2.5 flex items-center gap-2 rounded-xl border-[2.5px] border-[#3f4147] bg-[#121316] px-3 py-2.5">
+                    <CoinIcon size={18} />
+                    <input
+                      type="number"
+                      min={0}
+                      max={DUEL_STAKE_MAX}
+                      step={50}
+                      value={draftStake || ''}
+                      placeholder="Custom amount"
+                      onChange={e => setDraftStake(Number(e.target.value) || 0)}
+                      className="min-w-0 flex-1 bg-transparent font-mono text-sm font-black text-[#f0b232] outline-none placeholder:text-[#5c5e66]"
+                    />
+                    <button
+                      type="button"
+                      disabled={!canAfford || liveDraft <= 0}
+                      onClick={() => {
+                        playMenuClick();
+                        lockStake(liveDraft);
+                      }}
+                      className="shrink-0 rounded-full border-[2.5px] border-[#f0b232]/70 bg-[#2a2414] px-3 py-1.5 text-[10px] font-black text-[#f0b232] disabled:opacity-40"
+                    >
+                      Set
+                    </button>
                   </div>
                   {!canAfford && liveDraft > 0 && (
                     <p className="mt-2 text-[11px] font-black text-[#ed4245]">Not enough coins</p>

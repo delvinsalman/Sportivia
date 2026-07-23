@@ -32,21 +32,22 @@ export function CoinStakeScreen({
   const rules = BOT_STAKE_RULES[difficulty];
   const config = BOT_DIFFICULTIES[difficulty];
   const maxAffordable = Math.min(rules.max, profile.coins);
-  const canPlay = maxAffordable >= rules.min;
 
   const presets = useMemo(() => {
-    const base = [rules.min, Math.round(rules.min * 2), Math.round(rules.min * 4), rules.max];
-    return [...new Set(base.map(n => clampBotStake(difficulty, n)))].filter(n => n <= maxAffordable);
+    const base = [0, rules.min, Math.round(rules.min * 2), Math.round(rules.min * 4), rules.max];
+    return [...new Set(base.map(n => (n <= 0 ? 0 : clampBotStake(difficulty, n))))].filter(
+      n => n === 0 || n <= Math.max(maxAffordable, rules.min),
+    );
   }, [difficulty, maxAffordable, rules.max, rules.min]);
 
-  const [stake, setStake] = useState(() =>
-    canPlay ? clampBotStake(difficulty, Math.min(rules.min, maxAffordable)) : rules.min,
-  );
+  const [stake, setStake] = useState(0);
 
   const liveStake = clampBotStake(difficulty, stake);
   const payout = botWinPayout(liveStake, difficulty);
-  const tooBroke = profile.coins < rules.min;
+  const staking = liveStake > 0;
   const overBalance = liveStake > profile.coins;
+  const belowMin = stake > 0 && stake < rules.min;
+  const canConfirm = !overBalance && !belowMin && (liveStake === 0 || liveStake <= profile.coins);
 
   return (
     <div className="relative h-svh overflow-hidden">
@@ -77,78 +78,86 @@ export function CoinStakeScreen({
                 <Swords className="h-5 w-5" style={{ color: config.color }} />
               </div>
               <div>
-                <p className="text-lg font-black text-[#f2f3f5]">Stake vs {config.label}</p>
+                <p className="text-lg font-black text-[#f2f3f5]">Vs {config.label}</p>
                 <p className="text-xs font-semibold text-[#949ba4]">{rules.blurb}</p>
               </div>
             </div>
 
             <p className="text-[11px] font-black uppercase tracking-[0.16em] text-[#6d6f78]">
-              Put coins on the line
+              Coin stake · optional
             </p>
             <p className="mt-1 text-sm font-semibold text-[#b5bac1]">
-              Min {formatCoins(rules.min)} · Win +{formatCoins(payout)} · Lose −
-              {formatCoins(liveStake)}
+              {staking
+                ? `Win +${formatCoins(payout)} · Lose −${formatCoins(liveStake)}`
+                : 'Play free, or put coins on the line for extra reward.'}
             </p>
 
-            <div className="mt-4 flex items-center justify-center gap-2 rounded-2xl border-[2.5px] border-[#f0b232]/50 bg-[#1a160c] px-4 py-4 shadow-[0_4px_0_#8a6814]">
-              <CoinIcon size={28} />
+            <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {presets.map(amount => {
+                const active = liveStake === amount;
+                const lockedOut = amount > 0 && amount > profile.coins;
+                return (
+                  <button
+                    key={amount}
+                    type="button"
+                    disabled={lockedOut}
+                    onClick={() => {
+                      playMenuClick();
+                      setStake(amount);
+                    }}
+                    className={`rounded-2xl border-[2.5px] px-3 py-3 text-xs font-black transition-all disabled:cursor-not-allowed disabled:opacity-35 ${
+                      active
+                        ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232] shadow-[0_3px_0_#8a6814]'
+                        : 'border-[#3f4147] bg-[#1e1f22] text-[#949ba4] hover:text-[#f2f3f5]'
+                    }`}
+                  >
+                    {amount === 0 ? 'No stake' : formatCoins(amount)}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 flex items-center justify-center gap-2 rounded-2xl border-[2.5px] border-[#3f4147] bg-[#151619] px-4 py-3">
+              <CoinIcon size={22} />
               <input
                 type="number"
-                min={rules.min}
+                min={0}
                 max={maxAffordable}
                 step={50}
                 value={stake}
-                disabled={!canPlay}
                 onChange={e => setStake(Number(e.target.value) || 0)}
-                className="w-full bg-transparent text-center font-mono text-3xl font-black text-[#f0b232] outline-none"
+                placeholder="Custom"
+                className="w-full bg-transparent text-center font-mono text-xl font-black text-[#f0b232] outline-none"
               />
             </div>
-
-            {presets.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5">
-                {presets.map(amount => {
-                  const active = liveStake === amount;
-                  return (
-                    <button
-                      key={amount}
-                      type="button"
-                      onClick={() => {
-                        playMenuClick();
-                        setStake(amount);
-                      }}
-                      className={`rounded-full border-[2.5px] px-3 py-1.5 text-[11px] font-black transition-all ${
-                        active
-                          ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232]'
-                          : 'border-[#3f4147] bg-[#1e1f22] text-[#949ba4] hover:text-[#f2f3f5]'
-                      }`}
-                    >
-                      {formatCoins(amount)}
-                    </button>
-                  );
-                })}
-              </div>
+            {staking && (
+              <p className="mt-1.5 text-center text-[10px] font-bold text-[#6d6f78]">
+                Custom stakes snap to at least {formatCoins(rules.min)} for {config.label}
+              </p>
             )}
 
-            {(tooBroke || overBalance) && (
+            {(belowMin || overBalance) && (
               <p className="mt-3 text-center text-xs font-black text-[#ed4245]">
-                {tooBroke
-                  ? `Need at least ${formatCoins(rules.min)} coins for ${config.label}.`
-                  : 'Stake is higher than your balance.'}
+                {overBalance
+                  ? 'Stake is higher than your balance.'
+                  : `If you stake, minimum is ${formatCoins(rules.min)}.`}
               </p>
             )}
 
             <button
               type="button"
-              disabled={!canPlay || overBalance}
+              disabled={!canConfirm}
               onClick={() => {
-                if (!canPlay || overBalance) return;
+                if (!canConfirm) return;
                 playMenuConfirm();
                 onConfirm(liveStake);
               }}
               className="mt-5 w-full rounded-2xl border-[3px] border-white/25 py-3.5 text-sm font-black text-white shadow-[0_5px_0_#2f3aa8] transition-all hover:translate-y-[1px] disabled:cursor-not-allowed disabled:opacity-40"
               style={{ background: config.color }}
             >
-              Lock stake · Challenge {config.label}
+              {staking
+                ? `Lock ${formatCoins(liveStake)} · Challenge ${config.label}`
+                : `Play ${config.label} · no stake`}
             </button>
           </div>
         </div>
