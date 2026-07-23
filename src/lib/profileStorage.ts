@@ -27,10 +27,146 @@ import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult, grantDuelWinAchievement } from './seasonMeta';
 import { pickRandomPlayerName } from './playerNames';
 import { maxBonusForStat, pendingUpgradeTotal, type CardStatKey } from './characterCards';
+import type { BotDifficulty } from '../types';
+import {
+  clampBotStake,
+  clampDuelStake,
+  settleBotStakeDelta,
+  settleDuelStakeDelta,
+  type StakeOutcome,
+} from './coinStake';
 
 const PROFILE_KEY = 'gridiq-profile-v4';
 const PAID_SKINS_MIGRATION_KEY = 'gridiq-paid-skins-v1';
 const CARD_STATS_DEFAULT_RESET_KEY = 'gridiq-card-stats-default-v1';
+const COIN_STAKE_ESCROW_KEY = 'sportivia-coin-stake-escrow-v1';
+
+type CoinStakeEscrow =
+  | {
+      mode: 'bot';
+      amount: number;
+      difficulty: BotDifficulty;
+    }
+  | {
+      mode: 'duel';
+      amount: number;
+      opponentAmount: number;
+    };
+
+function readEscrow(): CoinStakeEscrow | null {
+  try {
+    const raw = localStorage.getItem(COIN_STAKE_ESCROW_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<CoinStakeEscrow>;
+    if (parsed.mode === 'bot' && typeof parsed.amount === 'number' && parsed.difficulty) {
+      return {
+        mode: 'bot',
+        amount: Math.max(0, Math.floor(parsed.amount)),
+        difficulty: parsed.difficulty,
+      };
+    }
+    if (parsed.mode === 'duel' && typeof parsed.amount === 'number') {
+      return {
+        mode: 'duel',
+        amount: Math.max(0, Math.floor(parsed.amount)),
+        opponentAmount: Math.max(0, Math.floor(Number(parsed.opponentAmount) || 0)),
+      };
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
+
+function writeEscrow(escrow: CoinStakeEscrow | null) {
+  try {
+    if (!escrow || escrow.amount <= 0) {
+      localStorage.removeItem(COIN_STAKE_ESCROW_KEY);
+      return;
+    }
+    localStorage.setItem(COIN_STAKE_ESCROW_KEY, JSON.stringify(escrow));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Lock coins before a bot or duel match. Returns false if balance is too low. */
+export function lockCoinStake(input: CoinStakeEscrow): {
+  ok: boolean;
+  profile: PlayerProfile;
+  error?: string;
+} {
+  const profile = loadProfile();
+  const amount =
+    input.mode === 'bot'
+      ? clampBotStake(input.difficulty, input.amount)
+      : clampDuelStake(input.amount);
+  if (amount > 0 && profile.coins < amount) {
+    return { ok: false, profile, error: 'Not enough coins' };
+  }
+  // Clear any stale escrow first.
+  const prior = readEscrow();
+  if (prior && prior.amount > 0) {
+    profile.coins += prior.amount;
+  }
+  if (amount > 0) profile.coins -= amount;
+  writeEscrow(
+    amount > 0
+      ? input.mode === 'bot'
+        ? { mode: 'bot', amount, difficulty: input.difficulty }
+        : {
+            mode: 'duel',
+            amount,
+            opponentAmount: clampDuelStake(input.opponentAmount),
+          }
+      : null,
+  );
+  saveProfile(profile);
+  return { ok: true, profile };
+}
+
+/** Refund escrow without settling a match (quit before finish / rematch cancel). */
+export function releaseCoinStake(): PlayerProfile {
+  const profile = loadProfile();
+  const escrow = readEscrow();
+  if (escrow && escrow.amount > 0) {
+    profile.coins += escrow.amount;
+    writeEscrow(null);
+    saveProfile(profile);
+  } else {
+    writeEscrow(null);
+  }
+  return profile;
+}
+
+export function settleLockedCoinStake(outcome: StakeOutcome): {
+  profile: PlayerProfile;
+  stakeDelta: number;
+  stakeLabel: string;
+  stakeAmount: number;
+} {
+  const profile = loadProfile();
+  const escrow = readEscrow();
+  if (!escrow || escrow.amount <= 0) {
+    writeEscrow(null);
+    return { profile, stakeDelta: 0, stakeLabel: 'No stake', stakeAmount: 0 };
+  }
+
+  const settled =
+    escrow.mode === 'bot'
+      ? settleBotStakeDelta(escrow.amount, escrow.difficulty, outcome)
+      : settleDuelStakeDelta(escrow.amount, escrow.opponentAmount, outcome);
+
+  profile.coins += settled.delta;
+  writeEscrow(null);
+  saveProfile(profile);
+  return {
+    profile,
+    stakeDelta: settled.delta - escrow.amount,
+    stakeLabel: settled.label,
+    stakeAmount: escrow.amount,
+  };
+}
 
 function migrateCharacterId(id?: string): CharacterId | undefined {
   if (id === 'cool-banana-guy') return 'bunny';

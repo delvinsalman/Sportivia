@@ -181,6 +181,19 @@ export function ResultModal({
                   {waitingForOpponent ? ' · waiting…' : ''}
                 </p>
               )}
+              {result.coinStake && result.coinStake.amount > 0 && (
+                <p
+                  className={`mt-2 text-sm font-black ${
+                    result.coinStake.net > 0
+                      ? 'text-[#4ade80]'
+                      : result.coinStake.net < 0
+                        ? 'text-[#ed4245]'
+                        : 'text-[#f0b232]'
+                  }`}
+                >
+                  Stake {result.coinStake.label}
+                </p>
+              )}
               {!result.completed && (
                 <p className="text-xs text-[#ed4245] mt-2 font-black">
                   Quit early — no coins or XP earned

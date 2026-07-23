@@ -24,10 +24,7 @@ interface ClientMsg {
   correct?: number;
   wrong?: number;
   maxStreak?: number;
-  cardKey?: string | null;
-  cardName?: string | null;
-  cardRarity?: string | null;
-  cardRating?: number | null;
+  coins?: number;
 }
 
 interface PlayerInfo {
@@ -41,10 +38,7 @@ interface PlayerInfo {
   wrong: number;
   maxStreak: number;
   wagerDecided: boolean;
-  wagerCardKey: string | null;
-  wagerCardName: string | null;
-  wagerCardRarity: string | null;
-  wagerCardRating: number | null;
+  wagerCoins: number;
 }
 
 interface Player extends PlayerInfo {
@@ -175,10 +169,7 @@ function publicPlayers(room: Room): PlayerInfo[] {
     wrong: p.wrong,
     maxStreak: p.maxStreak,
     wagerDecided: p.wagerDecided,
-    wagerCardKey: p.wagerCardKey,
-    wagerCardName: p.wagerCardName,
-    wagerCardRarity: p.wagerCardRarity,
-    wagerCardRating: p.wagerCardRating,
+    wagerCoins: p.wagerCoins,
   }));
 }
 
@@ -247,14 +238,8 @@ function removePlayer(ws: WebSocket) {
       },
       disconnected: true,
       wager: {
-        yourCardKey: winner.wagerCardKey,
-        yourCardName: winner.wagerCardName,
-        yourCardRarity: winner.wagerCardRarity,
-        yourCardRating: winner.wagerCardRating,
-        opponentCardKey: leaving.wagerCardKey,
-        opponentCardName: leaving.wagerCardName,
-        opponentCardRarity: leaving.wagerCardRarity,
-        opponentCardRating: leaving.wagerCardRating,
+        yourCoins: winner.wagerCoins ?? 0,
+        opponentCoins: leaving.wagerCoins ?? 0,
       },
     });
     broadcast(room, lobbyPayload(room));
@@ -322,14 +307,8 @@ function tryFinish(room: Room) {
         maxStreak: opp.maxStreak,
       },
       wager: {
-        yourCardKey: p.wagerCardKey,
-        yourCardName: p.wagerCardName,
-        yourCardRarity: p.wagerCardRarity,
-        yourCardRating: p.wagerCardRating,
-        opponentCardKey: opp.wagerCardKey,
-        opponentCardName: opp.wagerCardName,
-        opponentCardRarity: opp.wagerCardRarity,
-        opponentCardRating: opp.wagerCardRating,
+        yourCoins: p.wagerCoins ?? 0,
+        opponentCoins: opp.wagerCoins ?? 0,
       },
     });
   }
@@ -655,10 +634,7 @@ wss.on('connection', ws => {
         wrong: 0,
         maxStreak: 0,
         wagerDecided: false,
-        wagerCardKey: null,
-        wagerCardName: null,
-        wagerCardRarity: null,
-        wagerCardRating: null,
+        wagerCoins: 0,
         ws,
         alive: true,
       };
@@ -706,10 +682,7 @@ wss.on('connection', ws => {
         wrong: 0,
         maxStreak: 0,
         wagerDecided: false,
-        wagerCardKey: null,
-        wagerCardName: null,
-        wagerCardRarity: null,
-        wagerCardRating: null,
+        wagerCoins: 0,
         ws,
         alive: true,
       };
@@ -737,7 +710,7 @@ wss.on('connection', ws => {
     if (msg.type === 'ready') {
       if (room.status !== 'lobby') return;
       if (!player.wagerDecided) {
-        send(ws, { type: 'error', message: 'Choose a card stake or skip first' });
+        send(ws, { type: 'error', message: 'Set a coin stake or choose No stake first' });
         return;
       }
       player.ready = true;
@@ -755,24 +728,12 @@ wss.on('connection', ws => {
 
     if (msg.type === 'wager') {
       if (room.status !== 'lobby') return;
-      const cardKey =
-        typeof msg.cardKey === 'string' && msg.cardKey.trim()
-          ? msg.cardKey.trim().slice(0, 80)
-          : null;
+      const coinsRaw = Number(msg.coins);
+      const coins = Number.isFinite(coinsRaw)
+        ? Math.max(0, Math.min(50_000, Math.floor(coinsRaw)))
+        : 0;
       player.wagerDecided = true;
-      player.wagerCardKey = cardKey;
-      player.wagerCardName =
-        cardKey && typeof msg.cardName === 'string'
-          ? msg.cardName.trim().slice(0, 48)
-          : null;
-      player.wagerCardRarity =
-        cardKey && typeof msg.cardRarity === 'string'
-          ? msg.cardRarity.trim().slice(0, 16)
-          : null;
-      player.wagerCardRating =
-        cardKey && typeof msg.cardRating === 'number' && Number.isFinite(msg.cardRating)
-          ? Math.max(1, Math.min(99, Math.floor(msg.cardRating)))
-          : null;
+      player.wagerCoins = coins;
       player.ready = false;
       broadcast(room, lobbyPayload(room));
       return;
@@ -838,10 +799,7 @@ wss.on('connection', ws => {
           p.wrong = 0;
           p.maxStreak = 0;
           p.wagerDecided = false;
-          p.wagerCardKey = null;
-          p.wagerCardName = null;
-          p.wagerCardRarity = null;
-          p.wagerCardRating = null;
+          p.wagerCoins = 0;
         }
       } else if (room.status !== 'lobby') {
         send(ws, { type: 'error', message: 'Match is still in progress' });

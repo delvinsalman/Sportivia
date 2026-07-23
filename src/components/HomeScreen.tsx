@@ -46,8 +46,8 @@ const MODE_META: Record<GameMode, { tone: string; icon: string; detail: string }
   training: { tone: '#949ba4', icon: '/icons/modes/training.png', detail: '1 min · practice · no rewards' },
   daily: { tone: '#23a559', icon: '/icons/modes/daily.png', detail: '2 min · first finish pays' },
   timed: { tone: '#5865f2', icon: '/icons/modes/ranked.png', detail: '2 min · ranked bonus' },
-  bot: { tone: '#a855f7', icon: '/icons/modes/bot.png', detail: 'Race a bot · highest score wins' },
-  duel: { tone: '#ed4245', icon: '/icons/modes/duel.png', detail: 'Lobby code · highest score wins' },
+  bot: { tone: '#a855f7', icon: '/icons/modes/bot.png', detail: 'Race a bot · stake coins · high risk' },
+  duel: { tone: '#ed4245', icon: '/icons/modes/duel.png', detail: 'Live 1v1 · optional coin stakes' },
 };
 
 function EditableName({
@@ -522,9 +522,13 @@ export function HomeScreen({
                                     <p className="text-xs font-black" style={{ color: config.color }}>
                                       {config.label}
                                     </p>
-                                    <p className="mt-1 text-[8px] font-bold leading-tight text-[#7a7d86]">
-                                      {difficulty === 'beginner' ? 'Steady' : difficulty === 'pro' ? 'Competitive' : 'Fast'}
-                                    </p>
+                          <p className="mt-1 text-[8px] font-bold leading-tight text-[#7a7d86]">
+                            {difficulty === 'beginner'
+                              ? 'Min 100'
+                              : difficulty === 'pro'
+                                ? 'Min 1K · 1.75×'
+                                : 'Min 3K · 2.5×'}
+                          </p>
                                   </button>
                                 );
                               })}

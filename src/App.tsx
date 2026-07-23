@@ -8,6 +8,7 @@ import { BallRainIntro } from './components/BallRainIntro';
 import { StoreScreen } from './components/StoreScreen';
 import { CharacterCardsScreen } from './components/CharacterCardsScreen';
 import { LobbyScreen } from './components/LobbyScreen';
+import { CoinStakeScreen } from './components/CoinStakeScreen';
 import { AboutScreen } from './components/AboutScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { CareerScreen } from './components/CareerScreen';
@@ -26,6 +27,8 @@ import {
   saveRabbitVariant,
   saveMakoVariant,
   saveDogVariant,
+  lockCoinStake,
+  releaseCoinStake,
 } from './lib/profileStorage';
 import type { PlayerProfile } from './types/profile';
 import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from './types/profile';
@@ -46,6 +49,7 @@ type Screen =
   | 'cards'
   | 'career'
   | 'lobby'
+  | 'bot-stake'
   | 'intro'
   | 'game';
 
@@ -99,8 +103,21 @@ export default function App() {
     setSport(duel.match.sport);
     setDuelSeed(duel.match.seed);
     setMode('duel');
+
+    const youId = duel.lobby?.youId ?? duel.you?.id;
+    const youPlayer =
+      duel.match.players.find(p => p.id === youId) ??
+      duel.match.players[0];
+    const oppPlayer = duel.match.players.find(p => p.id !== youPlayer?.id);
+    const locked = lockCoinStake({
+      mode: 'duel',
+      amount: youPlayer?.wagerCoins ?? 0,
+      opponentAmount: oppPlayer?.wagerCoins ?? 0,
+    });
+    setProfile(locked.profile);
+
     setScreen('intro');
-  }, [duel.match]);
+  }, [duel.match, duel.lobby?.youId, duel.you?.id]);
 
   // Joiners inherit the host's sport so boards match the room.
   useEffect(() => {
@@ -114,6 +131,7 @@ export default function App() {
     if (duel.lobby?.status === 'lobby' || (!duel.lobby && duel.status === 'idle')) {
       startedMatchRef.current = null;
       setDuelSeed(null);
+      setProfile(releaseCoinStake());
       setScreen('lobby');
     }
   }, [duel.lobby, duel.lobby?.status, duel.status, duel.duelResult, mode, screen]);
@@ -135,7 +153,26 @@ export default function App() {
       return;
     }
     setMode(m);
-    if (m === 'bot' && difficulty) setBotDifficulty(difficulty);
+    if (m === 'bot' && difficulty) {
+      setBotDifficulty(difficulty);
+      setScreen('bot-stake');
+      return;
+    }
+    setDuelSeed(null);
+    setScreen('intro');
+  }
+
+  function handleBotStakeConfirm(stake: number) {
+    const locked = lockCoinStake({
+      mode: 'bot',
+      amount: stake,
+      difficulty: botDifficulty,
+    });
+    if (!locked.ok) {
+      setProfile(locked.profile);
+      return;
+    }
+    setProfile(locked.profile);
     setDuelSeed(null);
     setScreen('intro');
   }
@@ -150,7 +187,12 @@ export default function App() {
       duel.requestRematch();
       startedMatchRef.current = null;
       setDuelSeed(null);
+      setProfile(releaseCoinStake());
       setScreen('lobby');
+      return;
+    }
+    if (mode === 'bot') {
+      setScreen('bot-stake');
       return;
     }
     setScreen('intro');
@@ -160,6 +202,7 @@ export default function App() {
     if (mode === 'duel') duel.leaveLobby();
     startedMatchRef.current = null;
     setDuelSeed(null);
+    setProfile(releaseCoinStake());
     setScreen('home');
     refreshProfile();
   }
@@ -311,6 +354,7 @@ export default function App() {
           <PageTransition key="lobby" variant="menu">
             <LobbyScreen
               sport={sport}
+              profile={profile}
               status={duel.status}
               error={duel.error}
               lobby={duel.lobby}
@@ -324,6 +368,18 @@ export default function App() {
               onReady={ready => duel.setReady(ready)}
               onLeave={() => duel.leaveLobby()}
               onSetWager={duel.setWager}
+            />
+          </PageTransition>
+        )}
+
+        {screen === 'bot-stake' && (
+          <PageTransition key="bot-stake" variant="menu">
+            <CoinStakeScreen
+              sport={sport}
+              difficulty={botDifficulty}
+              profile={profile}
+              onBack={() => setScreen('home')}
+              onConfirm={handleBotStakeConfirm}
             />
           </PageTransition>
         )}

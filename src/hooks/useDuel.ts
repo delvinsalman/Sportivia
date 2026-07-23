@@ -245,18 +245,10 @@ export function useDuel({ playerName, characterId, sport }: UseDuelOptions) {
   );
 
   const setWager = useCallback(
-    (stake: {
-      cardKey: string | null;
-      cardName?: string | null;
-      cardRarity?: string | null;
-      cardRating?: number | null;
-    }) => {
+    (stake: { coins: number }) => {
       send({
         type: 'wager',
-        cardKey: stake.cardKey,
-        cardName: stake.cardName ?? null,
-        cardRarity: stake.cardRarity ?? null,
-        cardRating: stake.cardRating ?? null,
+        coins: Math.max(0, Math.floor(stake.coins || 0)),
       });
     },
     [send],

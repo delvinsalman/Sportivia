@@ -72,6 +72,12 @@ export interface GameResult {
     opponentScore: number;
     outcome: 'win' | 'loss' | 'draw' | 'pending';
   };
+  /** Coin stake outcome after escrow settlement. */
+  coinStake?: {
+    amount: number;
+    label: string;
+    net: number;
+  };
 }
 
 export interface PlayerStats {

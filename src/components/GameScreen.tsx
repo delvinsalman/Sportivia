@@ -16,8 +16,9 @@ import type { DuelMatchResult } from '../lib/duelTypes';
 import { Bot, Swords } from 'lucide-react';
 import { getSettings } from '../lib/settings';
 import { BOT_DIFFICULTIES, botName, nextBotDelay, rollBotPoints } from '../lib/botOpponent';
-import { grantDuelWin } from '../lib/profileStorage';
+import { grantDuelWin, settleLockedCoinStake } from '../lib/profileStorage';
 import type { PlayerProfile } from '../types/profile';
+import type { StakeOutcome } from '../lib/coinStake';
 
 interface GameScreenProps {
   sport: Sport;
@@ -86,6 +87,12 @@ export function GameScreen({
   });
   const [botScore, setBotScore] = useState(0);
   const botScoreRef = useRef(0);
+  const stakeSettledRef = useRef(false);
+  const [stakeInfo, setStakeInfo] = useState<{
+    amount: number;
+    label: string;
+    net: number;
+  } | null>(null);
 
   useEffect(() => {
     if (mode !== 'bot' || game.phase !== 'playing') return;
@@ -121,8 +128,42 @@ export function GameScreen({
     if (granted) onProfileChange?.(profile);
   }, [duelResult, mode, onProfileChange]);
 
+  // Settle coin stake once outcome is known (bot immediately; duel after server result).
+  useEffect(() => {
+    if (!game.result || stakeSettledRef.current) return;
+
+    let outcome: StakeOutcome | null = null;
+    if (mode === 'bot') {
+      outcome =
+        game.result.score > botScore
+          ? 'win'
+          : game.result.score < botScore
+            ? 'loss'
+            : 'draw';
+    } else if (mode === 'duel' && duelResult) {
+      if (duelResult.winnerId === 'draw') outcome = 'draw';
+      else if (duelResult.winnerId === duelResult.you.id) outcome = 'win';
+      else outcome = 'loss';
+    } else {
+      return;
+    }
+
+    stakeSettledRef.current = true;
+    const settled = settleLockedCoinStake(outcome);
+    setStakeInfo({
+      amount: settled.stakeAmount,
+      label: settled.stakeLabel,
+      net: settled.stakeDelta,
+    });
+    onProfileChange?.(settled.profile);
+  }, [game.result, mode, botScore, duelResult, onProfileChange]);
+
   const resultWithDuel: GameResult | null = useMemo(() => {
     if (!game.result) return null;
+    const withStake = stakeInfo
+      ? { coinStake: stakeInfo }
+      : {};
+
     if (mode === 'bot') {
       const outcome =
         game.result.score > botScore
@@ -132,6 +173,7 @@ export function GameScreen({
             : 'draw';
       return {
         ...game.result,
+        ...withStake,
         duel: {
           opponentName: botName(botDifficulty),
           opponentScore: botScore,
@@ -139,7 +181,7 @@ export function GameScreen({
         },
       };
     }
-    if (mode !== 'duel') return game.result;
+    if (mode !== 'duel') return { ...game.result, ...withStake };
 
     let outcome: 'win' | 'loss' | 'draw' | 'pending' = 'pending';
     if (duelResult) {
@@ -150,6 +192,7 @@ export function GameScreen({
 
     return {
       ...game.result,
+      ...withStake,
       duel: {
         opponentName: duelResult?.opponent.name ?? opponentName ?? 'Opponent',
         opponentScore: duelResult?.opponent.score ?? opponentScore,
@@ -164,9 +207,15 @@ export function GameScreen({
     opponentScore,
     botScore,
     botDifficulty,
+    stakeInfo,
   ]);
 
   function handleQuit() {
+    if ((mode === 'bot' || mode === 'duel') && !stakeSettledRef.current) {
+      stakeSettledRef.current = true;
+      const settled = settleLockedCoinStake('loss');
+      onProfileChange?.(settled.profile);
+    }
     game.abandonRun();
     onHome();
   }

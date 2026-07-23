@@ -1,15 +1,20 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Copy, Check, Swords, Wifi, WifiOff } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { Sport } from '../types';
 import type { DuelLobbyState, DuelPlayerInfo } from '../lib/duelTypes';
 import type { DuelConnectionStatus } from '../hooks/useDuel';
+import type { PlayerProfile } from '../types/profile';
 import { SportBackground } from './SportBackground';
 import { SportBall } from './SportBall';
+import { CoinIcon } from './CoinIcon';
 import { SPORT_ACCENT, SPORT_LABEL } from '../lib/sportTheme';
+import { DUEL_STAKE_PRESETS, clampDuelStake, formatCoins } from '../lib/coinStake';
+import { playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 
 interface LobbyScreenProps {
   sport: Sport;
+  profile: PlayerProfile;
   status: DuelConnectionStatus;
   error: string | null;
   lobby: DuelLobbyState | null;
@@ -19,12 +24,7 @@ interface LobbyScreenProps {
   onJoin: (code: string) => void;
   onReady: (ready: boolean) => void;
   onLeave: () => void;
-  onSetWager: (stake: {
-    cardKey: string | null;
-    cardName?: string | null;
-    cardRarity?: string | null;
-    cardRating?: number | null;
-  }) => void;
+  onSetWager: (stake: { coins: number }) => void;
 }
 
 function onAccentFg(color: string) {
@@ -33,6 +33,7 @@ function onAccentFg(color: string) {
 
 export function LobbyScreen({
   sport,
+  profile,
   status,
   error,
   lobby,
@@ -47,17 +48,19 @@ export function LobbyScreen({
   const accent = SPORT_ACCENT[sport];
   const [joinCode, setJoinCode] = useState('');
   const [copied, setCopied] = useState(false);
+  const [draftStake, setDraftStake] = useState(0);
 
   const inLobby = !!lobby;
   const bothHere = !!lobby && lobby.players.length === 2;
   const bothReady =
     bothHere && lobby.players.every(p => p.ready && p.wagerDecided);
 
-  // Auto-skip card stakes so the ready gate still works without stake UI.
-  useEffect(() => {
-    if (!lobby || you?.wagerDecided) return;
-    onSetWager({ cardKey: null });
-  }, [lobby, you?.wagerDecided, onSetWager]);
+  const liveDraft = clampDuelStake(draftStake);
+  const canAfford = liveDraft <= profile.coins;
+  const presets = useMemo(
+    () => DUEL_STAKE_PRESETS.filter(n => n === 0 || n <= profile.coins),
+    [profile.coins],
+  );
 
   async function copyCode() {
     if (!lobby?.code) return;
@@ -69,6 +72,14 @@ export function LobbyScreen({
   function handleBack() {
     onLeave();
     onBack();
+  }
+
+  function lockStake(amount: number) {
+    const coins = clampDuelStake(amount);
+    if (coins > profile.coins) return;
+    playMenuConfirm();
+    setDraftStake(coins);
+    onSetWager({ coins });
   }
 
   return (
@@ -118,86 +129,68 @@ export function LobbyScreen({
             >
               <div className="mb-3 inline-flex items-center gap-1.5 rounded-full border-2 border-[#ff6b6e] bg-[#ed4245] px-3 py-1 shadow-[0_3px_0_#8f1e22]">
                 <SportBall sport={sport} size={14} />
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-white">
-                  {SPORT_LABEL[sport]} duel
-                </p>
+                <span className="text-[10px] font-black uppercase tracking-wide text-white">
+                  {SPORT_LABEL[sport]}
+                </span>
               </div>
-              <h2 className="mb-1 text-2xl font-black text-[#f2f3f5]">Challenge a friend</h2>
-              <p className="mb-5 text-sm font-semibold text-[#949ba4]">
-                Share a code, ready up together, and the highest score wins.
+              <h2 className="text-2xl font-black text-[#f2f3f5]">Find a rival</h2>
+              <p className="mt-1 text-sm font-semibold text-[#949ba4]">
+                Optional coin stakes — winner takes the matched pot.
               </p>
 
+              <button
+                type="button"
+                onClick={onCreate}
+                className="mt-5 w-full rounded-2xl border-[3px] border-white/25 bg-[#ed4245] py-3.5 text-sm font-black text-white shadow-[0_5px_0_#8f1e22]"
+              >
+                Create lobby
+              </button>
+
+              <div className="mt-4 flex gap-2">
+                <input
+                  value={joinCode}
+                  onChange={e => setJoinCode(e.target.value.toUpperCase())}
+                  placeholder="CODE"
+                  maxLength={6}
+                  className="min-w-0 flex-1 rounded-2xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-3 text-center font-mono text-sm font-black tracking-[0.2em] text-[#f2f3f5] outline-none"
+                />
+                <button
+                  type="button"
+                  onClick={() => onJoin(joinCode.trim())}
+                  className="rounded-2xl border-[3px] border-white/20 bg-[#5865f2] px-4 py-3 text-sm font-black text-white shadow-[0_5px_0_#2f3aa8]"
+                >
+                  Join
+                </button>
+              </div>
+
               {error && (
-                <div className="mb-4 rounded-2xl border-[3px] border-[#ed4245]/60 bg-[#ed4245]/10 px-3 py-2.5 text-sm font-semibold text-[#f98998] shadow-[0_3px_0_#8f1e22]">
+                <div className="mt-3 rounded-xl border-2 border-[#ed4245]/50 bg-[#ed4245]/10 px-2.5 py-1.5 text-[11px] font-semibold text-[#f98998]">
                   {error}
                 </div>
               )}
-
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={onCreate}
-                  disabled={status === 'connecting'}
-                  className="w-full rounded-2xl border-[3px] border-white/25 py-3.5 text-sm font-black transition-all hover:translate-y-[1px] disabled:opacity-50"
-                  style={{
-                    background: accent,
-                    color: onAccentFg(accent),
-                    boxShadow: `0 5px 0 ${accent === '#f4f4f5' ? '#8a8a8f' : `${accent}99`}`,
-                  }}
-                >
-                  {status === 'connecting' ? 'Connecting…' : 'Create lobby'}
-                </button>
-                <div className="flex gap-2">
-                  <input
-                    value={joinCode}
-                    onChange={e => setJoinCode(e.target.value.toUpperCase())}
-                    onFocus={e => {
-                      requestAnimationFrame(() => {
-                        e.target.scrollIntoView({ block: 'center', behavior: 'smooth' });
-                      });
-                    }}
-                    placeholder="CODE"
-                    maxLength={6}
-                    className="min-h-12 flex-1 rounded-2xl border-[3px] border-[#3f4147] bg-[#1e1f22] px-4 py-3 text-center text-sm font-black uppercase tracking-[0.2em] text-[#f2f3f5] outline-none focus:border-[#ed4245]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => onJoin(joinCode)}
-                    disabled={joinCode.trim().length < 4 || status === 'connecting'}
-                    className="min-h-12 rounded-2xl border-[3px] border-[#3f4147] bg-[#1e1f22] px-4 py-3 text-sm font-black text-[#f2f3f5] disabled:opacity-40"
-                  >
-                    Join
-                  </button>
-                </div>
-              </div>
             </motion.div>
           ) : (
             <motion.div
-              initial={{ opacity: 0, y: 8 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="flex h-[min(420px,72svh)] w-full max-w-lg flex-col overflow-hidden rounded-[24px] border-[3px] border-[#ed4245]/70 bg-[#121316]/95 shadow-[0_7px_0_#8f1e22] backdrop-blur-md"
+              className="flex h-full max-h-[40rem] w-full max-w-md flex-col overflow-hidden rounded-[28px] border-[3px] border-[#ed4245]/70 bg-[#121316]/95 shadow-[0_9px_0_#8f1e22] backdrop-blur-md"
             >
-              <div className="flex shrink-0 items-center justify-between gap-3 border-b border-white/10 px-3 py-2 sm:px-4">
-                <div className="inline-flex items-center gap-1.5 rounded-full border-2 border-[#ff6b6e] bg-[#ed4245] px-2.5 py-0.5 shadow-[0_2px_0_#8f1e22]">
-                  <SportBall sport={sport} size={12} />
-                  <p className="text-[9px] font-black uppercase tracking-[0.12em] text-white">
-                    {SPORT_LABEL[sport]}
+              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-white/10 px-3 py-3 sm:px-4">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6d6f78]">
+                    Lobby code
+                  </p>
+                  <p className="font-mono text-2xl font-black tracking-[0.18em] text-[#f2f3f5]">
+                    {lobby.code}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={copyCode}
-                  className="inline-flex min-h-10 items-center gap-2 rounded-xl border-[2.5px] border-[#3f4147] bg-[#1a1b1f] px-3 py-1.5 shadow-[0_3px_0_#0c0d0f] transition-all hover:border-[#5c5e66]"
-                  title="Copy lobby code"
+                  className="flex items-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-2 text-xs font-black text-[#b5bac1]"
                 >
-                  <span className="font-mono text-base font-black tracking-[0.18em] text-[#f2f3f5] sm:text-lg">
-                    {lobby.code}
-                  </span>
-                  {copied ? (
-                    <Check className="h-4 w-4 text-[#23a559]" />
-                  ) : (
-                    <Copy className="h-4 w-4 text-[#949ba4]" />
-                  )}
+                  {copied ? <Check className="h-3.5 w-3.5 text-[#4ade80]" /> : <Copy className="h-3.5 w-3.5" />}
+                  {copied ? 'Copied' : 'Copy'}
                 </button>
               </div>
 
@@ -207,7 +200,7 @@ export function LobbyScreen({
                 </div>
               )}
 
-              <div className="flex min-h-0 flex-1 flex-col gap-3 px-3 py-3 sm:px-4">
+              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto px-3 py-3 sm:px-4">
                 <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6d6f78]">
                   Players · {lobby.players.length}/2
                 </p>
@@ -253,9 +246,51 @@ export function LobbyScreen({
                             HOST
                           </span>
                         )}
+                        <p className="mt-2 flex items-center gap-1 text-[10px] font-black text-[#f0b232]">
+                          <CoinIcon size={12} />
+                          {p.wagerDecided
+                            ? (p.wagerCoins ?? 0) > 0
+                              ? formatCoins(p.wagerCoins ?? 0)
+                              : 'No stake'
+                            : 'Pick stake'}
+                        </p>
                       </div>
                     );
                   })}
+                </div>
+
+                <div className="rounded-2xl border-[2.5px] border-[#3f4147] bg-[#151619] p-3">
+                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#6d6f78]">
+                    Your stake · optional
+                  </p>
+                  <p className="mt-1 text-xs font-semibold text-[#949ba4]">
+                    Winner takes the matched amount. Skip with No stake.
+                  </p>
+                  <div className="mt-2.5 flex flex-wrap gap-1.5">
+                    {presets.map(amount => {
+                      const active = you?.wagerDecided && (you.wagerCoins ?? 0) === amount;
+                      return (
+                        <button
+                          key={amount}
+                          type="button"
+                          onClick={() => {
+                            playMenuClick();
+                            lockStake(amount);
+                          }}
+                          className={`rounded-full border-[2.5px] px-2.5 py-1.5 text-[10px] font-black transition-all ${
+                            active
+                              ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232]'
+                              : 'border-[#3f4147] bg-[#1e1f22] text-[#949ba4] hover:text-[#f2f3f5]'
+                          }`}
+                        >
+                          {amount === 0 ? 'No stake' : formatCoins(amount)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {!canAfford && liveDraft > 0 && (
+                    <p className="mt-2 text-[11px] font-black text-[#ed4245]">Not enough coins</p>
+                  )}
                 </div>
 
                 {!bothHere && (
@@ -295,18 +330,13 @@ export function LobbyScreen({
                   >
                     {!bothHere
                       ? 'Waiting for opponent'
-                      : you?.ready
-                        ? 'Cancel ready'
-                        : 'Ready up'}
+                      : !you?.wagerDecided
+                        ? 'Pick a stake first'
+                        : you?.ready
+                          ? 'Cancel ready'
+                          : 'Ready'}
                   </button>
                 )}
-                <button
-                  type="button"
-                  onClick={handleBack}
-                  className="min-h-11 shrink-0 px-3 text-xs font-black text-[#6d6f78] transition-colors hover:text-[#f2f3f5]"
-                >
-                  Leave
-                </button>
               </div>
             </motion.div>
           )}

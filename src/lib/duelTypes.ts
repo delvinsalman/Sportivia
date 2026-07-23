@@ -14,10 +14,8 @@ export interface DuelPlayerInfo {
   wrong: number;
   maxStreak: number;
   wagerDecided?: boolean;
-  wagerCardKey?: string | null;
-  wagerCardName?: string | null;
-  wagerCardRarity?: string | null;
-  wagerCardRating?: number | null;
+  /** Coins put on the line (0 = no stake). */
+  wagerCoins?: number;
 }
 
 export interface DuelLobbyState {
@@ -57,14 +55,8 @@ export interface DuelMatchResult {
   /** Opponent disconnected mid-match — you win by default. */
   disconnected?: boolean;
   wager?: {
-    yourCardKey: string | null;
-    yourCardName: string | null;
-    yourCardRarity: string | null;
-    yourCardRating: number | null;
-    opponentCardKey: string | null;
-    opponentCardName: string | null;
-    opponentCardRarity: string | null;
-    opponentCardRating: number | null;
+    yourCoins: number;
+    opponentCoins: number;
   };
 }
 
