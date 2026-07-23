@@ -24,10 +24,11 @@ import {
   saveAthleteLoadout,
   saveBobLoadout,
   saveRabbitVariant,
+  saveMakoVariant,
   saveDogVariant,
 } from './lib/profileStorage';
 import type { PlayerProfile } from './types/profile';
-import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from './types/profile';
+import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from './types/profile';
 import type { StatPending } from './lib/characterCards';
 import type { CreativeLoadout } from './types/creativeCharacter';
 import type { AthleteLoadout } from './types/athleteCharacter';
@@ -207,6 +208,10 @@ export default function App() {
     setProfile(saveRabbitVariant(variant));
   }
 
+  function handleSaveMakoVariant(variant: MakoVariantId) {
+    setProfile(saveMakoVariant(variant));
+  }
+
   function handleSaveDogVariant(variant: DogVariantId) {
     setProfile(saveDogVariant(variant));
   }
@@ -272,6 +277,7 @@ export default function App() {
               onSaveAthleteLoadout={handleSaveAthleteLoadout}
               onSaveBobLoadout={handleSaveBobLoadout}
               onSaveRabbitVariant={handleSaveRabbitVariant}
+              onSaveMakoVariant={handleSaveMakoVariant}
               onSaveDogVariant={handleSaveDogVariant}
             />
           </PageTransition>
@@ -345,6 +351,7 @@ export default function App() {
               athleteLoadout={profile.athleteLoadout}
               bobLoadout={profile.bobLoadout}
               rabbitVariant={profile.rabbitVariant}
+              makoVariant={profile.makoVariant}
               dogVariant={profile.dogVariant}
               seedKey={mode === 'duel' ? duelSeed ?? undefined : undefined}
               opponentName={duel.opponent?.name}

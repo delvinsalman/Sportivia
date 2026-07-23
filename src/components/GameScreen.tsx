@@ -8,7 +8,7 @@ import {
 } from './GameUI';
 import { ResultModal } from './ResultModal';
 import type { Sport, GameMode, GameResult, BotDifficulty } from '../types';
-import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from '../types/profile';
+import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
@@ -29,6 +29,7 @@ interface GameScreenProps {
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
   rabbitVariant?: RabbitVariantId;
+  makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
   seedKey?: string;
   opponentName?: string;
@@ -65,6 +66,7 @@ export function GameScreen({
   athleteLoadout,
   bobLoadout,
   rabbitVariant,
+  makoVariant,
   dogVariant,
   seedKey,
   opponentName,
@@ -286,6 +288,7 @@ export function GameScreen({
           athleteLoadout={athleteLoadout}
           bobLoadout={bobLoadout}
           rabbitVariant={rabbitVariant}
+          makoVariant={makoVariant}
           dogVariant={dogVariant}
           onPlayAgain={onReplay}
           onHome={onHome}

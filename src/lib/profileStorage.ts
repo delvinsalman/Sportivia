@@ -1,5 +1,5 @@
 import type { GameResult, Sport } from '../types';
-import type { CharacterId, DogVariantId, PetId, PlayerProfile, RabbitVariantId } from '../types/profile';
+import type { CharacterId, DogVariantId, MakoVariantId, PetId, PlayerProfile, RabbitVariantId } from '../types/profile';
 import {
   CHARACTERS,
   DEFAULT_ATHLETE_LOADOUT,
@@ -7,8 +7,10 @@ import {
   DEFAULT_CHARACTER,
   DEFAULT_CREATIVE_LOADOUT,
   DEFAULT_DOG_VARIANT,
+  DEFAULT_MAKO_VARIANT,
   DEFAULT_RABBIT_VARIANT,
   DOG_VARIANTS,
+  MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
   STARTER_CHARACTERS,
@@ -75,6 +77,7 @@ function defaultProfile(): PlayerProfile {
     athleteLoadout: { ...DEFAULT_ATHLETE_LOADOUT },
     bobLoadout: { ...DEFAULT_BOB_LOADOUT },
     rabbitVariant: DEFAULT_RABBIT_VARIANT,
+    makoVariant: DEFAULT_MAKO_VARIANT,
     dogVariant: DEFAULT_DOG_VARIANT,
     characterStatLevels: {},
     stats: loadStats(),
@@ -115,6 +118,9 @@ export function loadProfile(): PlayerProfile {
     const rabbitVariant = RABBIT_VARIANTS.some(variant => variant.id === parsed.rabbitVariant)
       ? (parsed.rabbitVariant as RabbitVariantId)
       : DEFAULT_RABBIT_VARIANT;
+    const makoVariant = MAKO_VARIANTS.some(variant => variant.id === parsed.makoVariant)
+      ? (parsed.makoVariant as MakoVariantId)
+      : DEFAULT_MAKO_VARIANT;
     const dogVariant = DOG_VARIANTS.some(variant => variant.id === parsed.dogVariant)
       ? (parsed.dogVariant as DogVariantId)
       : DEFAULT_DOG_VARIANT;
@@ -157,6 +163,7 @@ export function loadProfile(): PlayerProfile {
       athleteLoadout,
       bobLoadout,
       rabbitVariant,
+      makoVariant,
       dogVariant,
       characterStatLevels,
       stats: loadStats(),
@@ -176,6 +183,7 @@ export function loadProfile(): PlayerProfile {
       safePet !== parsed.equippedPet ||
       unlockedPets.length !== (parsed.unlockedPets?.length ?? 0);
     const rabbitChanged = parsed.rabbitVariant !== rabbitVariant;
+    const makoChanged = parsed.makoVariant !== makoVariant;
     const dogChanged = parsed.dogVariant !== dogVariant;
     const hadLegacyCards = 'cardCollection' in parsed;
     const cardStatsReset = !resetDone;
@@ -185,6 +193,7 @@ export function loadProfile(): PlayerProfile {
       unlockedChanged ||
       petsChanged ||
       rabbitChanged ||
+      makoChanged ||
       dogChanged ||
       hadLegacyCards ||
       cardStatsReset
@@ -443,6 +452,15 @@ export function saveRabbitVariant(variant: RabbitVariantId): PlayerProfile {
   if (!profile.unlockedCharacters.includes('bunny')) return profile;
   if (!RABBIT_VARIANTS.some(item => item.id === variant)) return profile;
   profile.rabbitVariant = variant;
+  saveProfile(profile);
+  return profile;
+}
+
+export function saveMakoVariant(variant: MakoVariantId): PlayerProfile {
+  const profile = loadProfile();
+  if (!profile.unlockedCharacters.includes('mako')) return profile;
+  if (!MAKO_VARIANTS.some(item => item.id === variant)) return profile;
+  profile.makoVariant = variant;
   saveProfile(profile);
   return profile;
 }

@@ -5,6 +5,7 @@ import { HomeCoinMeter } from './LevelBar';
 import type {
   CharacterId,
   DogVariantId,
+  MakoVariantId,
   PetId,
   PlayerProfile,
   RabbitVariantId,
@@ -12,6 +13,7 @@ import type {
 import {
   CHARACTERS,
   DOG_VARIANTS,
+  MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
   getCharacterDef,
@@ -58,6 +60,7 @@ interface StoreScreenProps {
   onSaveAthleteLoadout: (loadout: AthleteLoadout) => void;
   onSaveBobLoadout: (loadout: BobLoadout) => void;
   onSaveRabbitVariant: (variant: RabbitVariantId) => void;
+  onSaveMakoVariant: (variant: MakoVariantId) => void;
   onSaveDogVariant: (variant: DogVariantId) => void;
 }
 
@@ -76,6 +79,7 @@ export function StoreScreen({
   onSaveAthleteLoadout,
   onSaveBobLoadout,
   onSaveRabbitVariant,
+  onSaveMakoVariant,
   onSaveDogVariant,
 }: StoreScreenProps) {
   const [tab, setTab] = useState<StoreTab>('skins');
@@ -102,6 +106,7 @@ export function StoreScreen({
   const [draftRabbitVariant, setDraftRabbitVariant] = useState<RabbitVariantId>(
     profile.rabbitVariant,
   );
+  const [draftMakoVariant, setDraftMakoVariant] = useState<MakoVariantId>(profile.makoVariant);
   const [draftDogVariant, setDraftDogVariant] = useState<DogVariantId>(profile.dogVariant);
   const [slotId, setSlotId] = useState<CreativeSlotId>('face');
   const [athleteSlotId, setAthleteSlotId] = useState<AthleteSlotId>('jersey');
@@ -142,6 +147,10 @@ export function StoreScreen({
   }, [profile.rabbitVariant]);
 
   useEffect(() => {
+    setDraftMakoVariant(profile.makoVariant);
+  }, [profile.makoVariant]);
+
+  useEffect(() => {
     setDraftDogVariant(profile.dogVariant);
   }, [profile.dogVariant]);
 
@@ -166,12 +175,14 @@ export function StoreScreen({
   const isAthletePreview = !isPets && safePreviewId === 'athlete';
   const isBobPreview = !isPets && safePreviewId === 'bob';
   const isRabbitPreview = !isPets && safePreviewId === 'bunny';
+  const isMakoPreview = !isPets && safePreviewId === 'mako';
   const isDogPreview = isPets && safePreviewId === 'dog';
   const canCustomize =
     (isCreativePreview ||
       isAthletePreview ||
       isBobPreview ||
       isRabbitPreview ||
+      isMakoPreview ||
       isDogPreview) &&
     owned;
   const previewLoadout =
@@ -256,6 +267,7 @@ export function StoreScreen({
     setDraftAthleteLoadout(normalizeAthleteLoadout(profile.athleteLoadout));
     setDraftBobLoadout(normalizeBobLoadout(profile.bobLoadout));
     setDraftRabbitVariant(profile.rabbitVariant);
+    setDraftMakoVariant(profile.makoVariant);
     setDraftDogVariant(profile.dogVariant);
     setSlotId('face');
     setAthleteSlotId('jersey');
@@ -266,6 +278,7 @@ export function StoreScreen({
   const saveCustomize = () => {
     playMenuConfirm();
     if (isRabbitPreview) onSaveRabbitVariant(draftRabbitVariant);
+    else if (isMakoPreview) onSaveMakoVariant(draftMakoVariant);
     else if (isDogPreview) onSaveDogVariant(draftDogVariant);
     else if (isAthletePreview) onSaveAthleteLoadout(draftAthleteLoadout);
     else if (isBobPreview) onSaveBobLoadout(draftBobLoadout);
@@ -276,6 +289,7 @@ export function StoreScreen({
   const resetCustomize = () => {
     playMenuClick();
     if (isRabbitPreview) setDraftRabbitVariant('base');
+    else if (isMakoPreview) setDraftMakoVariant('classic');
     else if (isDogPreview) setDraftDogVariant('husky');
     else if (isAthletePreview) setDraftAthleteLoadout({ ...DEFAULT_ATHLETE_LOADOUT });
     else if (isBobPreview) {
@@ -303,6 +317,7 @@ export function StoreScreen({
                   categoryForFinishId(normalizeBobLoadout(profile.bobLoadout).finishId),
                 );
                 setDraftRabbitVariant(profile.rabbitVariant);
+                setDraftMakoVariant(profile.makoVariant);
                 setDraftDogVariant(profile.dogVariant);
                 return;
               }
@@ -377,6 +392,9 @@ export function StoreScreen({
                               ...(prevItem.id === 'bunny'
                                 ? { rabbitVariant: profile.rabbitVariant }
                                 : {}),
+                              ...(prevItem.id === 'mako'
+                                ? { makoVariant: profile.makoVariant }
+                                : {}),
                             })}
                         accent={prevItem.accent}
                         height={240}
@@ -432,6 +450,13 @@ export function StoreScreen({
                                   rabbitVariant: customizing
                                     ? draftRabbitVariant
                                     : profile.rabbitVariant,
+                                }
+                              : {}),
+                            ...(isMakoPreview
+                              ? {
+                                  makoVariant: customizing
+                                    ? draftMakoVariant
+                                    : profile.makoVariant,
                                 }
                               : {}),
                           })}
@@ -492,6 +517,9 @@ export function StoreScreen({
                               ...(nextItem.id === 'bunny'
                                 ? { rabbitVariant: profile.rabbitVariant }
                                 : {}),
+                              ...(nextItem.id === 'mako'
+                                ? { makoVariant: profile.makoVariant }
+                                : {}),
                             })}
                         accent={nextItem.accent}
                         height={240}
@@ -531,6 +559,29 @@ export function StoreScreen({
                           className={`px-3 py-3 rounded-xl text-xs font-black border-[2.5px] transition-all ${
                             active
                               ? 'border-[#67e8f9] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#155e75]'
+                              : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
+                          }`}
+                        >
+                          {variant.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : isMakoPreview ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {MAKO_VARIANTS.map(variant => {
+                      const active = draftMakoVariant === variant.id;
+                      return (
+                        <button
+                          key={variant.id}
+                          type="button"
+                          onClick={() => {
+                            playMenuSelect();
+                            setDraftMakoVariant(variant.id);
+                          }}
+                          className={`px-3 py-3 rounded-xl text-xs font-black border-[2.5px] transition-all ${
+                            active
+                              ? 'border-[#2dd4bf] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#0f766e]'
                               : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
                           }`}
                         >
@@ -849,13 +900,15 @@ export function StoreScreen({
                     <Check className="w-4 h-4" />
                     {isRabbitPreview
                       ? 'Save Lane Hopper'
-                      : isDogPreview
-                        ? 'Save Breed'
-                        : isAthletePreview
-                          ? 'Save Kit'
-                          : isBobPreview
-                            ? 'Save Color'
-                            : 'Save Look'}
+                      : isMakoPreview
+                        ? 'Save Mako Style'
+                        : isDogPreview
+                          ? 'Save Breed'
+                          : isAthletePreview
+                            ? 'Save Kit'
+                            : isBobPreview
+                              ? 'Save Color'
+                              : 'Save Look'}
                   </button>
                 </div>
               </div>
@@ -872,13 +925,15 @@ export function StoreScreen({
                         <SlidersHorizontal className="w-4 h-4 text-[#f472b6]" />
                         {isRabbitPreview
                           ? 'Choose Lane Hopper Look'
-                          : isDogPreview
-                            ? 'Choose Dog Breed'
-                            : isAthletePreview
-                              ? 'Customize Jersey'
-                              : isBobPreview
-                                ? 'Pick Color'
-                                : 'Customize Kit'}
+                          : isMakoPreview
+                            ? 'Choose Mako Style'
+                            : isDogPreview
+                              ? 'Choose Dog Breed'
+                              : isAthletePreview
+                                ? 'Customize Jersey'
+                                : isBobPreview
+                                  ? 'Pick Color'
+                                  : 'Customize Kit'}
                       </button>
                     )}
                     <button

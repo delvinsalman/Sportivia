@@ -16,6 +16,7 @@ import type {
   CharacterDef,
   CharacterId,
   DogVariantId,
+  MakoVariantId,
   PetDef,
   PetId,
   RabbitVariantId,
@@ -25,8 +26,10 @@ import {
   DOG_VARIANTS,
   getCharacterDef,
   getDogVariantDef,
+  getMakoVariantDef,
   getPetDef,
   getRabbitVariantDef,
+  MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
 } from '../../types/profile';
@@ -66,6 +69,7 @@ const LANDING_PAD_SCALE = 0.92;
 CHARACTERS.filter(c => c.modelPath.endsWith('.fbx')).forEach(c => useFBX.preload(c.modelPath));
 CHARACTERS.filter(c => c.modelPath.endsWith('.glb')).forEach(c => useGLTF.preload(c.modelPath));
 RABBIT_VARIANTS.forEach(variant => useGLTF.preload(variant.modelPath));
+MAKO_VARIANTS.forEach(variant => useGLTF.preload(variant.modelPath));
 DOG_VARIANTS.forEach(variant => useGLTF.preload(variant.modelPath));
 PETS.forEach(p => useGLTF.preload(p.modelPath));
 useGLTF.preload(LANDING_PAD_PATH);
@@ -673,6 +677,7 @@ interface CharacterModelProps {
   /** Home-page showcase flourishes */
   showcase?: boolean;
   rabbitVariant?: RabbitVariantId;
+  makoVariant?: MakoVariantId;
 }
 
 type PodiumModelDef = CharacterDef | PetDef;
@@ -1775,6 +1780,7 @@ function CharacterModel({
   athleteLoadout,
   bobLoadout,
   rabbitVariant,
+  makoVariant,
   sport,
 }: CharacterModelProps & {
   creativeLoadout?: CreativeLoadout;
@@ -1786,7 +1792,9 @@ function CharacterModel({
   const def =
     characterId === 'bunny'
       ? { ...baseDef, modelPath: getRabbitVariantDef(rabbitVariant ?? 'base').modelPath }
-      : baseDef;
+      : characterId === 'mako'
+        ? { ...baseDef, modelPath: getMakoVariantDef(makoVariant ?? 'classic').modelPath }
+        : baseDef;
   if (def.modelPath.endsWith('.glb')) {
     return (
       <GlbModel
@@ -1884,6 +1892,7 @@ function Scene({
   athleteLoadout,
   bobLoadout,
   rabbitVariant,
+  makoVariant,
   dogVariant,
   sport,
 }: {
@@ -1897,6 +1906,7 @@ function Scene({
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
   rabbitVariant?: RabbitVariantId;
+  makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
   sport?: Sport;
 }) {
@@ -1927,6 +1937,7 @@ function Scene({
             athleteLoadout={athleteLoadout}
             bobLoadout={bobLoadout}
             rabbitVariant={rabbitVariant}
+            makoVariant={makoVariant}
             sport={sport}
           />
         ) : null}
@@ -1972,6 +1983,8 @@ interface CharacterPodiumProps {
   bobLoadout?: BobLoadout;
   /** Appearance included with the Lane Hopper skin */
   rabbitVariant?: RabbitVariantId;
+  /** Appearance included with the Finisher Mako skin */
+  makoVariant?: MakoVariantId;
   /** Breed included with the Street Dog pet */
   dogVariant?: DogVariantId;
   /** Prefer sport-themed flourishes when available (Fitness Geek) */
@@ -1992,6 +2005,7 @@ export function CharacterPodium({
   athleteLoadout,
   bobLoadout,
   rabbitVariant,
+  makoVariant,
   dogVariant,
   sport,
 }: CharacterPodiumProps) {
@@ -2010,9 +2024,11 @@ export function CharacterPodium({
   const variantKey =
     characterId === 'bunny'
       ? rabbitVariant ?? 'base'
-      : petId === 'dog'
-        ? dogVariant ?? 'husky'
-        : '';
+      : characterId === 'mako'
+        ? makoVariant ?? 'classic'
+        : petId === 'dog'
+          ? dogVariant ?? 'husky'
+          : '';
 
   return (
     <div
@@ -2075,6 +2091,7 @@ export function CharacterPodium({
             athleteLoadout={athleteLoadout}
             bobLoadout={bobLoadout}
             rabbitVariant={rabbitVariant}
+            makoVariant={makoVariant}
             dogVariant={dogVariant}
             sport={sport}
           />

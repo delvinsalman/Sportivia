@@ -331,6 +331,9 @@ export function HomeScreen({
               {...(profile.equippedCharacter === 'bunny'
                 ? { rabbitVariant: profile.rabbitVariant }
                 : {})}
+              {...(profile.equippedCharacter === 'mako'
+                ? { makoVariant: profile.makoVariant }
+                : {})}
             />
             </div>
             {profile.equippedPet && (

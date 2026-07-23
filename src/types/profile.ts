@@ -28,6 +28,7 @@ export type CharacterId =
   | 'creative'
   | 'athlete';
 export type RabbitVariantId = 'base' | 'grey' | 'blond' | 'pigtails' | 'cyan-hair';
+export type MakoVariantId = 'classic' | 'sharky';
 export type DogVariantId = 'husky' | 'shiba' | 'black-shiba' | 'german-shepherd';
 export type PetId =
   | 'pug'
@@ -46,6 +47,12 @@ export type PetId =
 
 export interface RabbitVariantDef {
   id: RabbitVariantId;
+  name: string;
+  modelPath: string;
+}
+
+export interface MakoVariantDef {
+  id: MakoVariantId;
   name: string;
   modelPath: string;
 }
@@ -118,6 +125,8 @@ export interface PlayerProfile {
   bobLoadout: BobLoadout;
   /** Selected look included with the Lane Hopper skin bundle */
   rabbitVariant: RabbitVariantId;
+  /** Selected look included with the Finisher Mako skin */
+  makoVariant: MakoVariantId;
   /** Selected breed included with the Dog pet */
   dogVariant: DogVariantId;
   /** Per-skin per-stat upgrade bonuses. Overall averages the six live stats (up to 99). */
@@ -367,12 +376,13 @@ export const CHARACTERS: CharacterDef[] = [
   {
     id: 'mako',
     name: 'Finisher Mako',
-    tagline: 'Shark in the paint · ice cold',
+    tagline: 'Two looks · switch anytime',
     price: 65_000,
-    modelPath: '/models/mako.glb',
+    modelPath: '/models/mako/classic.glb',
     baseOvr: 89,
     accent: '#2dd4bf',
     footOffsetY: 0,
+    customizable: true,
   },
 ];
 
@@ -526,6 +536,7 @@ export const DEFAULT_CHARACTER: CharacterId = 'cube-man';
 /** Fallback pet id for migrations only — new profiles start with none equipped. */
 export const DEFAULT_PET: PetId = 'pug';
 export const DEFAULT_RABBIT_VARIANT: RabbitVariantId = 'base';
+export const DEFAULT_MAKO_VARIANT: MakoVariantId = 'classic';
 export const DEFAULT_DOG_VARIANT: DogVariantId = 'husky';
 export { DEFAULT_CREATIVE_LOADOUT };
 export { DEFAULT_ATHLETE_LOADOUT };
@@ -539,6 +550,11 @@ export const RABBIT_VARIANTS: RabbitVariantDef[] = [
   { id: 'cyan-hair', name: 'Cyan Hair', modelPath: '/models/rabbit/cyan-hair.glb' },
 ];
 
+export const MAKO_VARIANTS: MakoVariantDef[] = [
+  { id: 'classic', name: 'Classic', modelPath: '/models/mako/classic.glb' },
+  { id: 'sharky', name: 'Sharky', modelPath: '/models/mako/sharky.glb' },
+];
+
 export const DOG_VARIANTS: DogVariantDef[] = [
   { id: 'husky', name: 'Husky', modelPath: '/models/pets/dog/husky.glb' },
   { id: 'shiba', name: 'Shiba', modelPath: '/models/pets/dog/shiba.glb' },
@@ -548,6 +564,10 @@ export const DOG_VARIANTS: DogVariantDef[] = [
 
 export function getRabbitVariantDef(id: RabbitVariantId): RabbitVariantDef {
   return RABBIT_VARIANTS.find(variant => variant.id === id) ?? RABBIT_VARIANTS[0];
+}
+
+export function getMakoVariantDef(id: MakoVariantId): MakoVariantDef {
+  return MAKO_VARIANTS.find(variant => variant.id === id) ?? MAKO_VARIANTS[0];
 }
 
 export function getDogVariantDef(id: DogVariantId): DogVariantDef {

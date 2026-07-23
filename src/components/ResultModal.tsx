@@ -8,7 +8,7 @@ import { SportBall } from './SportBall';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import type { CharacterId, PetId, RabbitVariantId, DogVariantId } from '../types/profile';
+import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
@@ -21,6 +21,7 @@ interface ResultModalProps {
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
   rabbitVariant?: RabbitVariantId;
+  makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
   onPlayAgain: () => void;
   onHome: () => void;
@@ -43,6 +44,7 @@ export function ResultModal({
   athleteLoadout,
   bobLoadout,
   rabbitVariant,
+  makoVariant,
   dogVariant,
   onPlayAgain,
   onHome,
@@ -133,6 +135,9 @@ export function ResultModal({
                 {...(characterId === 'bob' && bobLoadout ? { bobLoadout } : {})}
                 {...(characterId === 'bunny' && rabbitVariant
                   ? { rabbitVariant }
+                  : {})}
+                {...(characterId === 'mako' && makoVariant
+                  ? { makoVariant }
                   : {})}
               />
             </div>

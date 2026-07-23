@@ -199,6 +199,9 @@ export function CharacterCardsScreen({
                       {...(selectedId === 'bunny'
                         ? { rabbitVariant: profile.rabbitVariant }
                         : {})}
+                      {...(selectedId === 'mako'
+                        ? { makoVariant: profile.makoVariant }
+                        : {})}
                     />
                     {!owned && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40">
