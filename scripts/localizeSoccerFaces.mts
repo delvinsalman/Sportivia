@@ -92,7 +92,7 @@ const STABLE_OVERRIDES: Record<string, string> = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Eusebio_1966.jpg/800px-Eusebio_1966.jpg",
   "nedved": "https://r2.thesportsdb.com/images/media/player/cutout/nedved.jpg",
   "r9":
-    "https://r2.thesportsdb.com/images/media/player/cutout/xtvtxy1546170072.png",
+    "https://s.hs-data.com/gfx/person/cropped/250x250/846.png?fallback=male",
   "rodri": "https://www.fifarosters.com/assets/players/fifa24/faces/231866.png",
   "figo": "https://r2.thesportsdb.com/images/media/player/cutout/figo.png",
   "bastoni": "https://b.fssta.com/uploads/application/soccer/headshots/48753.png",
