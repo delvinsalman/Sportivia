@@ -300,6 +300,7 @@ export default function App() {
               onOpenAbout={() => setScreen('about')}
               onOpenSettings={() => setScreen('settings')}
               onSaveName={handleSaveName}
+              onProfileChange={setProfile}
               online={settings.showOnlineCount ? online : null}
             />
           </PageTransition>

@@ -19,6 +19,10 @@ import { PAGE_TRANSITION } from '../lib/pageTransitions';
 import { useSettings } from '../hooks/useSettings';
 import { pickRandomPlayerName } from '../lib/playerNames';
 import { BOT_DIFFICULTIES } from '../lib/botOpponent';
+import { isDailySpinAvailable } from '../lib/profileStorage';
+import { DailySpinModal } from './DailySpinModal';
+import type { DailySpinPrize } from '../lib/dailySpin';
+import { DAILY_SPIN_ICON } from '../lib/dailySpin';
 
 interface HomeScreenProps {
   sport: Sport;
@@ -31,6 +35,7 @@ interface HomeScreenProps {
   onOpenAbout: () => void;
   onOpenSettings: () => void;
   onSaveName: (name: string) => void;
+  onProfileChange?: (profile: PlayerProfile) => void;
   online?: number | null;
 }
 
@@ -123,17 +128,24 @@ export function HomeScreen({
   onOpenAbout,
   onOpenSettings,
   onSaveName,
+  onProfileChange,
   online,
 }: HomeScreenProps) {
   const [showModes, setShowModes] = useState(false);
   const [showBotDifficulties, setShowBotDifficulties] = useState(false);
+  const [showDailySpin, setShowDailySpin] = useState(false);
   const { settings } = useSettings();
   const s = profile.stats[sport];
   const today = getTodayKey();
   const dailyDone = s.dailyCompleted.includes(today);
+  const spinReady = isDailySpinAvailable(profile);
   const accent = SPORT_ACCENT[sport];
   const character = getCharacterDef(profile.equippedCharacter);
   const showOnline = settings.showOnlineCount ? online : null;
+
+  function handleSpinClaimed(next: PlayerProfile, _prize: DailySpinPrize) {
+    onProfileChange?.(next);
+  }
 
   return (
     <div className="relative h-svh overflow-hidden">
@@ -158,7 +170,7 @@ export function HomeScreen({
       <motion.aside
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 flex flex-col items-stretch gap-2.5 sm:gap-4 pl-[max(0.5rem,env(safe-area-inset-left))] sm:pl-5 max-sm:scale-[0.92] max-sm:origin-left"
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 flex flex-col items-stretch gap-2.5 sm:gap-3.5 pl-[max(0.45rem,env(safe-area-inset-left))] sm:pl-4 max-sm:scale-[0.9] max-sm:origin-left"
       >
         <SportPicker sport={sport} onSportChange={onSportChange} layout="rail" />
 
@@ -284,6 +296,34 @@ export function HomeScreen({
             <span className="hidden sm:inline">Store</span>
           </button>
         </div>
+      </motion.div>
+
+      {/* Daily Spin — mid-right stage */}
+      <motion.div
+        initial={{ opacity: 0, x: 12 }}
+        animate={{ opacity: 1, x: 0 }}
+        className="fixed top-1/2 right-0 z-30 -translate-y-1/2 pr-[max(0.75rem,env(safe-area-inset-right))] pl-2"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            playMenuClick();
+            setShowDailySpin(true);
+          }}
+          className={`game-spin-chip relative ${spinReady ? 'game-spin-chip-ready' : ''}`}
+          aria-label="Daily Spin"
+        >
+          <img
+            src={DAILY_SPIN_ICON}
+            alt=""
+            draggable={false}
+            className="h-6 w-6 object-contain sm:h-7 sm:w-7"
+          />
+          <span>Spin</span>
+          {spinReady && (
+            <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-[#23a559] shadow-[0_0_8px_#23a559]" />
+          )}
+        </button>
       </motion.div>
 
       {/* Level — bottom right alone */}
@@ -544,6 +584,16 @@ export function HomeScreen({
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showDailySpin && (
+          <DailySpinModal
+            profile={profile}
+            onClose={() => setShowDailySpin(false)}
+            onClaimed={handleSpinClaimed}
+          />
         )}
       </AnimatePresence>
     </div>

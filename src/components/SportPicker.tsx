@@ -24,9 +24,12 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
 
   if (rail) {
     return (
-      <div className="relative flex flex-col items-stretch gap-2 sm:gap-2.5" role="tablist" aria-label="Choose sport">
-        <div className="relative flex items-center gap-1 px-0.5 sm:px-0">
-          <p className="game-sport-rail-label hidden sm:block !pb-0">Sports</p>
+      <div className="game-sport-menu" role="tablist" aria-label="Choose sport">
+        <div className="game-sport-menu-head">
+          <div className="min-w-0">
+            <p className="game-sport-menu-kicker">Select</p>
+            <p className="game-sport-menu-title">Sport</p>
+          </div>
           <button
             type="button"
             aria-label="About sports"
@@ -35,13 +38,9 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
               playMenuClick();
               setShowSportInfo(v => !v);
             }}
-            className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border transition-all sm:h-[1.05rem] sm:w-[1.05rem] ${
-              showSportInfo
-                ? 'border-[#f0b232]/80 bg-[#2a2414] text-[#f0b232]'
-                : 'border-[#3f4147]/90 bg-[#1e1f22]/80 text-[#6d6f78] hover:border-[#5c5e66] hover:text-[#b5bac1]'
-            }`}
+            className={`game-sport-menu-info ${showSportInfo ? 'game-sport-menu-info-on' : ''}`}
           >
-            <Info className="h-2.5 w-2.5" strokeWidth={2.5} />
+            <Info className="h-3 w-3" strokeWidth={2.75} />
           </button>
           {showSportInfo && (
             <>
@@ -56,45 +55,69 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
                   Same game · any sport
                 </p>
                 <p className="mt-1.5 text-[11px] font-semibold leading-snug text-[#b5bac1]">
-                  Every sport is the same trivia idea — match stars to categories on a 3×3 board — just with that sport’s players and categories. Switch anytime from this rail and pick up a run whenever you want.
+                  Every sport is the same trivia idea — match stars to categories on a 3×3 board — just with that sport’s players and categories. Switch anytime from this menu and pick up a run whenever you want.
                 </p>
               </div>
             </>
           )}
         </div>
-        {SPORTS.map(sp => {
-          const active = sport === sp;
-          const label = SPORT_LABEL[sp];
-          const railBg = SPORT_RAIL_BG[sp];
-          return (
-            <button
-              key={sp}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              aria-label={label}
-              onClick={() => {
-                playMenuClick();
-                onSportChange(sp);
-              }}
-              className={`game-sport-tab ${active ? 'game-sport-tab-active' : ''}`}
-              style={
-                {
-                  '--sport-rail-bg': railBg.base,
-                  '--sport-rail-bg-hover': railBg.hover,
-                  '--sport-rail-bg-active': railBg.active,
-                } as CSSProperties
-              }
-            >
-              <span className="relative z-0 flex h-7 w-7 shrink-0 items-center justify-center overflow-visible sm:h-[1.85rem] sm:w-[1.85rem]">
-                <SportBall sport={sp} size={sp === 'basketball' ? 24 : 26} />
-              </span>
-              <span className="relative z-10 min-w-0 leading-none tracking-wide hidden sm:inline">
-                {label}
-              </span>
-            </button>
-          );
-        })}
+
+        <div className="game-sport-menu-list">
+          {SPORTS.map((sp, i) => {
+            const active = sport === sp;
+            const label = SPORT_LABEL[sp];
+            const accent = SPORT_ACCENT[sp];
+            const railBg = SPORT_RAIL_BG[sp];
+            const wideIcon = sp === 'football' || sp === 'hockey';
+            const ballSize =
+              sp === 'football' ? 30 : sp === 'hockey' ? 28 : sp === 'basketball' ? 32 : 34;
+            return (
+              <motion.button
+                key={sp}
+                type="button"
+                role="tab"
+                aria-selected={active}
+                aria-label={label}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{
+                  opacity: 1,
+                  x: active ? 6 : 0,
+                  scale: active ? 1.02 : 1,
+                }}
+                transition={{ type: 'spring', stiffness: 420, damping: 28, delay: i * 0.03 }}
+                onClick={() => {
+                  playMenuClick();
+                  onSportChange(sp);
+                }}
+                className={`game-sport-menu-item ${active ? 'game-sport-menu-item-active' : ''}`}
+                style={
+                  {
+                    '--sport-rail-bg': railBg.base,
+                    '--sport-rail-bg-hover': railBg.hover,
+                    '--sport-rail-bg-active': railBg.active,
+                    '--sport-accent': accent,
+                  } as CSSProperties
+                }
+              >
+                <span
+                  className={`game-sport-menu-ball ${
+                    wideIcon
+                      ? sp === 'football'
+                        ? 'game-sport-menu-ball-football'
+                        : 'game-sport-menu-ball-hockey'
+                      : ''
+                  }`}
+                >
+                  <SportBall sport={sp} size={ballSize} />
+                </span>
+                <span className="game-sport-menu-copy">
+                  <span className="game-sport-menu-name">{label}</span>
+                  {active && <span className="game-sport-menu-live">Selected</span>}
+                </span>
+              </motion.button>
+            );
+          })}
+        </div>
       </div>
     );
   }

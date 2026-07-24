@@ -133,6 +133,10 @@ export interface PlayerProfile {
   characterStatLevels: Partial<Record<CharacterId, Partial<Record<'pac' | 'sho' | 'pas' | 'dri' | 'def' | 'phy', number>>>>;
   /** Lifetime 1v1 duel record — wins / losses / ties. */
   pvpRecord: PvpRecord;
+  /** Banked free card +1 upgrades from daily spin (1 credit = 1 stat step). */
+  freeUpgradeCredits: number;
+  /** Unix ms of last daily spin claim (24h cooldown from this). */
+  dailySpinAt: number | null;
   stats: PlayerStats;
 }
 

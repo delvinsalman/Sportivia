@@ -27,8 +27,13 @@ import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult, grantDuelWinAchievement } from './seasonMeta';
 import { pickRandomPlayerName } from './playerNames';
-import { maxBonusForStat, pendingUpgradeTotal, type CardStatKey } from './characterCards';
+import { maxBonusForStat, pendingUpgradePayment, type CardStatKey } from './characterCards';
 import type { BotDifficulty } from '../types';
+import {
+  isDailySpinOnCooldown,
+  rollDailySpinPrize,
+  type DailySpinPrize,
+} from './dailySpin';
 import {
   clampBotStake,
   clampDuelStake,
@@ -232,6 +237,8 @@ function defaultProfile(): PlayerProfile {
     dogVariant: DEFAULT_DOG_VARIANT,
     characterStatLevels: {},
     pvpRecord: { ...EMPTY_PVP_RECORD },
+    freeUpgradeCredits: 0,
+    dailySpinAt: null,
     stats: loadStats(),
   };
 }
@@ -319,6 +326,11 @@ export function loadProfile(): PlayerProfile {
       dogVariant,
       characterStatLevels,
       pvpRecord: normalizePvpRecord((parsed as { pvpRecord?: unknown }).pvpRecord),
+      freeUpgradeCredits:
+        typeof (parsed as { freeUpgradeCredits?: unknown }).freeUpgradeCredits === 'number'
+          ? Math.max(0, Math.floor((parsed as { freeUpgradeCredits: number }).freeUpgradeCredits))
+          : 0,
+      dailySpinAt: normalizeDailySpinAt(parsed),
       stats: loadStats(),
     };
 
@@ -387,6 +399,18 @@ function normalizePvpRecord(raw: unknown): PvpRecord {
   };
 }
 
+/** Accept ms timestamp, or migrate old YYYY-MM-DD dailySpinDate. */
+function normalizeDailySpinAt(parsed: Partial<PlayerProfile> & Record<string, unknown>): number | null {
+  const at = parsed.dailySpinAt;
+  if (typeof at === 'number' && Number.isFinite(at) && at > 0) return Math.floor(at);
+  const legacy = parsed.dailySpinDate;
+  if (typeof legacy === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(legacy)) {
+    const ms = Date.parse(`${legacy}T12:00:00`);
+    return Number.isFinite(ms) ? ms : null;
+  }
+  return null;
+}
+
 export function formatPvpRecord(record: PvpRecord): string {
   return `${record.wins}-${record.losses}-${record.ties}`;
 }
@@ -403,6 +427,33 @@ export function recordPvpOutcome(
   profile.pvpRecord = next;
   saveProfile(profile);
   return profile;
+}
+
+export function isDailySpinAvailable(profile?: PlayerProfile): boolean {
+  const p = profile ?? loadProfile();
+  return !isDailySpinOnCooldown(p.dailySpinAt);
+}
+
+/** Roll + grant a spin. Locked for 24h from the moment you claim. */
+export function claimDailySpin(): {
+  ok: boolean;
+  profile: PlayerProfile;
+  prize?: DailySpinPrize;
+  error?: string;
+} {
+  const profile = loadProfile();
+  if (isDailySpinOnCooldown(profile.dailySpinAt)) {
+    return { ok: false, profile, error: 'Spin available again in 24 hours' };
+  }
+  const prize = rollDailySpinPrize();
+  if (prize.kind === 'coins') {
+    profile.coins += prize.amount;
+  } else {
+    profile.freeUpgradeCredits = Math.max(0, Math.floor(profile.freeUpgradeCredits ?? 0)) + prize.amount;
+  }
+  profile.dailySpinAt = Date.now();
+  saveProfile(profile);
+  return { ok: true, profile, prize };
 }
 
 /** Apply duelist achievement + coin bonus after a confirmed online win. */
@@ -568,13 +619,21 @@ export function applyCharacterStatUpgrades(
     }
   }
 
-  const { total } = pendingUpgradeTotal(profile, def, cleaned);
-  if (total <= 0) return { ok: false, profile, error: 'Nothing to upgrade' };
-  if (profile.coins < total) {
-    return { ok: false, profile, error: `Need ${total - profile.coins} more coins` };
+  const payment = pendingUpgradePayment(profile, def, cleaned);
+  if (payment.steps <= 0) return { ok: false, profile, error: 'Nothing to upgrade' };
+  if (profile.coins < payment.coinCost) {
+    return {
+      ok: false,
+      profile,
+      error: `Need ${payment.coinCost - profile.coins} more coins`,
+    };
   }
 
-  profile.coins -= total;
+  profile.coins -= payment.coinCost;
+  profile.freeUpgradeCredits = Math.max(
+    0,
+    Math.floor(profile.freeUpgradeCredits ?? 0) - payment.creditsUsed,
+  );
   const nextLevels = { ...(profile.characterStatLevels?.[id] ?? {}) };
   for (const key of ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const) {
     const add = cleaned[key] ?? 0;
@@ -584,7 +643,7 @@ export function applyCharacterStatUpgrades(
   }
   profile.characterStatLevels = { ...profile.characterStatLevels, [id]: nextLevels };
   saveProfile(profile);
-  return { ok: true, profile, total };
+  return { ok: true, profile, total: payment.coinCost };
 }
 
 export function purchasePet(id: PetId): { ok: boolean; profile: PlayerProfile; error?: string } {

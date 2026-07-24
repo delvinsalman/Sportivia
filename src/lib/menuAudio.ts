@@ -73,6 +73,16 @@ export function playMenuSelect() {
   tone(920, 0.08, { type: 'sine', gain: 0.02, attack: 0.006, decay: 0.06 });
 }
 
+/** Quick tick while the daily wheel spins */
+export function playSpinTick() {
+  tone(640 + Math.random() * 180, 0.045, {
+    type: 'triangle',
+    gain: 0.028,
+    attack: 0.002,
+    decay: 0.035,
+  });
+}
+
 /** Confirm / equip / unlock */
 export function playMenuConfirm() {
   tone(440, 0.14, { type: 'sine', gain: 0.05, attack: 0.01, decay: 0.11 });

@@ -333,6 +333,61 @@ button,
   color: #f5c451;
 }
 
+/* Circular Daily Spin button — icon + label stacked */
+.game-spin-chip {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  width: 4.25rem;
+  height: 4.25rem;
+  padding: 0.35rem;
+  border-radius: 50%;
+  border: 2.5px solid rgba(255, 255, 255, 0.16);
+  background: linear-gradient(180deg, #2a2c33 0%, #1a1b20 100%);
+  color: #e8eaef;
+  font-weight: 900;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1;
+  box-shadow:
+    0 4px 0 #0c0d0f,
+    0 4px 14px rgba(0, 0, 0, 0.35);
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.12s ease,
+    transform 0.12s ease;
+}
+
+.game-spin-chip:hover {
+  border-color: rgba(255, 255, 255, 0.32);
+  color: #f8f9fb;
+  transform: translateY(1px);
+  box-shadow:
+    0 3px 0 #0c0d0f,
+    0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.game-spin-chip-ready {
+  border-color: rgba(35, 165, 89, 0.8);
+  color: #86efac;
+  box-shadow:
+    0 4px 0 #0c0d0f,
+    0 0 16px rgba(35, 165, 89, 0.32);
+}
+
+.game-nav-tab-spin-ready {
+  border-color: rgba(35, 165, 89, 0.75) !important;
+  color: #4ade80;
+  box-shadow:
+    0 4px 0 #0c0d0f,
+    0 0 14px rgba(35, 165, 89, 0.28);
+}
+
 /* Home Cards tab — slanted snake border + glow */
 .cards-nav-snake-ring {
   --snake-angle: 0deg;
@@ -473,71 +528,190 @@ button,
   }
 }
 
-/* Home sports rail — same slanted chrome as top nav tabs */
-.game-sport-rail-label {
-  padding: 0 0.15rem 0;
-  font-size: 0.65rem;
-  font-weight: 900;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  color: #949ba4;
+/* Home sports rail — game-style select rows (no panel chrome) */
+.game-sport-menu {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  width: min(10.75rem, calc(100vw - 1.25rem));
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
 }
 
-.game-sport-tab {
+.game-sport-menu-head {
+  position: relative;
   display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0 0.15rem 0.15rem;
+  border-bottom: none;
+}
+
+.game-sport-menu-kicker {
+  font-size: 0.58rem;
+  font-weight: 900;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #f0b232;
+  line-height: 1;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.55);
+}
+
+.game-sport-menu-title {
+  margin-top: 0.2rem;
+  font-size: 0.95rem;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #f2f3f5;
+  line-height: 1;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.game-sport-menu-info {
+  display: flex;
+  height: 1.35rem;
+  width: 1.35rem;
+  flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  gap: 0.45rem;
-  min-height: 2.75rem;
-  min-width: 2.75rem;
-  padding: 0.45rem;
-  border-radius: 0.55rem;
-  border: 2.5px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  background: rgba(12, 13, 15, 0.45);
+  color: #8b8e96;
+  backdrop-filter: blur(4px);
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease;
+}
+
+.game-sport-menu-info:hover {
+  border-color: rgba(255, 255, 255, 0.3);
+  color: #d7dae0;
+}
+
+.game-sport-menu-info-on {
+  border-color: rgba(240, 178, 50, 0.8);
+  background: rgba(42, 36, 20, 0.75);
+  color: #f0b232;
+}
+
+.game-sport-menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.game-sport-menu-item {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  width: 100%;
+  min-height: 3.15rem;
+  padding: 0.4rem 0.55rem 0.4rem 0.4rem;
+  border-radius: 0.75rem;
+  border: 2.5px solid rgba(255, 255, 255, 0.14);
   background: var(--sport-rail-bg, linear-gradient(180deg, #2a2c33 0%, #1a1b20 100%));
-  color: #e8eaef;
-  font-weight: 900;
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  box-shadow:
-    0 4px 0 #0c0d0f,
-    0 4px 14px rgba(0, 0, 0, 0.35);
+  color: #d7dae0;
+  text-align: left;
+  box-shadow: 0 3px 0 #0c0d0f;
   transition:
     border-color 0.15s ease,
     color 0.15s ease,
     background 0.15s ease,
     box-shadow 0.15s ease,
-    transform 0.12s ease,
-    opacity 0.15s ease;
+    filter 0.15s ease;
 }
 
-.game-sport-tab:hover {
+.game-sport-menu-item:hover {
   border-color: rgba(255, 255, 255, 0.28);
   color: #f8f9fb;
   background: var(--sport-rail-bg-hover, linear-gradient(180deg, #32343c 0%, #1f2026 100%));
-  transform: translateY(1px);
-  box-shadow:
-    0 3px 0 #0c0d0f,
-    0 4px 12px rgba(0, 0, 0, 0.35);
+  filter: brightness(1.06);
 }
 
-.game-sport-tab-active {
-  color: #f0b232;
-  border-color: rgba(240, 178, 50, 0.85);
+.game-sport-menu-item-active {
+  z-index: 2;
+  color: #fff;
+  border-color: color-mix(in srgb, var(--sport-accent, #f0b232) 85%, white);
   background: var(--sport-rail-bg-active, linear-gradient(180deg, #2f3038 0%, #1c1d22 100%));
   box-shadow:
-    0 4px 0 #8a6814,
-    0 0 0 1px rgba(240, 178, 50, 0.28),
-    0 0 16px rgba(240, 178, 50, 0.22);
+    0 4px 0 color-mix(in srgb, var(--sport-accent, #f0b232) 55%, #0c0d0f),
+    0 0 0 1px color-mix(in srgb, var(--sport-accent, #f0b232) 35%, transparent),
+    0 0 18px color-mix(in srgb, var(--sport-accent, #f0b232) 28%, transparent);
 }
 
-.game-sport-tab-active:hover {
-  border-color: #f5c451;
-  color: #f5c451;
+.game-sport-menu-ball {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 2.45rem;
+  width: 2.45rem;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.16);
+  background: rgba(0, 0, 0, 0.28);
   box-shadow:
-    0 3px 0 #8a6814,
-    0 0 0 1px rgba(240, 178, 50, 0.35),
-    0 0 18px rgba(240, 178, 50, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 2px 0 rgba(0, 0, 0, 0.35);
+}
+
+/* Oval / wide badges for non-round gear */
+.game-sport-menu-ball-football {
+  width: 2.85rem;
+  height: 2.15rem;
+  border-radius: 999px;
+  padding: 0 0.1rem;
+}
+
+.game-sport-menu-ball-hockey {
+  width: 2.9rem;
+  height: 2.2rem;
+  border-radius: 0.65rem;
+  padding: 0 0.12rem;
+}
+
+.game-sport-menu-item-active .game-sport-menu-ball {
+  border-color: color-mix(in srgb, var(--sport-accent, #f0b232) 70%, white);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    0 0 14px color-mix(in srgb, var(--sport-accent, #f0b232) 40%, transparent);
+}
+
+.game-sport-menu-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.game-sport-menu-name {
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1.05;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.45);
+}
+
+.game-sport-menu-live {
+  font-size: 0.55rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--sport-accent, #f0b232) 85%, white);
+  line-height: 1;
 }
 
 .game-sport-record {
@@ -546,7 +720,7 @@ button,
   align-items: center;
   gap: 0.35rem;
   padding: 0.5rem 0.4rem;
-  border-radius: 0.55rem;
+  border-radius: 0.75rem;
   border: 2.5px solid #3f4147;
   background: linear-gradient(180deg, #2a2c33 0%, #14151a 100%);
   box-shadow: 0 4px 0 #0c0d0f;
@@ -554,15 +728,45 @@ button,
 }
 
 @media (min-width: 640px) {
-  .game-sport-tab {
-    justify-content: flex-start;
-    min-height: 2.9rem;
-    min-width: 0;
-    gap: 0.75rem;
-    padding: 0.55rem 1rem;
-    font-size: 0.8rem;
-    letter-spacing: 0.1em;
-    overflow: visible;
+  .game-sport-menu {
+    width: 12.75rem;
+    gap: 0.55rem;
+  }
+
+  .game-sport-menu-title {
+    font-size: 1.05rem;
+  }
+
+  .game-sport-menu-list {
+    gap: 0.8rem;
+  }
+
+  .game-sport-menu-item {
+    min-height: 3.45rem;
+    gap: 0.7rem;
+    padding: 0.45rem 0.7rem 0.45rem 0.45rem;
+    border-radius: 0.85rem;
+  }
+
+  .game-sport-menu-ball {
+    height: 2.7rem;
+    width: 2.7rem;
+  }
+
+  .game-sport-menu-ball-football {
+    width: 3.15rem;
+    height: 2.35rem;
+  }
+
+  .game-sport-menu-ball-hockey {
+    width: 3.2rem;
+    height: 2.4rem;
+    border-radius: 0.7rem;
+  }
+
+  .game-sport-menu-name {
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
   }
 
   .game-sport-record {
@@ -570,7 +774,7 @@ button,
     align-items: center;
     gap: 0.7rem;
     padding: 0.7rem 0.85rem;
-    border-radius: 0.65rem;
+    border-radius: 0.85rem;
   }
 }
 

@@ -172,6 +172,38 @@ export function pendingCount(pending: StatPending): number {
   return CARD_STAT_KEYS.reduce((acc, key) => acc + (pending[key] ?? 0), 0);
 }
 
+/** Ordered per-step costs for a pending cart (same walk order as totals). */
+export function pendingUpgradeStepCosts(
+  profile: PlayerProfile,
+  character: CharacterDef,
+  pending: StatPending,
+): number[] {
+  const live = characterCardStats(character, profile);
+  const steps: number[] = [];
+  for (const stat of CARD_STAT_KEYS) {
+    const count = pending[stat] ?? 0;
+    for (let i = 0; i < count; i++) {
+      steps.push(characterStatUpgradeCost(live[stat] + i));
+    }
+  }
+  return steps;
+}
+
+/** Split a cart into free-credit steps vs paid coin cost. */
+export function pendingUpgradePayment(
+  profile: PlayerProfile,
+  character: CharacterDef,
+  pending: StatPending,
+): { fullTotal: number; coinCost: number; creditsUsed: number; steps: number } {
+  const stepCosts = pendingUpgradeStepCosts(profile, character, pending);
+  const steps = stepCosts.length;
+  const credits = Math.max(0, Math.floor(profile.freeUpgradeCredits ?? 0));
+  const creditsUsed = Math.min(credits, steps);
+  const coinCost = stepCosts.slice(creditsUsed).reduce((sum, c) => sum + c, 0);
+  const fullTotal = stepCosts.reduce((sum, c) => sum + c, 0);
+  return { fullTotal, coinCost, creditsUsed, steps };
+}
+
 /** Stats after applying queued (unpaid) upgrades on top of saved progress. */
 export function characterCardStatsWithPending(
   character: CharacterDef,
