@@ -10,15 +10,21 @@
 </p>
 
 <p align="center">
+  <a href="https://sportivia.up.railway.app/"><strong>Play live → sportivia.up.railway.app</strong></a>
+</p>
+
+<p align="center">
   <a href="#play">Play</a> ·
   <a href="#gameplay">Gameplay</a> ·
   <a href="#modes">Modes</a> ·
   <a href="#systems">Systems</a> ·
   <a href="#architecture">Architecture</a> ·
-  <a href="#local-development">Dev</a>
+  <a href="#local-development">Dev</a> ·
+  <a href="#credits">Credits</a>
 </p>
 
 <p align="center">
+  <a href="https://sportivia.up.railway.app/"><img alt="Live" src="https://img.shields.io/badge/live-sportivia.up.railway.app-23a559?style=for-the-badge" /></a>
   <img alt="Sports" src="https://img.shields.io/badge/sports-5-23a559?style=for-the-badge" />
   <img alt="Athletes" src="https://img.shields.io/badge/athletes-1000%2B-f0b232?style=for-the-badge" />
   <img alt="Faces" src="https://img.shields.io/badge/portraits-600%2B-38bdf8?style=for-the-badge" />
@@ -262,7 +268,9 @@ Rosters carry clubs, leagues, nations, trophies, decades, and sport-specific fie
 
 ## Play / deploy
 
-**GitHub Pages cannot host the duel server** (static only — no WebSockets). Ship the full app (static + duel) to Render, Railway, or similar.
+**Live:** [https://sportivia.up.railway.app/](https://sportivia.up.railway.app/)
+
+**GitHub Pages cannot host the duel server** (static only — no WebSockets). The production build runs on Railway with the static client and duel WebSocket together. You can also ship the full app to Render or similar.
 
 ### One-click Render
 
@@ -339,7 +347,17 @@ scripts/          face localize, audits, transforms
 
 ---
 
+<a id="credits"></a>
+
+## Credits
+
+Sportivia has been built over a stretch of focused work — design, data, systems, and polish — with [**Cursor**](https://cursor.com) as the AI coding partner along the way. Different models in Cursor helped move the project forward: scaffolding features, debugging, refining UI, and speeding up the long tail of roster, face, and product work while the vision and direction stayed human-led.
+
+---
+
 <p align="center">
   <strong>Sportivia</strong> — five sports · one board · built for speed.<br />
-  <a href="https://github.com/delvinsalman/Sportivia">github.com/delvinsalman/Sportivia</a>
+  <a href="https://sportivia.up.railway.app/">Play live</a>
+  ·
+  <a href="https://github.com/delvinsalman/Sportivia">GitHub</a>
 </p>
