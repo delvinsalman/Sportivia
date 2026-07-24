@@ -351,7 +351,7 @@ scripts/          face localize, audits, transforms
 
 ## Credits
 
-Sportivia has been built over a stretch of focused work — design, data, systems, and polish — with [**Cursor**](https://cursor.com) as the AI coding partner along the way. Different models in Cursor helped move the project forward: scaffolding features, debugging, refining UI, and speeding up the long tail of roster, face, and product work while the vision and direction stayed human-led.
+I’ve put a lot of work into Sportivia myself — the idea, the systems, the polish, and the long haul of building it out. [Cursor](https://cursor.com) helped as a support tool along the way, especially on a project this data-heavy: rosters, faces, wiring, refactors, and the kind of repo grunt work that keeps everything crisp. Using AI that way let me move faster without handing over the creative or product direction.
 
 ---
 
