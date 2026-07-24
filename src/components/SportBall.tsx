@@ -16,7 +16,7 @@ function BallImage({ src, size = 40, className = '', style, visualScale = 1 }: B
 
   return (
     <span
-      className={`inline-flex items-center justify-center shrink-0 overflow-hidden ${className}`}
+      className={`inline-flex items-center justify-center shrink-0 overflow-visible ${className}`}
       style={{ width: size, height: size, ...style }}
     >
       <img
@@ -68,7 +68,7 @@ export function BasketballBall({ size = 40, className = '', style }: BasketballB
       size={size}
       className={className}
       style={style}
-      visualScale={1.28}
+      visualScale={1.08}
     />
   );
 }

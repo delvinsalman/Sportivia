@@ -86,10 +86,12 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
                 } as CSSProperties
               }
             >
-              <span className="shrink-0 w-[28px] h-[28px] flex items-center justify-center">
-                <SportBall sport={sp} size={28} />
+              <span className="relative z-0 flex h-7 w-7 shrink-0 items-center justify-center overflow-visible sm:h-[1.85rem] sm:w-[1.85rem]">
+                <SportBall sport={sp} size={sp === 'basketball' ? 24 : 26} />
               </span>
-              <span className="leading-none hidden sm:inline">{label}</span>
+              <span className="relative z-10 min-w-0 leading-none tracking-wide hidden sm:inline">
+                {label}
+              </span>
             </button>
           );
         })}
