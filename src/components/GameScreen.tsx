@@ -274,6 +274,8 @@ export function GameScreen({
       {versusMode && (
         <div className="relative z-20 flex justify-center px-4 -mt-1 mb-0.5 shrink-0">
           <div className="inline-flex items-center gap-3 rounded-full border border-[#2b2d31]/80 bg-[#121316]/90 backdrop-blur-md px-3 py-1.5 text-xs">
+            <span className="font-bold text-[#f2f3f5]">{game.score}</span>
+            <span className="text-[#5c5e66]">vs</span>
             {mode === 'bot' ? (
               <img
                 src={assetUrl('/icons/modes/bot.png')}
@@ -284,8 +286,6 @@ export function GameScreen({
             ) : (
               <Swords className="w-3.5 h-3.5 text-[#ed4245]" />
             )}
-            <span className="font-bold text-[#f2f3f5]">{game.score}</span>
-            <span className="text-[#5c5e66]">vs</span>
             <span className="font-bold text-[#f0b232]">{versusScore}</span>
             <span className="text-[#6d6f78] max-w-[7rem] truncate">
               {versusName}
