@@ -34,6 +34,7 @@ const modeLabels: Record<GameResult['mode'], string> = {
   timed: 'Ranked',
   bot: 'Vs AI',
   duel: '1v1 Duel',
+  quick: 'Quick Play',
 };
 
 export function ResultModal({
@@ -74,7 +75,9 @@ export function ResultModal({
     : rewards?.leveledUp
       ? `Level ${rewards.newLevel}!`
       : result.perfectBoard
-        ? 'Perfect Board!'
+        ? result.mode === 'quick'
+          ? 'Perfect Run!'
+          : 'Perfect Board!'
         : result.completed
           ? "Time's Up!"
           : 'Run Ended';
@@ -241,6 +244,12 @@ export function ResultModal({
               </div>
             )}
 
+            {result.perfectBoard && result.mode === 'quick' && result.completed && (
+              <p className="mb-5 text-center text-xs font-black uppercase tracking-[0.14em] text-[#f0b232]">
+                Clean 10/10 · perfect bonus included
+              </p>
+            )}
+
             {rewards?.leveledUp && (
               <div className="mb-5 flex flex-col gap-1.5 rounded-2xl border-[3px] border-[#5865f2]/60 bg-[#5865f2]/15 px-4 py-2.5 shadow-[0_4px_0_#2f3aa8]">
                 <div className="flex items-center gap-2">
@@ -259,7 +268,9 @@ export function ResultModal({
 
             <div className="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
               {[
-                { label: 'Filled', value: `${result.boardFilled}/9` },
+                result.mode === 'quick'
+                  ? { label: 'Correct', value: result.correct }
+                  : { label: 'Filled', value: `${result.boardFilled}/9` },
                 { label: 'Skipped', value: result.skipped },
                 {
                   label: 'Accuracy',

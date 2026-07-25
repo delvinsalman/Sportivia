@@ -56,6 +56,7 @@ const modeLabels: Record<GameMode, string> = {
   timed: 'RANKED',
   bot: 'VS AI',
   duel: 'DUEL',
+  quick: 'QUICK',
 };
 
 export function GameScreen({

@@ -299,9 +299,14 @@ export function TopBar({ gameTimeLeft, totalGameTime, mode, sport, onClose, corr
 
 interface CountdownOverlayProps {
   label: string;
+  /** Optional subcopy under GET READY */
+  readyHint?: string;
 }
 
-export function CountdownOverlay({ label }: CountdownOverlayProps) {
+export function CountdownOverlay({
+  label,
+  readyHint = 'Match players to categories',
+}: CountdownOverlayProps) {
   const isGo = label === 'GO!';
   const isReady = label === 'GET READY';
 
@@ -329,7 +334,7 @@ export function CountdownOverlay({ label }: CountdownOverlayProps) {
             {label}
           </p>
           {isReady && (
-            <p className="text-sm font-black text-[#949ba4] mt-3 uppercase tracking-wide">Match players to categories</p>
+            <p className="text-sm font-black text-[#949ba4] mt-3 uppercase tracking-wide">{readyHint}</p>
           )}
         </motion.div>
       </AnimatePresence>

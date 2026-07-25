@@ -66,7 +66,7 @@ const GUIDE: Array<{
   {
     eyebrow: 'Modes',
     title: 'Play how you want',
-    body: 'Training is practice with no rewards. Daily is a shared board with a first-finish payday. Ranked is timed and competitive. Vs AI races a bot. 1v1 Duel is a live lobby with a code.',
+    body: 'Training is practice with no rewards. Quick Play is Kahoot-style trivia with light coins. Daily is a shared board with a first-finish payday. Ranked is timed and competitive. Vs AI races a bot. 1v1 Duel is a live lobby with a code.',
     Icon: Gamepad2,
     glare: 'rgba(240, 178, 50, 0.14)',
     demo: '',
@@ -123,6 +123,7 @@ const GUIDE: Array<{
 
 const MODES = [
   { name: 'Training', detail: '1 min · practice' },
+  { name: 'Quick Play', detail: '10 Qs · light coins' },
   { name: 'Daily', detail: '2 min · first finish' },
   { name: 'Ranked', detail: '2 min · climb' },
   { name: 'Vs AI', detail: 'Bot race' },

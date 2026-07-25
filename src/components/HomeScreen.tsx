@@ -45,12 +45,14 @@ const modeLabels: Record<GameMode, string> = {
   timed: 'Ranked',
   bot: 'Vs AI',
   duel: '1v1 Duel',
+  quick: 'Quick Play',
 };
 
 const MODE_META: Record<GameMode, { tone: string; icon: string; detail: string }> = {
   training: { tone: '#949ba4', icon: '/icons/modes/training.png', detail: '1 min · practice · no rewards' },
   daily: { tone: '#23a559', icon: '/icons/modes/daily.png', detail: '2 min · first finish pays' },
   timed: { tone: '#5865f2', icon: '/icons/modes/ranked.png', detail: '2 min · ranked bonus' },
+  quick: { tone: '#f59e0b', icon: '/icons/modes/quick.svg', detail: '10 Qs · fast trivia · light coins' },
   bot: { tone: '#a855f7', icon: '/icons/modes/bot.png', detail: 'Race a bot · stake coins · high risk' },
   duel: { tone: '#ed4245', icon: '/icons/modes/duel.png', detail: 'Live 1v1 · optional coin stakes' },
 };
@@ -453,11 +455,11 @@ export function HomeScreen({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 28, scale: 0.97 }}
               transition={PAGE_TRANSITION}
-              className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-8 pt-[max(4.5rem,calc(env(safe-area-inset-top)+3.5rem))] pb-[max(2rem,env(safe-area-inset-bottom))] sm:px-8"
+              className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-6 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8"
               onClick={e => e.stopPropagation()}
             >
-              <div className="mx-auto mb-5 flex w-full max-w-lg items-center gap-3 sm:mb-6">
-                <h3 className="text-2xl font-black tracking-tight text-[#f2f3f5] sm:text-4xl">Game Modes</h3>
+              <div className="mx-auto mb-4 flex w-full max-w-lg items-center gap-2.5 sm:mb-5">
+                <h3 className="text-2xl font-black tracking-tight text-[#f2f3f5] sm:text-3xl">Game Modes</h3>
                 <span
                   className="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
                   style={{
@@ -470,8 +472,8 @@ export function HomeScreen({
                 </span>
               </div>
 
-              <div className="mx-auto flex w-full max-w-lg flex-col gap-3">
-                {(['daily', 'training', 'timed', 'bot', 'duel'] as GameMode[]).map((m, i) => {
+              <div className="mx-auto flex w-full max-w-lg flex-col gap-2.5 sm:gap-3">
+                {(['daily', 'quick', 'training', 'timed', 'bot', 'duel'] as GameMode[]).map((m, i) => {
                   const meta = MODE_META[m];
                   return (
                     <motion.div
@@ -491,11 +493,11 @@ export function HomeScreen({
                           setShowModes(false);
                           onStart(m);
                         }}
-                        className="group/mode relative flex h-[88px] w-full items-center gap-4 overflow-hidden rounded-2xl border-[3px] px-4 text-left transition-all hover:translate-y-[1px] sm:h-[96px] sm:px-5"
+                        className="group/mode relative flex h-[76px] w-full items-center gap-3.5 overflow-hidden rounded-2xl border-[3px] px-4 text-left transition-all hover:translate-y-[1px] sm:h-[82px] sm:gap-4 sm:px-4.5"
                         style={{
                           background: `linear-gradient(160deg, ${meta.tone}22 0%, #1a1b1f 55%)`,
                           borderColor: `${meta.tone}88`,
-                          boxShadow: `0 5px 0 ${meta.tone}55`,
+                          boxShadow: `0 4px 0 ${meta.tone}55`,
                         }}
                       >
                         <div
@@ -503,31 +505,31 @@ export function HomeScreen({
                           className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity group-hover/mode:opacity-[0.2]"
                           style={{ backgroundImage: `radial-gradient(circle at 92% 12%, ${meta.tone}, transparent 42%)` }}
                         />
-                        <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-[3px] border-white/15 bg-[#111214]/80 shadow-[0_3px_0_rgba(0,0,0,0.35)]">
+                        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-[2.5px] border-white/15 bg-[#111214]/80 shadow-[0_3px_0_rgba(0,0,0,0.35)] sm:h-[3.25rem] sm:w-[3.25rem]">
                           <img
                             src={meta.icon}
                             alt=""
-                            className="h-9 w-9 object-contain"
+                            className="h-8 w-8 object-contain"
                             draggable={false}
                           />
                         </div>
                         <div className="relative min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <p className="text-lg font-black text-[#f2f3f5]">
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <p className="text-base font-black leading-none text-[#f2f3f5] sm:text-lg">
                               {modeLabels[m]}
                             </p>
                             {m === 'daily' && dailyDone && (
-                              <span className="rounded-full border-2 border-[#4ade80] bg-[#23a559] px-2 py-0.5 text-[9px] font-black text-white shadow-[0_2px_0_#14532d]">
+                              <span className="rounded-full border-2 border-[#4ade80] bg-[#23a559] px-1.5 py-0.5 text-[8px] font-black text-white shadow-[0_2px_0_#14532d]">
                                 DONE
                               </span>
                             )}
                             {m === 'duel' && (
-                              <span className="rounded-full border-2 border-[#ff8a8c] bg-[#ed4245] px-2 py-0.5 text-[9px] font-black text-white shadow-[0_2px_0_#8f1e22]">
+                              <span className="rounded-full border-2 border-[#ff8a8c] bg-[#ed4245] px-1.5 py-0.5 text-[8px] font-black text-white shadow-[0_2px_0_#8f1e22]">
                                 LIVE
                               </span>
                             )}
                           </div>
-                          <p className="mt-1 truncate text-xs font-semibold whitespace-nowrap text-[#949ba4]">
+                          <p className="mt-1.5 truncate text-xs font-semibold leading-none whitespace-nowrap text-[#949ba4]">
                             {meta.detail}
                           </p>
                         </div>
@@ -545,7 +547,7 @@ export function HomeScreen({
                             transition={PAGE_TRANSITION}
                             className="overflow-hidden"
                           >
-                            <div className="grid grid-cols-3 gap-2 px-1 pt-3">
+                            <div className="grid grid-cols-3 gap-2 px-1 pt-2">
                               {(Object.keys(BOT_DIFFICULTIES) as BotDifficulty[]).map(difficulty => {
                                 const config = BOT_DIFFICULTIES[difficulty];
                                 return (
@@ -558,7 +560,7 @@ export function HomeScreen({
                                       setShowBotDifficulties(false);
                                       onStart('bot', difficulty);
                                     }}
-                                    className="rounded-2xl border-[2.5px] bg-[#111214] px-2 py-3 text-center shadow-[0_3px_0_#0c0d0f] transition-transform hover:translate-y-[1px]"
+                                    className="rounded-2xl border-[2.5px] bg-[#111214] px-2 py-2.5 text-center shadow-[0_3px_0_#0c0d0f] transition-transform hover:translate-y-[1px]"
                                     style={{ borderColor: `${config.color}aa` }}
                                   >
                                     <p className="text-xs font-black" style={{ color: config.color }}>

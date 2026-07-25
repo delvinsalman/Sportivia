@@ -1,6 +1,6 @@
 export type Sport = 'soccer' | 'basketball' | 'baseball' | 'football' | 'hockey';
 
-export type GameMode = 'training' | 'daily' | 'timed' | 'bot' | 'duel';
+export type GameMode = 'training' | 'daily' | 'timed' | 'bot' | 'duel' | 'quick';
 
 export type BotDifficulty = 'beginner' | 'pro' | 'expert';
 

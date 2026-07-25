@@ -4,6 +4,7 @@ import type { Sport, GameMode, BotDifficulty } from './types';
 import { PageTransition } from './components/PageTransition';
 import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
+import { QuickPlayScreen } from './components/QuickPlayScreen';
 import { BallRainIntro } from './components/BallRainIntro';
 import { DuelVersusScreen } from './components/DuelVersusScreen';
 import { StoreScreen } from './components/StoreScreen';
@@ -63,6 +64,7 @@ const modeLabels: Record<GameMode, string> = {
   timed: 'RANKED',
   bot: 'VS AI',
   duel: 'DUEL',
+  quick: 'QUICK',
 };
 
 export default function App() {
@@ -86,7 +88,7 @@ export default function App() {
   const online = useOnlineCount();
   const { settings } = useSettings();
 
-  useAmbientMusic(screen);
+  useAmbientMusic(screen, mode);
 
   useEffect(() => {
     if (
@@ -429,7 +431,26 @@ export default function App() {
           </PageTransition>
         )}
 
-        {screen === 'game' && (
+        {screen === 'game' && mode === 'quick' && (
+          <PageTransition key={`quick-${sport}-${gameKey}`} variant="game">
+            <QuickPlayScreen
+              sport={sport}
+              equippedCharacter={profile.equippedCharacter}
+              equippedPet={profile.equippedPet}
+              creativeLoadout={profile.creativeLoadout}
+              athleteLoadout={profile.athleteLoadout}
+              bobLoadout={profile.bobLoadout}
+              rabbitVariant={profile.rabbitVariant}
+              makoVariant={profile.makoVariant}
+              dogVariant={profile.dogVariant}
+              onHome={handleHome}
+              onReplay={handleReplay}
+              onProfileChange={refreshProfile}
+            />
+          </PageTransition>
+        )}
+
+        {screen === 'game' && mode !== 'quick' && (
           <PageTransition key={`game-${sport}-${mode}-${gameKey}`} variant="game">
             <GameScreen
               sport={sport}

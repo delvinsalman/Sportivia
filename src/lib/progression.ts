@@ -7,7 +7,7 @@ export function isRunComplete(_mode: GameMode, reason: GameEndReason): boolean {
 }
 
 export function earnsProgression(mode: GameMode): boolean {
-  return mode === 'daily' || mode === 'timed' || mode === 'bot' || mode === 'duel';
+  return mode === 'daily' || mode === 'timed' || mode === 'bot' || mode === 'duel' || mode === 'quick';
 }
 
 /** Total XP required to reach a given level (level 1 = 0). */
@@ -77,6 +77,27 @@ export function milestoneBonusBetween(previousLevel: number, newLevel: number): 
 }
 
 export function computeGameRewards(result: GameResult): GameRewards {
+  // Quick Play — Kahoot bursts pay less than Daily / Ranked / Duel / Bot.
+  if (result.mode === 'quick') {
+    let coins = Math.floor(result.score / 10) + result.correct * 2 + 8;
+    let xp = result.correct * 4 + Math.floor(result.score / 25) + 4;
+    if (result.perfectBoard) {
+      // Clean 10/10 — nice bump, still below board-mode perfect payday
+      coins += 45;
+      xp += 20;
+    }
+    coins = Math.max(5, coins);
+    xp = Math.max(5, xp);
+    return {
+      coinsEarned: coins,
+      xpEarned: xp,
+      leveledUp: false,
+      previousLevel: 1,
+      newLevel: 1,
+      milestoneBonus: 0,
+    };
+  }
+
   let coins = Math.floor(result.score / 5) + result.correct * 3;
   let xp = result.correct * 8 + Math.floor(result.score / 12);
 
@@ -147,5 +168,6 @@ export function modeXpHint(mode: GameMode): string {
   if (mode === 'timed') return '+ ranked bonus';
   if (mode === 'duel') return '+ duel bonus';
   if (mode === 'bot') return '+ AI match bonus';
+  if (mode === 'quick') return '+ light quick bonus';
   return 'practice only';
 }

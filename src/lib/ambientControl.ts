@@ -3,6 +3,10 @@
 let duckFactor = 1;
 const listeners = new Set<() => void>();
 
+/** When true, Quick Play bed is allowed (after countdown). */
+let quickPlayLive = false;
+const quickListeners = new Set<() => void>();
+
 export function getAmbientDuck(): number {
   return duckFactor;
 }
@@ -19,5 +23,22 @@ export function subscribeAmbientDuck(listener: () => void) {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
+  };
+}
+
+export function getQuickPlayLive(): boolean {
+  return quickPlayLive;
+}
+
+export function setQuickPlayLive(live: boolean) {
+  if (quickPlayLive === live) return;
+  quickPlayLive = live;
+  quickListeners.forEach(listener => listener());
+}
+
+export function subscribeQuickPlayLive(listener: () => void) {
+  quickListeners.add(listener);
+  return () => {
+    quickListeners.delete(listener);
   };
 }

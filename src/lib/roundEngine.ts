@@ -120,6 +120,11 @@ export function generateShareText(
           ? 'Vs AI'
           : mode === 'duel'
             ? '1v1 Duel'
-            : 'Training';
+            : mode === 'quick'
+              ? 'Quick Play'
+              : 'Training';
+  if (mode === 'quick') {
+    return `${emoji} Sportivia Quick Play · ${score} pts · ${correct} correct\nBeat my streak!`;
+  }
   return `${emoji} Sportivia ${score} pts · ${correct} correct · ${boardFilled}/9 filled\n${modeLabel} — beat my score!`;
 }
