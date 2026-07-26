@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Share2, RotateCcw, Home, Sparkles, Zap } from 'lucide-react';
+import { Share2, RotateCcw, Home, Sparkles } from 'lucide-react';
 import { CoinIcon } from './CoinIcon';
+import { XpIcon } from './XpIcon';
 import type { GameResult } from '../types';
 import { generateShareText } from '../lib/roundEngine';
 import { SportBall } from './SportBall';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from '../types/profile';
+import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId, TrophyFinishId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
@@ -23,6 +24,7 @@ interface ResultModalProps {
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
+  trophyFinish?: TrophyFinishId;
   onPlayAgain: () => void;
   onHome: () => void;
   waitingForOpponent?: boolean;
@@ -47,6 +49,7 @@ export function ResultModal({
   rabbitVariant,
   makoVariant,
   dogVariant,
+  trophyFinish,
   onPlayAgain,
   onHome,
   waitingForOpponent = false,
@@ -155,6 +158,7 @@ export function ResultModal({
                   height={260}
                   className="w-full"
                   {...(petId === 'dog' && dogVariant ? { dogVariant } : {})}
+                  {...(petId === 'trophy' && trophyFinish ? { trophyFinish } : {})}
                 />
               </div>
             )}
@@ -231,8 +235,8 @@ export function ResultModal({
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-[22px] border-[3px] border-[#5865f2]/75 bg-[#12152a] p-4 shadow-[0_5px_0_#2f3aa8] sm:p-5">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border-[3px] border-white/25 bg-[#5865f2] shadow-[0_3px_0_#2f3aa8]">
-                    <Zap className="h-5 w-5 text-white" />
+                  <div className="flex h-11 w-11 items-center justify-center drop-shadow-[0_3px_0_rgba(0,0,0,0.4)]">
+                    <XpIcon size={40} />
                   </div>
                   <div>
                     <p className="font-mono text-xl font-black text-[#5865f2] sm:text-2xl">

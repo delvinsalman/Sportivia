@@ -9,6 +9,7 @@ import type {
   PetId,
   PlayerProfile,
   RabbitVariantId,
+  TrophyFinishId,
 } from '../types/profile';
 import {
   CHARACTERS,
@@ -16,6 +17,7 @@ import {
   MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
+  TROPHY_FINISHES,
   getCharacterDef,
   getPetDef,
 } from '../types/profile';
@@ -62,6 +64,7 @@ interface StoreScreenProps {
   onSaveRabbitVariant: (variant: RabbitVariantId) => void;
   onSaveMakoVariant: (variant: MakoVariantId) => void;
   onSaveDogVariant: (variant: DogVariantId) => void;
+  onSaveTrophyFinish: (finish: TrophyFinishId) => void;
 }
 
 const SWIPE_THRESHOLD = 56;
@@ -81,6 +84,7 @@ export function StoreScreen({
   onSaveRabbitVariant,
   onSaveMakoVariant,
   onSaveDogVariant,
+  onSaveTrophyFinish,
 }: StoreScreenProps) {
   const [tab, setTab] = useState<StoreTab>('skins');
   const [previewCharId, setPreviewCharId] = useState<CharacterId>(() =>
@@ -108,6 +112,7 @@ export function StoreScreen({
   );
   const [draftMakoVariant, setDraftMakoVariant] = useState<MakoVariantId>(profile.makoVariant);
   const [draftDogVariant, setDraftDogVariant] = useState<DogVariantId>(profile.dogVariant);
+  const [draftTrophyFinish, setDraftTrophyFinish] = useState<TrophyFinishId>(profile.trophyFinish);
   const [slotId, setSlotId] = useState<CreativeSlotId>('face');
   const [athleteSlotId, setAthleteSlotId] = useState<AthleteSlotId>('jersey');
   const [bobCategoryId, setBobCategoryId] = useState<BobCategoryId>(() =>
@@ -154,6 +159,10 @@ export function StoreScreen({
     setDraftDogVariant(profile.dogVariant);
   }, [profile.dogVariant]);
 
+  useEffect(() => {
+    setDraftTrophyFinish(profile.trophyFinish);
+  }, [profile.trophyFinish]);
+
   const isPets = tab === 'pets';
   const catalog = isPets ? PETS : CHARACTERS;
   const previewId = isPets ? previewPetId : previewCharId;
@@ -177,13 +186,15 @@ export function StoreScreen({
   const isRabbitPreview = !isPets && safePreviewId === 'bunny';
   const isMakoPreview = !isPets && safePreviewId === 'mako';
   const isDogPreview = isPets && safePreviewId === 'dog';
+  const isTrophyPreview = isPets && safePreviewId === 'trophy';
   const canCustomize =
     (isCreativePreview ||
       isAthletePreview ||
       isBobPreview ||
       isRabbitPreview ||
       isMakoPreview ||
-      isDogPreview) &&
+      isDogPreview ||
+      isTrophyPreview) &&
     owned;
   const previewLoadout =
     isCreativePreview ? (customizing ? draftLoadout : profile.creativeLoadout) : undefined;
@@ -269,6 +280,7 @@ export function StoreScreen({
     setDraftRabbitVariant(profile.rabbitVariant);
     setDraftMakoVariant(profile.makoVariant);
     setDraftDogVariant(profile.dogVariant);
+    setDraftTrophyFinish(profile.trophyFinish);
     setSlotId('face');
     setAthleteSlotId('jersey');
     setBobCategoryId(categoryForFinishId(normalizeBobLoadout(profile.bobLoadout).finishId));
@@ -280,6 +292,7 @@ export function StoreScreen({
     if (isRabbitPreview) onSaveRabbitVariant(draftRabbitVariant);
     else if (isMakoPreview) onSaveMakoVariant(draftMakoVariant);
     else if (isDogPreview) onSaveDogVariant(draftDogVariant);
+    else if (isTrophyPreview) onSaveTrophyFinish(draftTrophyFinish);
     else if (isAthletePreview) onSaveAthleteLoadout(draftAthleteLoadout);
     else if (isBobPreview) onSaveBobLoadout(draftBobLoadout);
     else onSaveCreativeLoadout(draftLoadout);
@@ -291,6 +304,7 @@ export function StoreScreen({
     if (isRabbitPreview) setDraftRabbitVariant('base');
     else if (isMakoPreview) setDraftMakoVariant('classic');
     else if (isDogPreview) setDraftDogVariant('husky');
+    else if (isTrophyPreview) setDraftTrophyFinish('gold');
     else if (isAthletePreview) setDraftAthleteLoadout({ ...DEFAULT_ATHLETE_LOADOUT });
     else if (isBobPreview) {
       setDraftBobLoadout({ ...DEFAULT_BOB_LOADOUT });
@@ -319,6 +333,7 @@ export function StoreScreen({
                 setDraftRabbitVariant(profile.rabbitVariant);
                 setDraftMakoVariant(profile.makoVariant);
                 setDraftDogVariant(profile.dogVariant);
+                setDraftTrophyFinish(profile.trophyFinish);
                 return;
               }
               playMenuBack();
@@ -376,6 +391,9 @@ export function StoreScreen({
                               petId: prevItem.id as PetId,
                               ...(prevItem.id === 'dog'
                                 ? { dogVariant: profile.dogVariant }
+                                : {}),
+                              ...(prevItem.id === 'trophy'
+                                ? { trophyFinish: profile.trophyFinish }
                                 : {}),
                             }
                           : {
@@ -435,6 +453,13 @@ export function StoreScreen({
                                   dogVariant: customizing
                                     ? draftDogVariant
                                     : profile.dogVariant,
+                                }
+                              : {}),
+                            ...(isTrophyPreview
+                              ? {
+                                  trophyFinish: customizing
+                                    ? draftTrophyFinish
+                                    : profile.trophyFinish,
                                 }
                               : {}),
                           }
@@ -501,6 +526,9 @@ export function StoreScreen({
                               petId: nextItem.id as PetId,
                               ...(nextItem.id === 'dog'
                                 ? { dogVariant: profile.dogVariant }
+                                : {}),
+                              ...(nextItem.id === 'trophy'
+                                ? { trophyFinish: profile.trophyFinish }
                                 : {}),
                             }
                           : {
@@ -609,6 +637,33 @@ export function StoreScreen({
                           }`}
                         >
                           {variant.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : isTrophyPreview ? (
+                  <div className="grid grid-cols-2 gap-2">
+                    {TROPHY_FINISHES.map(finish => {
+                      const active = draftTrophyFinish === finish.id;
+                      return (
+                        <button
+                          key={finish.id}
+                          type="button"
+                          onClick={() => {
+                            playMenuSelect();
+                            setDraftTrophyFinish(finish.id);
+                          }}
+                          className={`px-3 py-3 rounded-xl text-xs font-black border-[2.5px] transition-all flex items-center gap-2 ${
+                            active
+                              ? 'border-[#f0b232] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#8a6814]'
+                              : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
+                          }`}
+                        >
+                          <span
+                            className="w-3.5 h-3.5 rounded-full border border-white/25 shrink-0"
+                            style={{ background: finish.hex }}
+                          />
+                          {finish.name}
                         </button>
                       );
                     })}
@@ -904,11 +959,13 @@ export function StoreScreen({
                         ? 'Save Mako Style'
                         : isDogPreview
                           ? 'Save Breed'
-                          : isAthletePreview
-                            ? 'Save Kit'
-                            : isBobPreview
-                              ? 'Save Color'
-                              : 'Save Look'}
+                          : isTrophyPreview
+                            ? 'Save Finish'
+                            : isAthletePreview
+                              ? 'Save Kit'
+                              : isBobPreview
+                                ? 'Save Color'
+                                : 'Save Look'}
                   </button>
                 </div>
               </div>
@@ -929,11 +986,13 @@ export function StoreScreen({
                             ? 'Choose Mako Style'
                             : isDogPreview
                               ? 'Choose Dog Breed'
-                              : isAthletePreview
-                                ? 'Customize Jersey'
-                                : isBobPreview
-                                  ? 'Pick Color'
-                                  : 'Customize Kit'}
+                              : isTrophyPreview
+                                ? 'Choose Trophy Finish'
+                                : isAthletePreview
+                                  ? 'Customize Jersey'
+                                  : isBobPreview
+                                    ? 'Pick Color'
+                                    : 'Customize Kit'}
                       </button>
                     )}
                     <button

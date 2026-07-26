@@ -48,13 +48,46 @@ const modeLabels: Record<GameMode, string> = {
   quick: 'Quick Play',
 };
 
-const MODE_META: Record<GameMode, { tone: string; icon: string; detail: string }> = {
-  training: { tone: '#949ba4', icon: '/icons/modes/training.png', detail: '1 min · practice · no rewards' },
-  daily: { tone: '#23a559', icon: '/icons/modes/daily.png', detail: '2 min · first finish pays' },
-  timed: { tone: '#5865f2', icon: '/icons/modes/ranked.png', detail: '2 min · ranked bonus' },
-  quick: { tone: '#f59e0b', icon: '/icons/modes/quick.svg', detail: '10 Qs · fast trivia · light coins' },
-  bot: { tone: '#a855f7', icon: '/icons/modes/bot.png', detail: 'Race a bot · stake coins · high risk' },
-  duel: { tone: '#ed4245', icon: '/icons/modes/duel.png', detail: 'Live 1v1 · optional coin stakes' },
+const MODE_META: Record<
+  GameMode,
+  { tone: string; icon: string; detail: string; blurb: string }
+> = {
+  training: {
+    tone: '#949ba4',
+    icon: '/icons/modes/training.png',
+    detail: '1 min · practice · no rewards',
+    blurb: 'A short practice board with no coins or XP. Warm up, learn the categories, then jump into a real mode.',
+  },
+  daily: {
+    tone: '#23a559',
+    icon: '/icons/modes/daily.png',
+    detail: '2 min · first finish pays',
+    blurb: 'One shared board per sport each day. Your first finish pays coins + XP; later runs still count toward your streak.',
+  },
+  timed: {
+    tone: '#5865f2',
+    icon: '/icons/modes/ranked.png',
+    detail: '2 min · ranked bonus',
+    blurb: 'Classic timed board run. Score for coins, XP, and ranked payout — the main grind when you want real rewards.',
+  },
+  quick: {
+    tone: '#f59e0b',
+    icon: '/icons/modes/quick.png',
+    detail: '10 Qs · fast trivia · light coins',
+    blurb: 'Ten rapid-fire trivia questions — no bingo board. Fast rounds with a light coin payout; Daily & Ranked pay more.',
+  },
+  bot: {
+    tone: '#a855f7',
+    icon: '/icons/modes/bot.png',
+    detail: 'Race a bot · stake coins · high risk',
+    blurb: 'Race an AI on the same board. Pick a difficulty and optionally stake coins — win the race to cash out, or lose the bet.',
+  },
+  duel: {
+    tone: '#ed4245',
+    icon: '/icons/modes/duel.png',
+    detail: 'Live 1v1 · optional coin stakes',
+    blurb: 'Live online 1v1 against another player. Optional coin stakes; first to clear the board takes the win.',
+  },
 };
 
 function EditableName({
@@ -136,6 +169,18 @@ export function HomeScreen({
   const [showModes, setShowModes] = useState(false);
   const [showBotDifficulties, setShowBotDifficulties] = useState(false);
   const [showDailySpin, setShowDailySpin] = useState(false);
+  const [modeInfo, setModeInfo] = useState<GameMode | null>(null);
+  const modeInfoLeaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openModeInfo = (m: GameMode) => {
+    if (modeInfoLeaveRef.current) clearTimeout(modeInfoLeaveRef.current);
+    setModeInfo(m);
+  };
+
+  const closeModeInfo = () => {
+    if (modeInfoLeaveRef.current) clearTimeout(modeInfoLeaveRef.current);
+    modeInfoLeaveRef.current = setTimeout(() => setModeInfo(null), 140);
+  };
   const { settings } = useSettings();
   const s = profile.stats[sport];
   const today = getTodayKey();
@@ -393,6 +438,9 @@ export function HomeScreen({
                   {...(profile.equippedPet === 'dog'
                     ? { dogVariant: profile.dogVariant }
                     : {})}
+                  {...(profile.equippedPet === 'trophy'
+                    ? { trophyFinish: profile.trophyFinish }
+                    : {})}
                 />
               </div>
             )}
@@ -435,6 +483,7 @@ export function HomeScreen({
             className="fixed inset-0 z-50 bg-black/50 backdrop-blur-[2px]"
             onClick={() => {
               playMenuBack();
+              setModeInfo(null);
               setShowModes(false);
             }}
           >
@@ -442,6 +491,7 @@ export function HomeScreen({
               type="button"
               onClick={() => {
                 playMenuBack();
+                setModeInfo(null);
                 setShowModes(false);
               }}
               className="fixed top-0 left-0 z-50 m-3 flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-2 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] sm:m-4"
@@ -481,11 +531,13 @@ export function HomeScreen({
                       initial={{ opacity: 0, y: 14 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ ...PAGE_TRANSITION, delay: 0.04 * i }}
+                      className="relative"
                     >
                       <button
                         type="button"
                         onClick={() => {
                           playMenuConfirm();
+                          setModeInfo(null);
                           if (m === 'bot') {
                             setShowBotDifficulties(open => !open);
                             return;
@@ -493,7 +545,7 @@ export function HomeScreen({
                           setShowModes(false);
                           onStart(m);
                         }}
-                        className="group/mode relative flex h-[76px] w-full items-center gap-3.5 overflow-hidden rounded-2xl border-[3px] px-4 text-left transition-all hover:translate-y-[1px] sm:h-[82px] sm:gap-4 sm:px-4.5"
+                        className="group/mode relative flex h-[76px] w-full items-center gap-3.5 rounded-2xl border-[3px] px-4 text-left transition-all hover:translate-y-[1px] sm:h-[82px] sm:gap-4 sm:px-4.5"
                         style={{
                           background: `linear-gradient(160deg, ${meta.tone}22 0%, #1a1b1f 55%)`,
                           borderColor: `${meta.tone}88`,
@@ -518,6 +570,27 @@ export function HomeScreen({
                             <p className="text-base font-black leading-none text-[#f2f3f5] sm:text-lg">
                               {modeLabels[m]}
                             </p>
+                            <button
+                              type="button"
+                              aria-label={`About ${modeLabels[m]}`}
+                              aria-expanded={modeInfo === m}
+                              onMouseEnter={() => openModeInfo(m)}
+                              onMouseLeave={closeModeInfo}
+                              onFocus={() => openModeInfo(m)}
+                              onBlur={closeModeInfo}
+                              onClick={e => {
+                                e.stopPropagation();
+                                playMenuClick();
+                                setModeInfo(cur => (cur === m ? null : m));
+                              }}
+                              className={`p-0.5 transition-colors ${
+                                modeInfo === m
+                                  ? 'text-[#f0b232]'
+                                  : 'text-[#7a7d86] hover:text-[#d7dae0]'
+                              }`}
+                            >
+                              <Info className="h-3.5 w-3.5" strokeWidth={2.5} />
+                            </button>
                             {m === 'daily' && dailyDone && (
                               <span className="rounded-full border-2 border-[#4ade80] bg-[#23a559] px-1.5 py-0.5 text-[8px] font-black text-white shadow-[0_2px_0_#14532d]">
                                 DONE
@@ -537,6 +610,57 @@ export function HomeScreen({
                           {m === 'bot' && showBotDifficulties ? '↑' : '→'}
                         </span>
                       </button>
+
+                      <AnimatePresence>
+                        {modeInfo === m && (
+                          <motion.div
+                            initial={{ opacity: 0, x: -6, scale: 0.98 }}
+                            animate={{ opacity: 1, x: 0, scale: 1 }}
+                            exit={{ opacity: 0, x: -4, scale: 0.98 }}
+                            transition={{ duration: 0.14 }}
+                            className="pointer-events-auto absolute left-full top-0 z-50 ml-2.5 hidden w-[min(15rem,calc(100vw-2rem))] rounded-2xl border-[2.5px] bg-[#121316]/98 p-3 text-left shadow-[0_8px_0_#0a0a0b,0_18px_40px_rgba(0,0,0,0.45)] sm:block"
+                            style={{ borderColor: `${meta.tone}66` }}
+                            onMouseEnter={() => openModeInfo(m)}
+                            onMouseLeave={closeModeInfo}
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <p
+                              className="text-[10px] font-black uppercase tracking-[0.14em]"
+                              style={{ color: meta.tone }}
+                            >
+                              {modeLabels[m]}
+                            </p>
+                            <p className="mt-1.5 text-[11px] font-semibold leading-snug text-[#b5bac1]">
+                              {meta.blurb}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Mobile: tip sits under the row so it doesn’t cover the title */}
+                      <AnimatePresence>
+                        {modeInfo === m && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 2 }}
+                            transition={{ duration: 0.14 }}
+                            className="relative z-50 mt-1.5 rounded-2xl border-[2.5px] bg-[#121316]/98 p-3 text-left shadow-[0_6px_0_#0a0a0b] sm:hidden"
+                            style={{ borderColor: `${meta.tone}66` }}
+                            onClick={e => e.stopPropagation()}
+                          >
+                            <p
+                              className="text-[10px] font-black uppercase tracking-[0.14em]"
+                              style={{ color: meta.tone }}
+                            >
+                              {modeLabels[m]}
+                            </p>
+                            <p className="mt-1.5 text-[11px] font-semibold leading-snug text-[#b5bac1]">
+                              {meta.blurb}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
 
                       <AnimatePresence initial={false}>
                         {m === 'bot' && showBotDifficulties && (

@@ -8,7 +8,7 @@ import {
 } from './GameUI';
 import { ResultModal } from './ResultModal';
 import type { Sport, GameMode, GameResult, BotDifficulty } from '../types';
-import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from '../types/profile';
+import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId, TrophyFinishId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
@@ -33,6 +33,7 @@ interface GameScreenProps {
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
+  trophyFinish?: TrophyFinishId;
   seedKey?: string;
   opponentName?: string;
   opponentScore?: number;
@@ -71,6 +72,7 @@ export function GameScreen({
   rabbitVariant,
   makoVariant,
   dogVariant,
+  trophyFinish,
   seedKey,
   opponentName,
   opponentScore = 0,
@@ -361,6 +363,7 @@ export function GameScreen({
           rabbitVariant={rabbitVariant}
           makoVariant={makoVariant}
           dogVariant={dogVariant}
+          trophyFinish={trophyFinish}
           onPlayAgain={onReplay}
           onHome={onHome}
           waitingForOpponent={mode === 'duel' && !duelResult}

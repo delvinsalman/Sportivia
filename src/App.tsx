@@ -30,11 +30,19 @@ import {
   saveRabbitVariant,
   saveMakoVariant,
   saveDogVariant,
+  saveTrophyFinish,
   lockCoinStake,
   releaseCoinStake,
 } from './lib/profileStorage';
 import type { PlayerProfile } from './types/profile';
-import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from './types/profile';
+import type {
+  CharacterId,
+  PetId,
+  RabbitVariantId,
+  MakoVariantId,
+  DogVariantId,
+  TrophyFinishId,
+} from './types/profile';
 import type { StatPending } from './lib/characterCards';
 import type { CreativeLoadout } from './types/creativeCharacter';
 import type { AthleteLoadout } from './types/athleteCharacter';
@@ -280,6 +288,10 @@ export default function App() {
     setProfile(saveDogVariant(variant));
   }
 
+  function handleSaveTrophyFinish(finish: TrophyFinishId) {
+    setProfile(saveTrophyFinish(finish));
+  }
+
   function handleSaveName(name: string) {
     setProfile(updatePlayerName(name));
   }
@@ -346,6 +358,7 @@ export default function App() {
               onSaveRabbitVariant={handleSaveRabbitVariant}
               onSaveMakoVariant={handleSaveMakoVariant}
               onSaveDogVariant={handleSaveDogVariant}
+              onSaveTrophyFinish={handleSaveTrophyFinish}
             />
           </PageTransition>
         )}
@@ -443,6 +456,7 @@ export default function App() {
               rabbitVariant={profile.rabbitVariant}
               makoVariant={profile.makoVariant}
               dogVariant={profile.dogVariant}
+              trophyFinish={profile.trophyFinish}
               onHome={handleHome}
               onReplay={handleReplay}
               onProfileChange={refreshProfile}
@@ -464,6 +478,7 @@ export default function App() {
               rabbitVariant={profile.rabbitVariant}
               makoVariant={profile.makoVariant}
               dogVariant={profile.dogVariant}
+              trophyFinish={profile.trophyFinish}
               seedKey={mode === 'duel' ? duelSeed ?? undefined : undefined}
               opponentName={duel.opponent?.name}
               opponentScore={duel.opponentScore}
@@ -491,6 +506,7 @@ export default function App() {
             rabbitVariant={profile.rabbitVariant}
             makoVariant={profile.makoVariant}
             dogVariant={profile.dogVariant}
+            trophyFinish={profile.trophyFinish}
             onDone={clearUnlockReveal}
           />
         )}

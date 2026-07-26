@@ -10,6 +10,7 @@ import {
   type RabbitVariantId,
   type MakoVariantId,
   type DogVariantId,
+  type TrophyFinishId,
 } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
@@ -30,6 +31,7 @@ interface UnlockShowcaseProps {
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
+  trophyFinish?: TrophyFinishId;
   onDone: () => void;
   /** Auto-close after this many ms. */
   durationMs?: number;
@@ -53,6 +55,7 @@ export function UnlockShowcase({
   rabbitVariant,
   makoVariant,
   dogVariant,
+  trophyFinish,
   onDone,
   durationMs = 4200,
 }: UnlockShowcaseProps) {
@@ -140,12 +143,12 @@ export function UnlockShowcase({
         </p>
       </motion.div>
 
-      {/* Character — true viewport center */}
+      {/* Model — true viewport center */}
       <motion.div
         initial={{ opacity: 0, scale: 0.78, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.12 }}
-        className="absolute left-1/2 top-[52%] z-10 w-[min(96vw,480px)] -translate-x-1/2 -translate-y-1/2"
+        className="absolute left-[54%] top-[52%] z-10 w-[min(96vw,480px)] -translate-x-1/2 -translate-y-1/2"
         onClick={(e) => e.stopPropagation()}
       >
         {isPet ? (
@@ -154,10 +157,11 @@ export function UnlockShowcase({
             accent={accent}
             bare
             hero
-            height={460}
+            height={petId === 'trophy' ? 540 : 460}
             className="w-full pointer-events-none"
             sport={sport}
             {...(petId === 'dog' && dogVariant ? { dogVariant } : {})}
+            {...(petId === 'trophy' && trophyFinish ? { trophyFinish } : {})}
           />
         ) : (
           <CharacterPodium

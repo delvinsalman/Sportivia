@@ -20,6 +20,7 @@ import type {
   PetDef,
   PetId,
   RabbitVariantId,
+  TrophyFinishId,
 } from '../../types/profile';
 import {
   CHARACTERS,
@@ -29,9 +30,11 @@ import {
   getMakoVariantDef,
   getPetDef,
   getRabbitVariantDef,
+  getTrophyFinish,
   MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
+  DEFAULT_TROPHY_FINISH,
 } from '../../types/profile';
 import type { CreativeLoadout } from '../../types/creativeCharacter';
 import {
@@ -145,6 +148,8 @@ const SHOWCASE_EXCLUDE = [
   'holding',
   'sword',
   'land',
+  'jump',
+  'gallop',
   'jump_end',
   'jump_loop',
   'runningjump',
@@ -224,9 +229,18 @@ function filterAnimNames(names: string[], exclude: string[]): string[] {
 
 function findIdleName(names: string[]): string | undefined {
   const pool = filterAnimNames(names, SHOWCASE_EXCLUDE);
+  const base = (n: string) => n.replace(/^.*\|/, '');
+  // Prefer a real Idle clip — Jump_toIdle / HitReact contain "idle" and used to win.
+  // Also match prefixed names like Snake_Idle / Animal_Idle.
   return (
-    pool.find(n => /idle(?!_)/i.test(n)) ??
-    pool.find(n => /idle/i.test(n)) ??
+    pool.find(n => /^idle$/i.test(base(n))) ??
+    pool.find(n => /^idle_\d+$/i.test(base(n))) ??
+    pool.find(n => /(?:^|[_\-.])idle$/i.test(base(n))) ??
+    pool.find(
+      n =>
+        /idle/i.test(base(n)) &&
+        !/jump|hit|react|toidle|to_idle|attack/i.test(base(n)),
+    ) ??
     pool.find(n => /stand|breath|float/i.test(n)) ??
     pool[0]
   );
@@ -267,15 +281,15 @@ function collectSportFlourishes(names: string[], sport?: Sport): string[] {
 function collectPetFlourishes(names: string[], idleName?: string): string[] {
   return filterAnimNames(names, [
     ...SHOWCASE_EXCLUDE,
-    'attack',
     'kick',
-    'headbutt',
     'hitreact',
     'death',
   ]).filter(
     name =>
       name !== idleName &&
-      (/idle[_|].*(2|head|low)/i.test(name) || /eating/i.test(name)),
+      (/idle[_|].*(2|head|low)/i.test(name) ||
+        /eating/i.test(name) ||
+        /headbutt/i.test(name)),
   );
 }
 
@@ -656,14 +670,14 @@ function useSimpleIdle(
 ) {
   useEffect(() => {
     if (!enabled || !names.length) return;
-    const idle =
-      names.find(n => /idle/i.test(n)) ??
-      names.find(n => /stand/i.test(n)) ??
-      names[0];
+    // Same Idle picker as showcase — naive /idle/i grabs Idle_HitReact / Jump_toIdle.
+    const idle = findIdleName(names) ?? names[0];
     const action = idle ? actions[idle] : undefined;
     if (!action) return;
 
     action.reset();
+    action.setLoop(LoopRepeat, Infinity);
+    action.clampWhenFinished = false;
     action.timeScale = timeScale;
     action.fadeIn(0.2).play();
     return () => {
@@ -829,6 +843,8 @@ const PET_SPECIALS: Record<PetId, PetSpecialMove[]> = {
   shark: [],
   snake: [],
   dog: ['look', 'paw', 'bark', 'shake', 'step'],
+  trophy: [],
+  stag: [],
 };
 
 function petSpecialDuration(type: PetSpecialMove) {
@@ -1283,10 +1299,12 @@ function PodiumRig({
     petId === 'horse' ||
     petId === 'deer' ||
     petId === 'dog';
+  const isDisplayPet = petId === 'trophy';
   // Static / T-pose GLBs (no clips) get bob + hop flourishes instead of freezing.
   const proceduralOnly =
-    ('poseMode' in def && def.poseMode === 'procedural') ||
-    (animations.length === 0 && !skeletalIdle && !isNaturalPet);
+    !isDisplayPet &&
+    (('poseMode' in def && def.poseMode === 'procedural') ||
+      (animations.length === 0 && !skeletalIdle && !isNaturalPet));
   const animTimeScale = 'animTimeScale' in def ? def.animTimeScale ?? 1 : 1;
   const { scale, position } = useMemo(
     () => fitModel(scene, def.footOffsetY ?? 0, targetHeight),
@@ -1375,6 +1393,18 @@ function PodiumRig({
     group.current.position.z = position[2];
 
     const t = state.clock.elapsedTime;
+
+    // Shelf Trophy — museum turntable + soft float (no living-creature hops)
+    if (isDisplayPet) {
+      const spin = t * (showcase ? 0.58 : 0.36);
+      const bob = Math.sin(t * 1.15) * (showcase ? 0.045 : 0.022);
+      group.current.position.y = baseY.current + bob;
+      group.current.rotation.y = faceYaw + spin;
+      group.current.rotation.x = Math.sin(t * 0.75) * (showcase ? 0.03 : 0.015);
+      group.current.rotation.z = 0;
+      group.current.scale.setScalar(scale);
+      return;
+    }
 
     // Rabbit: unique springy hop idle (different from other skins' soft sway)
     if (isRabbit && !proceduralOnly && !skeletalIdle) {
@@ -1757,6 +1787,39 @@ uniform vec3 bobShift;`,
   });
 }
 
+function applyTrophyFinish(scene: Object3D, finishId: TrophyFinishId) {
+  const finish = getTrophyFinish(finishId);
+  const tint = new Color(finish.hex);
+  const shade = tint.clone().multiplyScalar(0.82);
+
+  scene.traverse(child => {
+    const mesh = child as Mesh;
+    if (!mesh.isMesh || !mesh.material) return;
+
+    const paint = (mat: MeshStandardMaterial, darker: boolean) => {
+      const next = new MeshPhysicalMaterial({
+        name: mat.name,
+        color: darker ? shade : tint,
+        metalness: finish.metalness,
+        roughness: finish.roughness,
+        clearcoat: 0.55,
+        clearcoatRoughness: 0.12,
+        envMapIntensity: 1.15,
+      });
+      next.needsUpdate = true;
+      return next;
+    };
+
+    if (Array.isArray(mesh.material)) {
+      mesh.material = mesh.material.map((m, i) =>
+        paint(m as MeshStandardMaterial, i % 2 === 1),
+      );
+    } else {
+      mesh.material = paint(mesh.material as MeshStandardMaterial, false);
+    }
+  });
+}
+
 function GlbModel({
   def,
   showcase = false,
@@ -1765,6 +1828,7 @@ function GlbModel({
   bobLoadout,
   sport,
   petId,
+  trophyFinish,
 }: {
   def: CharacterDef | PetDef;
   showcase?: boolean;
@@ -1773,34 +1837,55 @@ function GlbModel({
   bobLoadout?: BobLoadout;
   sport?: Sport;
   petId?: PetId;
+  trophyFinish?: TrophyFinishId;
 }) {
   const isCreative =
     'customizable' in def && !!def.customizable && def.modelPath.includes('creative');
   const isAthlete = 'id' in def && def.id === 'athlete';
   const isBob = 'id' in def && def.id === 'bob';
+  const isTrophy = petId === 'trophy';
   const { scene, animations: embeddedAnims } = useGLTF(def.modelPath);
-  const animations = useMemo(
-    () => embeddedAnims.map(clip => clip.clone()),
-    [embeddedAnims],
-  );
+  const animations = useMemo(() => {
+    // Quaternius animals often ship each clip twice (Idle + AnimalArmature|Idle).
+    // Prefer the shorter name so actions don't fight on the same armature.
+    const stripArmature = (name: string) =>
+      name.replace(/^[A-Za-z0-9]+Armature\|/i, '');
+    const preferred = new Map<string, (typeof embeddedAnims)[number]>();
+    for (const clip of embeddedAnims) {
+      const base = stripArmature(clip.name);
+      const existing = preferred.get(base);
+      if (!existing || clip.name.length <= existing.name.length) {
+        preferred.set(base, clip);
+      }
+    }
+    return [...preferred.values()].map(clip => {
+      const next = clip.clone();
+      next.name = stripArmature(clip.name);
+      return next;
+    });
+  }, [embeddedAnims]);
   const loadout = creativeLoadout ?? DEFAULT_CREATIVE_LOADOUT;
   const kit = athleteLoadout ?? DEFAULT_ATHLETE_LOADOUT;
   const bobKit = bobLoadout ?? DEFAULT_BOB_LOADOUT;
+  const cupFinish = trophyFinish ?? DEFAULT_TROPHY_FINISH;
   const loadoutKey = isCreative
     ? creativeLoadoutKey(loadout)
     : isAthlete
       ? athleteLoadoutKey(kit)
       : isBob
         ? bobLoadoutKey(bobKit)
-        : '';
+        : isTrophy
+          ? cupFinish
+          : '';
   const clone = useMemo(() => {
     const next = SkeletonUtils.clone(scene);
     if (isCreative) applyCreativeLoadout(next, loadout);
     if (isAthlete) applyAthleteLoadout(next, kit);
     if (isBob) applyBobLoadout(next, bobKit);
+    if (isTrophy) applyTrophyFinish(next, cupFinish);
     return next;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, isCreative, isAthlete, isBob, loadoutKey]);
+  }, [scene, isCreative, isAthlete, isBob, isTrophy, loadoutKey]);
 
   return (
     <PodiumRig
@@ -1855,11 +1940,13 @@ function CharacterModel({
 function PetModel({
   petId,
   dogVariant,
+  trophyFinish,
   showcase = false,
   sport,
 }: {
   petId: PetId;
   dogVariant?: DogVariantId;
+  trophyFinish?: TrophyFinishId;
   showcase?: boolean;
   sport?: Sport;
 }) {
@@ -1868,7 +1955,15 @@ function PetModel({
     petId === 'dog'
       ? { ...baseDef, modelPath: getDogVariantDef(dogVariant ?? 'husky').modelPath }
       : baseDef;
-  return <GlbModel def={def} showcase={showcase} sport={sport} petId={petId} />;
+  return (
+    <GlbModel
+      def={def}
+      showcase={showcase}
+      sport={sport}
+      petId={petId}
+      trophyFinish={trophyFinish}
+    />
+  );
 }
 
 function PodiumStage({ accent }: { accent: string }) {
@@ -1936,6 +2031,7 @@ function Scene({
   rabbitVariant,
   makoVariant,
   dogVariant,
+  trophyFinish,
   sport,
 }: {
   characterId?: CharacterId;
@@ -1950,6 +2046,7 @@ function Scene({
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
+  trophyFinish?: TrophyFinishId;
   sport?: Sport;
 }) {
   return (
@@ -1970,7 +2067,13 @@ function Scene({
       {!hidePodium && <PodiumStage accent={accent} />}
       <ModelErrorBoundary characterId={characterId ?? 'cube-man'}>
         {petId ? (
-          <PetModel petId={petId} dogVariant={dogVariant} showcase={showcase} sport={sport} />
+          <PetModel
+            petId={petId}
+            dogVariant={dogVariant}
+            trophyFinish={trophyFinish}
+            showcase={showcase}
+            sport={sport}
+          />
         ) : characterId ? (
           <CharacterModel
             characterId={characterId}
@@ -2029,6 +2132,8 @@ interface CharacterPodiumProps {
   makoVariant?: MakoVariantId;
   /** Breed included with the Street Dog pet */
   dogVariant?: DogVariantId;
+  /** Metal finish for the Shelf Trophy pet */
+  trophyFinish?: TrophyFinishId;
   /** Prefer sport-themed flourishes when available (Fitness Geek) */
   sport?: Sport;
 }
@@ -2049,10 +2154,13 @@ export function CharacterPodium({
   rabbitVariant,
   makoVariant,
   dogVariant,
+  trophyFinish,
   sport,
 }: CharacterPodiumProps) {
   const def = petId ? getPetDef(petId) : getCharacterDef(characterId ?? 'cube-man');
-  const glow = accent ?? def.accent;
+  const glow =
+    accent ??
+    (petId === 'trophy' ? getTrophyFinish(trophyFinish ?? DEFAULT_TROPHY_FINISH).hex : def.accent);
   const framed = hero || peek;
   const loadoutKey =
     characterId === 'creative' && creativeLoadout
@@ -2070,7 +2178,9 @@ export function CharacterPodium({
         ? makoVariant ?? 'classic'
         : petId === 'dog'
           ? dogVariant ?? 'husky'
-          : '';
+          : petId === 'trophy'
+            ? trophyFinish ?? DEFAULT_TROPHY_FINISH
+            : '';
 
   return (
     <div
@@ -2106,18 +2216,22 @@ export function CharacterPodium({
       <Canvas
         camera={{
           position: framed
-            ? petId
-              ? [0, 0.35, 5.8]
-              : [0, 0.05, 4.4]
+            ? petId === 'trophy'
+              ? [0.15, 0.4, 4.6]
+              : petId
+                ? [0, 0.35, 5.8]
+                : [0, 0.05, 4.4]
             : [0, 0.55, 3.1],
-          fov: framed ? (petId ? 38 : 34) : 42,
+          fov: framed ? (petId === 'trophy' ? 36 : petId ? 38 : 34) : 42,
         }}
         gl={{ alpha: true, antialias: true }}
         style={{ background: 'transparent', height: '100%' }}
         onCreated={({ gl, camera }) => {
           gl.setClearColor(0x000000, 0);
           gl.toneMappingExposure = framed ? 1.15 : 1;
-          if (framed) camera.lookAt(0, petId ? 0.15 : -0.15, 0);
+          if (framed) {
+            camera.lookAt(petId === 'trophy' ? 0.12 : 0, petId ? 0.15 : -0.15, 0);
+          }
         }}
       >
         <Suspense fallback={<LoadingFallback />}>
@@ -2135,6 +2249,7 @@ export function CharacterPodium({
             rabbitVariant={rabbitVariant}
             makoVariant={makoVariant}
             dogVariant={dogVariant}
+            trophyFinish={trophyFinish}
             sport={sport}
           />
         </Suspense>

@@ -260,6 +260,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                       hidePodium
                       className="w-full"
                       {...(pet.id === 'dog' ? { dogVariant: profile.dogVariant } : {})}
+                      {...(pet.id === 'trophy' ? { trophyFinish: profile.trophyFinish } : {})}
                     />
                   </div>
                 )}
