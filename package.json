@@ -12,7 +12,7 @@
     "dev:all": "concurrently -n web,duel -c cyan,magenta \"vite\" \"tsx server/index.ts\"",
     "build": "tsc -b && vite build",
     "build:itch": "tsc -b && vite build --base=./",
-    "zip:itch": "npm run build:itch && rm -f sportivia-itch.zip && cd dist && zip -r ../sportivia-itch.zip . && cd .. && ls -lh sportivia-itch.zip",
+    "zip:itch": "npm run build:itch && node scripts/packageItch.mjs",
     "start": "tsx server/index.ts",
     "lint": "oxlint",
     "preview": "vite preview",

@@ -39,6 +39,8 @@ const CHAPTERS = [
   { id: 3, from: 31, to: 40, title: 'Final Stretch' },
 ] as const;
 
+type ChapterId = (typeof CHAPTERS)[number]['id'];
+
 function chapterForLevel(levelId: number) {
   return CHAPTERS.find(c => levelId >= c.from && levelId <= c.to) ?? CHAPTERS[0];
 }
@@ -307,7 +309,7 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
     [chapter.from, chapter.to],
   );
 
-  function goChapter(nextId: number) {
+  function goChapter(nextId: ChapterId) {
     if (nextId < 0 || nextId >= CHAPTERS.length || nextId === chapterId) return;
     playMenuClick();
     setSlideDir(nextId > chapterId ? 1 : -1);
@@ -534,7 +536,7 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
               type="button"
               aria-label="Previous chapter"
               disabled={chapterId === 0}
-              onClick={() => goChapter(chapterId - 1)}
+              onClick={() => goChapter((chapterId - 1) as ChapterId)}
               className="z-20 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[3px] border-white/20 bg-black/55 text-white shadow-[0_4px_0_rgba(0,0,0,0.5)] backdrop-blur-md disabled:opacity-30"
             >
               <ChevronLeft className="h-5 w-5" strokeWidth={2.75} />
@@ -602,7 +604,7 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
               type="button"
               aria-label="Next chapter"
               disabled={chapterId === CHAPTERS.length - 1}
-              onClick={() => goChapter(chapterId + 1)}
+              onClick={() => goChapter((chapterId + 1) as ChapterId)}
               className="z-20 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border-[3px] border-white/20 bg-black/55 text-white shadow-[0_4px_0_rgba(0,0,0,0.5)] backdrop-blur-md disabled:opacity-30"
             >
               <ChevronRight className="h-5 w-5" strokeWidth={2.75} />

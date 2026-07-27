@@ -32,7 +32,8 @@ type AmbientScreen =
   | 'bot-stake'
   | 'duel-versus'
   | 'intro'
-  | 'game';
+  | 'game'
+  | 'campaign';
 
 type BedId = 'menu' | 'cards' | 'quick' | 'none';
 
@@ -44,7 +45,8 @@ function isMenuScreen(screen: AmbientScreen) {
     screen === 'about' ||
     screen === 'settings' ||
     screen === 'career' ||
-    screen === 'bot-stake'
+    screen === 'bot-stake' ||
+    screen === 'campaign'
   );
 }
 
