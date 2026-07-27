@@ -683,10 +683,6 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
                     body: 'Classic Sportivia player trivia (clubs, nations, positions) mixed with who-won-it title questions — trophies for teams, faces for players.',
                   },
                   {
-                    title: 'Trophies, never logos',
-                    body: 'Team answers stay text + trophy art only — no real club branding.',
-                  },
-                  {
                     title: 'Gate & finale bonuses',
                     body: 'Clear 10 / 20 / 30 with 2★ for chapter payouts. Beat level 40 for the Crown Finale — the biggest coin + XP drop.',
                   },
