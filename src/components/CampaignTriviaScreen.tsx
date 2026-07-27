@@ -7,7 +7,6 @@ import type {
   RabbitVariantId,
   MakoVariantId,
   DogVariantId,
-  TrophyFinishId,
 } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
@@ -33,7 +32,6 @@ interface CampaignTriviaScreenProps {
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
-  trophyFinish?: TrophyFinishId;
   onHome: () => void;
   onReplay: () => void;
   onNextLevel?: (levelId: number) => void;
@@ -52,7 +50,6 @@ export function CampaignTriviaScreen({
   rabbitVariant,
   makoVariant,
   dogVariant,
-  trophyFinish,
   onHome,
   onReplay,
   onNextLevel,
@@ -264,7 +261,6 @@ export function CampaignTriviaScreen({
             rabbitVariant={rabbitVariant}
             makoVariant={makoVariant}
             dogVariant={dogVariant}
-            trophyFinish={trophyFinish}
             onHome={handleResultHome}
             onPlayAgain={handleResultReplay}
             onNextLevel={

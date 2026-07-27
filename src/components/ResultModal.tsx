@@ -9,7 +9,7 @@ import { SportBall } from './SportBall';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId, TrophyFinishId } from '../types/profile';
+import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
@@ -24,7 +24,6 @@ interface ResultModalProps {
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
-  trophyFinish?: TrophyFinishId;
   onPlayAgain: () => void;
   onHome: () => void;
   /** Campaign: jump straight into the next unlocked stage */
@@ -52,7 +51,6 @@ export function ResultModal({
   rabbitVariant,
   makoVariant,
   dogVariant,
-  trophyFinish,
   onPlayAgain,
   onHome,
   onNextLevel,
@@ -175,7 +173,6 @@ export function ResultModal({
                   height={260}
                   className="w-full"
                   {...(petId === 'dog' && dogVariant ? { dogVariant } : {})}
-                  {...(petId === 'trophy' && trophyFinish ? { trophyFinish } : {})}
                 />
               </div>
             )}

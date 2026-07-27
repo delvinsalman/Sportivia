@@ -446,9 +446,6 @@ export function HomeScreen({
                   {...(profile.equippedPet === 'dog'
                     ? { dogVariant: profile.dogVariant }
                     : {})}
-                  {...(profile.equippedPet === 'trophy'
-                    ? { trophyFinish: profile.trophyFinish }
-                    : {})}
                 />
               </div>
             )}

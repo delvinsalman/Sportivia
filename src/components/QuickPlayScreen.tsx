@@ -7,7 +7,6 @@ import type {
   RabbitVariantId,
   MakoVariantId,
   DogVariantId,
-  TrophyFinishId,
 } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
@@ -30,7 +29,6 @@ interface QuickPlayScreenProps {
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
-  trophyFinish?: TrophyFinishId;
   onHome: () => void;
   onReplay: () => void;
   onProfileChange?: () => void;
@@ -46,7 +44,6 @@ export function QuickPlayScreen({
   rabbitVariant,
   makoVariant,
   dogVariant,
-  trophyFinish,
   onHome,
   onReplay,
   onProfileChange,
@@ -204,7 +201,6 @@ export function QuickPlayScreen({
           rabbitVariant={rabbitVariant}
           makoVariant={makoVariant}
           dogVariant={dogVariant}
-          trophyFinish={trophyFinish}
           onPlayAgain={handleResultReplay}
           onHome={handleResultHome}
         />

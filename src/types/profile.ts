@@ -2,13 +2,9 @@ import type { PlayerStats } from '../types';
 import type { CreativeLoadout } from './creativeCharacter';
 import type { AthleteLoadout } from './athleteCharacter';
 import type { BobLoadout } from './bobCharacter';
-import type { TrophyFinishId } from './trophyPet';
 import { DEFAULT_CREATIVE_LOADOUT } from './creativeCharacter';
 import { DEFAULT_ATHLETE_LOADOUT } from './athleteCharacter';
 import { DEFAULT_BOB_LOADOUT } from './bobCharacter';
-import { DEFAULT_TROPHY_FINISH as DEFAULT_TROPHY_FINISH_ID } from './trophyPet';
-
-export type { TrophyFinishId } from './trophyPet';
 
 export type CharacterId =
   | 'cube-man'
@@ -48,7 +44,6 @@ export type PetId =
   | 'shark'
   | 'frog'
   | 'snake'
-  | 'trophy'
   | 'stag';
 
 export interface RabbitVariantDef {
@@ -135,8 +130,6 @@ export interface PlayerProfile {
   makoVariant: MakoVariantId;
   /** Selected breed included with the Dog pet */
   dogVariant: DogVariantId;
-  /** Metal finish for the Shelf Trophy pet */
-  trophyFinish: TrophyFinishId;
   /** Per-skin per-stat upgrade bonuses. Overall averages the six live stats (up to 99). */
   characterStatLevels: Partial<Record<CharacterId, Partial<Record<'pac' | 'sho' | 'pas' | 'dri' | 'def' | 'phy', number>>>>;
   /** Lifetime 1v1 duel record — wins / losses / ties. */
@@ -434,16 +427,6 @@ export const PETS: PetDef[] = [
     showcaseRestMs: [8000, 15000],
   },
   {
-    id: 'trophy',
-    name: 'Shelf Trophy',
-    tagline: 'Display piece · swap the finish',
-    price: 250,
-    modelPath: '/models/pets/trophy.glb',
-    accent: '#f0b232',
-    footOffsetY: 0,
-    targetHeight: 2.35,
-  },
-  {
     id: 'raccoon',
     name: 'Loot Bandit',
     tagline: 'Sticky paws · sneaky takeaway',
@@ -584,16 +567,9 @@ export const DEFAULT_PET: PetId = 'pug';
 export const DEFAULT_RABBIT_VARIANT: RabbitVariantId = 'base';
 export const DEFAULT_MAKO_VARIANT: MakoVariantId = 'classic';
 export const DEFAULT_DOG_VARIANT: DogVariantId = 'husky';
-export const DEFAULT_TROPHY_FINISH: TrophyFinishId = DEFAULT_TROPHY_FINISH_ID;
 export { DEFAULT_CREATIVE_LOADOUT };
 export { DEFAULT_ATHLETE_LOADOUT };
 export { DEFAULT_BOB_LOADOUT };
-export {
-  TROPHY_FINISHES,
-  getTrophyFinish,
-  normalizeTrophyFinish,
-} from './trophyPet';
-export type { TrophyFinishDef } from './trophyPet';
 
 export const RABBIT_VARIANTS: RabbitVariantDef[] = [
   { id: 'base', name: 'Classic', modelPath: '/models/rabbit/base.glb' },

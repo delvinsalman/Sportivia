@@ -10,7 +10,6 @@ import {
   type RabbitVariantId,
   type MakoVariantId,
   type DogVariantId,
-  type TrophyFinishId,
 } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
@@ -31,7 +30,6 @@ interface UnlockShowcaseProps {
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
-  trophyFinish?: TrophyFinishId;
   onDone: () => void;
   /** Auto-close after this many ms. */
   durationMs?: number;
@@ -55,7 +53,6 @@ export function UnlockShowcase({
   rabbitVariant,
   makoVariant,
   dogVariant,
-  trophyFinish,
   onDone,
   durationMs = 4200,
 }: UnlockShowcaseProps) {
@@ -157,11 +154,10 @@ export function UnlockShowcase({
             accent={accent}
             bare
             hero
-            height={petId === 'trophy' ? 540 : 460}
+            height={460}
             className="w-full pointer-events-none"
             sport={sport}
             {...(petId === 'dog' && dogVariant ? { dogVariant } : {})}
-            {...(petId === 'trophy' && trophyFinish ? { trophyFinish } : {})}
           />
         ) : (
           <CharacterPodium

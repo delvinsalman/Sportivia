@@ -20,7 +20,6 @@ import type {
   PetDef,
   PetId,
   RabbitVariantId,
-  TrophyFinishId,
 } from '../../types/profile';
 import {
   CHARACTERS,
@@ -30,11 +29,9 @@ import {
   getMakoVariantDef,
   getPetDef,
   getRabbitVariantDef,
-  getTrophyFinish,
   MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
-  DEFAULT_TROPHY_FINISH,
 } from '../../types/profile';
 import type { CreativeLoadout } from '../../types/creativeCharacter';
 import {
@@ -1008,7 +1005,6 @@ const PET_SPECIALS: Record<PetId, PetSpecialMove[]> = {
   shark: [],
   snake: [],
   dog: ['look', 'paw', 'bark', 'shake', 'step'],
-  trophy: [],
   stag: [],
 };
 
@@ -1464,12 +1460,10 @@ function PodiumRig({
     petId === 'horse' ||
     petId === 'deer' ||
     petId === 'dog';
-  const isDisplayPet = petId === 'trophy';
   // Static / T-pose GLBs (no clips) get bob + hop flourishes instead of freezing.
   const proceduralOnly =
-    !isDisplayPet &&
-    (('poseMode' in def && def.poseMode === 'procedural') ||
-      (animations.length === 0 && !skeletalIdle && !isNaturalPet));
+    ('poseMode' in def && def.poseMode === 'procedural') ||
+    (animations.length === 0 && !skeletalIdle && !isNaturalPet);
   const animTimeScale = 'animTimeScale' in def ? def.animTimeScale ?? 1 : 1;
   const { scale, position } = useMemo(
     () => fitModel(scene, def.footOffsetY ?? 0, targetHeight),
@@ -1572,18 +1566,6 @@ function PodiumRig({
     group.current.position.z = position[2];
 
     const t = state.clock.elapsedTime;
-
-    // Shelf Trophy — museum turntable + soft float (no living-creature hops)
-    if (isDisplayPet) {
-      const spin = t * (showcase ? 0.58 : 0.36);
-      const bob = Math.sin(t * 1.15) * (showcase ? 0.045 : 0.022);
-      group.current.position.y = baseY.current + bob;
-      group.current.rotation.y = faceYaw + spin;
-      group.current.rotation.x = Math.sin(t * 0.75) * (showcase ? 0.03 : 0.015);
-      group.current.rotation.z = 0;
-      group.current.scale.setScalar(scale);
-      return;
-    }
 
     // Rabbit: unique springy hop idle (different from other skins' soft sway)
     if (isRabbit && !proceduralOnly && !skeletalIdle) {
@@ -1966,39 +1948,6 @@ uniform vec3 bobShift;`,
   });
 }
 
-function applyTrophyFinish(scene: Object3D, finishId: TrophyFinishId) {
-  const finish = getTrophyFinish(finishId);
-  const tint = new Color(finish.hex);
-  const shade = tint.clone().multiplyScalar(0.82);
-
-  scene.traverse(child => {
-    const mesh = child as Mesh;
-    if (!mesh.isMesh || !mesh.material) return;
-
-    const paint = (mat: MeshStandardMaterial, darker: boolean) => {
-      const next = new MeshPhysicalMaterial({
-        name: mat.name,
-        color: darker ? shade : tint,
-        metalness: finish.metalness,
-        roughness: finish.roughness,
-        clearcoat: 0.55,
-        clearcoatRoughness: 0.12,
-        envMapIntensity: 1.15,
-      });
-      next.needsUpdate = true;
-      return next;
-    };
-
-    if (Array.isArray(mesh.material)) {
-      mesh.material = mesh.material.map((m, i) =>
-        paint(m as MeshStandardMaterial, i % 2 === 1),
-      );
-    } else {
-      mesh.material = paint(mesh.material as MeshStandardMaterial, false);
-    }
-  });
-}
-
 function GlbModel({
   def,
   showcase = false,
@@ -2007,7 +1956,6 @@ function GlbModel({
   bobLoadout,
   sport,
   petId,
-  trophyFinish,
 }: {
   def: CharacterDef | PetDef;
   showcase?: boolean;
@@ -2016,13 +1964,11 @@ function GlbModel({
   bobLoadout?: BobLoadout;
   sport?: Sport;
   petId?: PetId;
-  trophyFinish?: TrophyFinishId;
 }) {
   const isCreative =
     'customizable' in def && !!def.customizable && def.modelPath.includes('creative');
   const isAthlete = 'id' in def && def.id === 'athlete';
   const isBob = 'id' in def && def.id === 'bob';
-  const isTrophy = petId === 'trophy';
   const { scene, animations: embeddedAnims } = useGLTF(def.modelPath);
   const animations = useMemo(() => {
     // Quaternius animals often ship each clip twice (Idle + AnimalArmature|Idle).
@@ -2046,25 +1992,21 @@ function GlbModel({
   const loadout = creativeLoadout ?? DEFAULT_CREATIVE_LOADOUT;
   const kit = athleteLoadout ?? DEFAULT_ATHLETE_LOADOUT;
   const bobKit = bobLoadout ?? DEFAULT_BOB_LOADOUT;
-  const cupFinish = trophyFinish ?? DEFAULT_TROPHY_FINISH;
   const loadoutKey = isCreative
     ? creativeLoadoutKey(loadout)
     : isAthlete
       ? athleteLoadoutKey(kit)
       : isBob
         ? bobLoadoutKey(bobKit)
-        : isTrophy
-          ? cupFinish
-          : '';
+        : '';
   const clone = useMemo(() => {
     const next = SkeletonUtils.clone(scene);
     if (isCreative) applyCreativeLoadout(next, loadout);
     if (isAthlete) applyAthleteLoadout(next, kit);
     if (isBob) applyBobLoadout(next, bobKit);
-    if (isTrophy) applyTrophyFinish(next, cupFinish);
     return next;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, isCreative, isAthlete, isBob, isTrophy, loadoutKey]);
+  }, [scene, isCreative, isAthlete, isBob, loadoutKey]);
 
   return (
     <PodiumRig
@@ -2119,13 +2061,11 @@ function CharacterModel({
 function PetModel({
   petId,
   dogVariant,
-  trophyFinish,
   showcase = false,
   sport,
 }: {
   petId: PetId;
   dogVariant?: DogVariantId;
-  trophyFinish?: TrophyFinishId;
   showcase?: boolean;
   sport?: Sport;
 }) {
@@ -2140,7 +2080,6 @@ function PetModel({
       showcase={showcase}
       sport={sport}
       petId={petId}
-      trophyFinish={trophyFinish}
     />
   );
 }
@@ -2210,7 +2149,6 @@ function Scene({
   rabbitVariant,
   makoVariant,
   dogVariant,
-  trophyFinish,
   sport,
 }: {
   characterId?: CharacterId;
@@ -2225,7 +2163,6 @@ function Scene({
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
-  trophyFinish?: TrophyFinishId;
   sport?: Sport;
 }) {
   return (
@@ -2249,7 +2186,6 @@ function Scene({
           <PetModel
             petId={petId}
             dogVariant={dogVariant}
-            trophyFinish={trophyFinish}
             showcase={showcase}
             sport={sport}
           />
@@ -2311,8 +2247,6 @@ interface CharacterPodiumProps {
   makoVariant?: MakoVariantId;
   /** Breed included with the Street Dog pet */
   dogVariant?: DogVariantId;
-  /** Metal finish for the Shelf Trophy pet */
-  trophyFinish?: TrophyFinishId;
   /** Prefer sport-themed flourishes when available (Fitness Geek) */
   sport?: Sport;
 }
@@ -2333,13 +2267,10 @@ export function CharacterPodium({
   rabbitVariant,
   makoVariant,
   dogVariant,
-  trophyFinish,
   sport,
 }: CharacterPodiumProps) {
   const def = petId ? getPetDef(petId) : getCharacterDef(characterId ?? 'cube-man');
-  const glow =
-    accent ??
-    (petId === 'trophy' ? getTrophyFinish(trophyFinish ?? DEFAULT_TROPHY_FINISH).hex : def.accent);
+  const glow = accent ?? def.accent;
   const framed = hero || peek;
   const loadoutKey =
     characterId === 'creative' && creativeLoadout
@@ -2357,9 +2288,7 @@ export function CharacterPodium({
         ? makoVariant ?? 'classic'
         : petId === 'dog'
           ? dogVariant ?? 'husky'
-          : petId === 'trophy'
-            ? trophyFinish ?? DEFAULT_TROPHY_FINISH
-            : '';
+          : '';
 
   return (
     <div
@@ -2395,13 +2324,11 @@ export function CharacterPodium({
       <Canvas
         camera={{
           position: framed
-            ? petId === 'trophy'
-              ? [0.15, 0.4, 4.6]
-              : petId
-                ? [0, 0.35, 5.8]
-                : [0, 0.05, 4.4]
+            ? petId
+              ? [0, 0.35, 5.8]
+              : [0, 0.05, 4.4]
             : [0, 0.55, 3.1],
-          fov: framed ? (petId === 'trophy' ? 36 : petId ? 38 : 34) : 42,
+          fov: framed ? (petId ? 38 : 34) : 42,
         }}
         gl={{ alpha: true, antialias: true }}
         style={{ background: 'transparent', height: '100%' }}
@@ -2409,7 +2336,7 @@ export function CharacterPodium({
           gl.setClearColor(0x000000, 0);
           gl.toneMappingExposure = framed ? 1.15 : 1;
           if (framed) {
-            camera.lookAt(petId === 'trophy' ? 0.12 : 0, petId ? 0.15 : -0.15, 0);
+            camera.lookAt(0, petId ? 0.15 : -0.15, 0);
           }
         }}
       >
@@ -2428,7 +2355,6 @@ export function CharacterPodium({
             rabbitVariant={rabbitVariant}
             makoVariant={makoVariant}
             dogVariant={dogVariant}
-            trophyFinish={trophyFinish}
             sport={sport}
           />
         </Suspense>

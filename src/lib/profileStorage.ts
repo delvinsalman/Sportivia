@@ -1,5 +1,5 @@
 import type { GameResult, Sport } from '../types';
-import type { CharacterId, DogVariantId, MakoVariantId, PetId, PlayerProfile, PvpRecord, RabbitVariantId, TrophyFinishId } from '../types/profile';
+import type { CharacterId, DogVariantId, MakoVariantId, PetId, PlayerProfile, PvpRecord, RabbitVariantId } from '../types/profile';
 import {
   CHARACTERS,
   DEFAULT_ATHLETE_LOADOUT,
@@ -9,7 +9,6 @@ import {
   DEFAULT_DOG_VARIANT,
   DEFAULT_MAKO_VARIANT,
   DEFAULT_RABBIT_VARIANT,
-  DEFAULT_TROPHY_FINISH,
   DOG_VARIANTS,
   EMPTY_PVP_RECORD,
   MAKO_VARIANTS,
@@ -17,8 +16,6 @@ import {
   RABBIT_VARIANTS,
   STARTER_CHARACTERS,
   STARTER_PETS,
-  TROPHY_FINISHES,
-  normalizeTrophyFinish,
 } from '../types/profile';
 import { normalizeCreativeLoadout, type CreativeLoadout } from '../types/creativeCharacter';
 import {
@@ -238,7 +235,6 @@ function defaultProfile(): PlayerProfile {
     rabbitVariant: DEFAULT_RABBIT_VARIANT,
     makoVariant: DEFAULT_MAKO_VARIANT,
     dogVariant: DEFAULT_DOG_VARIANT,
-    trophyFinish: DEFAULT_TROPHY_FINISH,
     characterStatLevels: {},
     pvpRecord: { ...EMPTY_PVP_RECORD },
     freeUpgradeCredits: 0,
@@ -287,7 +283,6 @@ export function loadProfile(): PlayerProfile {
     const dogVariant = DOG_VARIANTS.some(variant => variant.id === parsed.dogVariant)
       ? (parsed.dogVariant as DogVariantId)
       : DEFAULT_DOG_VARIANT;
-    const trophyFinish = normalizeTrophyFinish(parsed.trophyFinish);
 
     const STAT_KEYS = ['pac', 'sho', 'pas', 'dri', 'def', 'phy'] as const;
     let characterStatLevels: PlayerProfile['characterStatLevels'] = {};
@@ -329,7 +324,6 @@ export function loadProfile(): PlayerProfile {
       rabbitVariant,
       makoVariant,
       dogVariant,
-      trophyFinish,
       characterStatLevels,
       pvpRecord: normalizePvpRecord((parsed as { pvpRecord?: unknown }).pvpRecord),
       freeUpgradeCredits:
@@ -356,9 +350,12 @@ export function loadProfile(): PlayerProfile {
     const rabbitChanged = parsed.rabbitVariant !== rabbitVariant;
     const makoChanged = parsed.makoVariant !== makoVariant;
     const dogChanged = parsed.dogVariant !== dogVariant;
-    const trophyChanged = parsed.trophyFinish !== trophyFinish;
     const hadLegacyCards = 'cardCollection' in parsed;
     const cardStatsReset = !resetDone;
+    const trophyRemoved =
+      (parsed.equippedPet as string | undefined) === 'trophy' ||
+      (parsed.unlockedPets as string[] | undefined)?.includes('trophy') === true ||
+      'trophyFinish' in parsed;
 
     if (
       equippedMigrated ||
@@ -367,7 +364,7 @@ export function loadProfile(): PlayerProfile {
       rabbitChanged ||
       makoChanged ||
       dogChanged ||
-      trophyChanged ||
+      trophyRemoved ||
       hadLegacyCards ||
       cardStatsReset
     ) {
@@ -720,15 +717,6 @@ export function saveDogVariant(variant: DogVariantId): PlayerProfile {
   if (!profile.unlockedPets.includes('dog')) return profile;
   if (!DOG_VARIANTS.some(item => item.id === variant)) return profile;
   profile.dogVariant = variant;
-  saveProfile(profile);
-  return profile;
-}
-
-export function saveTrophyFinish(finish: TrophyFinishId): PlayerProfile {
-  const profile = loadProfile();
-  if (!profile.unlockedPets.includes('trophy')) return profile;
-  if (!TROPHY_FINISHES.some(item => item.id === finish)) return profile;
-  profile.trophyFinish = finish;
   saveProfile(profile);
   return profile;
 }

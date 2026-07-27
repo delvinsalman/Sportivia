@@ -334,7 +334,7 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
 
       <div className="relative z-10 flex h-svh flex-col">
         {/* Top: back + chapter + stars */}
-        <header className="grid shrink-0 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5">
+        <header className="relative z-40 grid shrink-0 grid-cols-[auto_1fr_auto] items-center gap-2 px-3 pt-[max(0.75rem,env(safe-area-inset-top))] sm:px-5">
           <button
             type="button"
             onClick={() => {
@@ -364,9 +364,11 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
                   playMenuClick();
                   setShowInfo(cur => !cur);
                 }}
-                className="flex h-5 w-5 items-center justify-center rounded-full border border-white/25 bg-black/40 text-white/70 transition hover:border-[#f0b232]/55 hover:text-[#f0b232]"
+                className={`relative z-10 p-0.5 transition-colors ${
+                  showInfo ? 'text-[#f0b232]' : 'text-white/55 hover:text-[#f0b232]'
+                }`}
               >
-                <Info className="h-3 w-3" strokeWidth={2.5} />
+                <Info className="h-3.5 w-3.5" strokeWidth={2.5} />
               </button>
             </div>
             <h1
@@ -384,7 +386,7 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
                   transition={{ duration: 0.16 }}
                   onMouseEnter={openInfo}
                   onMouseLeave={closeInfo}
-                  className="absolute left-1/2 top-full z-30 mt-2 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border-[2.5px] border-[#f0b232]/45 bg-[#12141a]/96 p-3.5 text-left shadow-[0_10px_28px_rgba(0,0,0,0.55)] backdrop-blur-xl"
+                  className="absolute left-1/2 top-full z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border-[2.5px] border-[#f0b232]/45 bg-[#12141a]/96 p-3.5 text-left shadow-[0_10px_28px_rgba(0,0,0,0.55)] backdrop-blur-xl"
                 >
                   <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f0b232]">
                     Campaign
