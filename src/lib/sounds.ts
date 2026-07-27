@@ -12,6 +12,12 @@ const SOCCER_CORRECT = [
   assetUrl('/sounds/soccer/correct-kick.webm'),
   assetUrl('/sounds/soccer/correct-kick.m4a'),
 ];
+/** Universal wrong-answer whistle (all sports) */
+const WHISTLE_WRONG = SOCCER_WRONG;
+const BASKETBALL_CORRECT = [
+  assetUrl('/sounds/basketball/correct.webm'),
+  assetUrl('/sounds/basketball/correct.m4a'),
+];
 
 const audioCache = new Map<string, HTMLAudioElement>();
 
@@ -92,37 +98,6 @@ function noise(duration: number, volume = 0.08, lowpass = 800) {
   source.start();
 }
 
-/** Referee whistle — used for wrong answers in all sports */
-function playWhistle() {
-  if (!canPlaySfx()) return;
-  const c = getCtx();
-  const t = c.currentTime;
-  const volScale = effectiveSfxVolume(1);
-  if (volScale <= 0) return;
-  const osc = c.createOscillator();
-  const gain = c.createGain();
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(3100, t);
-  osc.frequency.exponentialRampToValueAtTime(2400, t + 0.12);
-  osc.frequency.setValueAtTime(3200, t + 0.18);
-  osc.frequency.exponentialRampToValueAtTime(1900, t + 0.42);
-  gain.gain.setValueAtTime(0.001, t);
-  gain.gain.linearRampToValueAtTime(0.22 * volScale, t + 0.02);
-  gain.gain.setValueAtTime(0.18 * volScale, t + 0.2);
-  gain.gain.exponentialRampToValueAtTime(0.001, t + 0.48);
-  osc.connect(gain);
-  gain.connect(c.destination);
-  osc.start(t);
-  osc.stop(t + 0.5);
-}
-
-function playNetSplash() {
-  noise(0.3, 0.14, 600);
-  tone(380, 0.12, 'sine', 0.1);
-  tone(220, 0.22, 'sine', 0.08, 0.06);
-  tone(160, 0.18, 'triangle', 0.06, 0.12);
-}
-
 function playBatCrack() {
   noise(0.05, 0.28, 2000);
   tone(180, 0.03, 'square', 0.12);
@@ -145,20 +120,22 @@ export function playCorrect(sport: Sport, streak: number) {
     playSample(SOCCER_CORRECT, 0.8);
     return;
   }
-  if (sport === 'basketball') playNetSplash();
-  else playBatCrack();
+  if (sport === 'basketball') {
+    playSample(BASKETBALL_CORRECT, 0.9);
+    if (streak >= 3) {
+      tone(700 + Math.min(streak, 5) * 50, 0.08, 'sine', 0.1, 0.08);
+    }
+    return;
+  }
+  playBatCrack();
 
   if (streak >= 3) {
     tone(700 + Math.min(streak, 5) * 50, 0.08, 'sine', 0.1, 0.08);
   }
 }
 
-export function playWrong(sport?: Sport) {
-  if (sport === 'soccer') {
-    playSample(SOCCER_WRONG, 0.85);
-    return;
-  }
-  playWhistle();
+export function playWrong(_sport?: Sport) {
+  playSample(WHISTLE_WRONG, 0.85);
 }
 
 export function playPick(sport: Sport) {

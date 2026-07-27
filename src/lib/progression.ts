@@ -7,7 +7,7 @@ export function isRunComplete(_mode: GameMode, reason: GameEndReason): boolean {
 }
 
 export function earnsProgression(mode: GameMode): boolean {
-  return mode === 'daily' || mode === 'timed' || mode === 'bot' || mode === 'duel' || mode === 'quick';
+  return mode === 'daily' || mode === 'timed' || mode === 'bot' || mode === 'duel' || mode === 'quick' || mode === 'campaign';
 }
 
 /** Total XP required to reach a given level (level 1 = 0). */
@@ -117,6 +117,14 @@ export function computeGameRewards(result: GameResult): GameRewards {
     coins += 20;
     xp += 12;
   }
+  if (result.mode === 'campaign') {
+    coins += 28;
+    xp += 16;
+  }
+  if (result.campaignBonus) {
+    coins += result.campaignBonus.coins;
+    xp += result.campaignBonus.xp;
+  }
   if (result.perfectBoard) {
     coins += 100;
     xp += 45;
@@ -169,5 +177,6 @@ export function modeXpHint(mode: GameMode): string {
   if (mode === 'duel') return '+ duel bonus';
   if (mode === 'bot') return '+ AI match bonus';
   if (mode === 'quick') return '+ light quick bonus';
+  if (mode === 'campaign') return '+ campaign bonus';
   return 'practice only';
 }

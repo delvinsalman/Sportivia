@@ -1,6 +1,6 @@
 export type Sport = 'soccer' | 'basketball' | 'baseball' | 'football' | 'hockey';
 
-export type GameMode = 'training' | 'daily' | 'timed' | 'bot' | 'duel' | 'quick';
+export type GameMode = 'training' | 'daily' | 'timed' | 'bot' | 'duel' | 'quick' | 'campaign';
 
 export type BotDifficulty = 'beginner' | 'pro' | 'expert';
 
@@ -77,6 +77,19 @@ export interface GameResult {
     amount: number;
     label: string;
     net: number;
+  };
+  /** Campaign stage id when mode === 'campaign' */
+  campaignLevelId?: number;
+  /** Stars earned this run (0–3) */
+  campaignStars?: 0 | 1 | 2 | 3;
+  /** Next stage unlocked by this run (2★+), if any */
+  campaignNextLevelId?: number;
+  /** One-time gate / finale clear bonus (already claimed in storage). */
+  campaignBonus?: {
+    levelId: number;
+    title: string;
+    coins: number;
+    xp: number;
   };
 }
 

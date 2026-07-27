@@ -21,6 +21,8 @@ export type GamePhase = 'countdown' | 'playing' | 'over';
 export interface RoundGameOptions {
   /** Shared seed for fair duels / rematches */
   seedKey?: string;
+  /** Override match clock (campaign stages use shorter timers). */
+  gameTimeSec?: number;
   onScoreChange?: (score: number) => void;
   onFinished?: (payload: {
     score: number;
@@ -31,7 +33,9 @@ export interface RoundGameOptions {
 }
 
 export function useRoundGame(sport: Sport, mode: GameMode, options?: RoundGameOptions) {
-  const totalGameTime = mode === 'training' ? TRAINING_TIME : GAME_TIME;
+  const totalGameTime =
+    options?.gameTimeSec ??
+    (mode === 'training' ? TRAINING_TIME : GAME_TIME);
   const baseSeedKey =
     options?.seedKey ??
     (mode === 'daily' ? getTodayKey() : `run-${Date.now()}`);

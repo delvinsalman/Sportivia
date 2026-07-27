@@ -529,6 +529,171 @@ function useHomeShowcase(
 }
 
 /**
+ * Fitness Geek — smooth ambient idle cycling.
+ * Breathing never stops or resets mid-session. Shifts use crossFadeTo so
+ * look-around / relaxed blend in and out without a visible “refresh” snap.
+ */
+function useCreativeShowcase(
+  actions: Record<string, AnimationAction | null>,
+  names: string[],
+  enabled: boolean,
+  opts?: { restMs?: [number, number]; sport?: Sport },
+) {
+  const restTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const endTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const lastShiftRef = useRef<string | null>(null);
+  const restMin = opts?.restMs?.[0] ?? 10_000;
+  const restMax = opts?.restMs?.[1] ?? 18_000;
+  const sport = opts?.sport;
+
+  useEffect(() => {
+    if (!enabled) return;
+
+    let cancelled = false;
+    const base = (n: string) => n.replace(/^.*\|/, '');
+
+    const breathing =
+      names.find(n => /idle_breathing/i.test(base(n))) ??
+      names.find(n => /breathing/i.test(base(n))) ??
+      findIdleName(names);
+    const idleVariants = names.filter(
+      n =>
+        n !== breathing &&
+        (/look_around/i.test(base(n)) ||
+          /idle_relaxed/i.test(base(n)) ||
+          (/relaxed/i.test(base(n)) && /idle/i.test(base(n)))),
+    );
+    const sportClips = names.filter(n => {
+      if (/idle/i.test(base(n))) return false;
+      if (sport === 'soccer') return /soccer/i.test(base(n));
+      if (sport === 'basketball') return /basketball/i.test(base(n));
+      return /^(Soccer_|Basketball_)/i.test(base(n));
+    });
+
+    const breathAction = breathing ? actions[breathing] : null;
+    if (!breathAction) return;
+
+    const clearTimers = () => {
+      clearTimeout(restTimerRef.current);
+      clearTimeout(endTimerRef.current);
+      restTimerRef.current = undefined;
+      endTimerRef.current = undefined;
+    };
+
+    const ensureBreathing = () => {
+      breathAction.enabled = true;
+      breathAction.setLoop(LoopRepeat, Infinity);
+      breathAction.clampWhenFinished = false;
+      // Keep a steady calm rate — don’t retune mid-loop (that reads as a refresh)
+      if (Math.abs(breathAction.timeScale - 0.9) > 0.2) breathAction.timeScale = 0.9;
+      if (!breathAction.isRunning()) breathAction.play();
+    };
+
+    const scheduleNext = (extraMs = 0) => {
+      clearTimeout(restTimerRef.current);
+      restTimerRef.current = setTimeout(() => {
+        if (!cancelled) playShift();
+      }, randBetween(restMin, restMax) + extraMs);
+    };
+
+    const returnToBreathing = (from: AnimationAction, fade: number) => {
+      if (cancelled) return;
+      ensureBreathing();
+      // Warp syncs phase a bit so the blend doesn’t pop
+      from.crossFadeTo(breathAction, fade, true);
+      // Let the outgoing clip finish fading, then stop it so it can’t re-trigger
+      endTimerRef.current = setTimeout(() => {
+        if (cancelled) return;
+        if (from !== breathAction) {
+          from.setEffectiveWeight(0);
+          from.enabled = false;
+        }
+        scheduleNext(randBetween(1_200, 2_800));
+      }, fade * 1000 + 80);
+    };
+
+    const playShift = () => {
+      if (cancelled) return;
+      ensureBreathing();
+
+      const wantSport = sportClips.length > 0 && Math.random() < 0.08;
+      let pool = (wantSport ? sportClips : idleVariants).filter(
+        n => n !== lastShiftRef.current,
+      );
+      if (!pool.length) pool = wantSport ? sportClips : idleVariants;
+      if (!pool.length) {
+        scheduleNext();
+        return;
+      }
+
+      const clipName = pickRandom(pool);
+      lastShiftRef.current = clipName;
+      const action = actions[clipName];
+      if (!action) {
+        scheduleNext();
+        return;
+      }
+
+      const isIdleLike = /idle|look|relax/i.test(base(clipName));
+      const fade = isIdleLike ? 0.95 : 0.7;
+
+      // Prepare incoming clip, then crossfade FROM breathing (never hard-cut)
+      action.enabled = true;
+      action.reset();
+      action.setEffectiveWeight(1);
+      action.setLoop(LoopOnce, 1);
+      // Don’t clamp — clamping freezes the last pose and causes the “refresh”
+      action.clampWhenFinished = false;
+      action.timeScale = isIdleLike ? 0.95 : 1;
+      action.play();
+
+      breathAction.crossFadeTo(action, fade, true);
+
+      // Blend back early — well before the clip ends — so it never dies into T-pose
+      const clipDur = action.getClip().duration / Math.max(0.01, action.timeScale);
+      const holdSec = isIdleLike
+        ? Math.min(clipDur * 0.72, randBetween(4.5, 7.2))
+        : Math.min(clipDur * 0.82, clipDur - 0.15);
+      const holdMs = Math.max(fade * 1000 + 400, holdSec * 1000);
+
+      clearTimeout(endTimerRef.current);
+      endTimerRef.current = setTimeout(() => {
+        if (cancelled) return;
+        returnToBreathing(action, isIdleLike ? 1.05 : 0.75);
+      }, holdMs);
+    };
+
+    // Stop everything else; seed calm breathing once
+    Object.values(actions).forEach(a => {
+      if (!a || a === breathAction) return;
+      a.stop();
+      a.setEffectiveWeight(0);
+      a.enabled = false;
+    });
+    breathAction.reset();
+    breathAction.setLoop(LoopRepeat, Infinity);
+    breathAction.clampWhenFinished = false;
+    breathAction.timeScale = 0.9;
+    breathAction.setEffectiveWeight(1);
+    breathAction.enabled = true;
+    breathAction.fadeIn(0.5).play();
+
+    restTimerRef.current = setTimeout(() => {
+      if (!cancelled) playShift();
+    }, randBetween(7_500, 12_000));
+
+    return () => {
+      cancelled = true;
+      clearTimers();
+      Object.values(actions).forEach(a => {
+        a?.fadeOut(0.15);
+        a?.stop();
+      });
+    };
+  }, [actions, names, enabled, restMin, restMax, sport]);
+}
+
+/**
  * Rabbit personality: bouncy idle + playful clip flourishes (jump/duck/wave/punch).
  * Distinct from the generic character showcase loop.
  */
@@ -1315,6 +1480,7 @@ function PodiumRig({
     skeletalIdle && (characterId === 'cube-man' || characterId === 'cube-woman');
   const isCreativeSkeletal = skeletalIdle && characterId === 'creative';
   const isRabbit = characterId === 'bunny';
+  const isCreative = characterId === 'creative';
   const { actions, names } = useAnimations(
     isNaturalPet || proceduralOnly || skeletalIdle ? [] : animations,
     scene,
@@ -1346,10 +1512,23 @@ function PodiumRig({
     rabbitRest,
   );
 
+  const creativeRest = def.showcaseRestMs ?? ([9_000, 16_000] as [number, number]);
+  useCreativeShowcase(
+    actions,
+    names,
+    isCreative && showcase && !proceduralOnly && !skeletalIdle,
+    { restMs: creativeRest, sport },
+  );
+
   useHomeShowcase(
     actions,
     names,
-    !isRabbit && !isNaturalPet && showcase && !proceduralOnly && !skeletalIdle,
+    !isRabbit &&
+      !isCreative &&
+      !isNaturalPet &&
+      showcase &&
+      !proceduralOnly &&
+      !skeletalIdle,
     triggerProcedural,
     {
       timeScale: animTimeScale,
@@ -1363,7 +1542,7 @@ function PodiumRig({
     actions,
     names,
     !isRabbit && !isNaturalPet && !showcase && !proceduralOnly && !skeletalIdle,
-    animTimeScale,
+    isCreative ? 0.9 : animTimeScale,
   );
   // Store / peek: keep rabbit's peppy idle looping even without showcase flourishes
   useSimpleIdle(actions, names, isRabbit && !showcase && !proceduralOnly && !skeletalIdle, 1.12);

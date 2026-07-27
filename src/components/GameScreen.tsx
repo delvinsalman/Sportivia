@@ -20,6 +20,8 @@ import { grantDuelWin, recordPvpOutcome, settleLockedCoinStake } from '../lib/pr
 import type { PlayerProfile } from '../types/profile';
 import type { StakeOutcome } from '../lib/coinStake';
 import { assetUrl } from '../lib/assetUrl';
+import { recordCampaignLevelResult } from '../lib/campaignStorage';
+import { getCampaignLevel } from '../lib/campaign';
 
 interface GameScreenProps {
   sport: Sport;
@@ -35,6 +37,8 @@ interface GameScreenProps {
   dogVariant?: DogVariantId;
   trophyFinish?: TrophyFinishId;
   seedKey?: string;
+  /** Campaign stage id (1–40) when mode === 'campaign' */
+  campaignLevelId?: number;
   opponentName?: string;
   opponentScore?: number;
   opponentFinished?: boolean;
@@ -58,6 +62,7 @@ const modeLabels: Record<GameMode, string> = {
   bot: 'VS AI',
   duel: 'DUEL',
   quick: 'QUICK',
+  campaign: 'CAMPAIGN',
 };
 
 export function GameScreen({
@@ -74,6 +79,7 @@ export function GameScreen({
   dogVariant,
   trophyFinish,
   seedKey,
+  campaignLevelId,
   opponentName,
   opponentScore = 0,
   opponentFinished = false,
@@ -84,8 +90,15 @@ export function GameScreen({
   onReplay,
   onProfileChange,
 }: GameScreenProps) {
+  const campaignLevel =
+    mode === 'campaign' && campaignLevelId ? getCampaignLevel(campaignLevelId) : null;
+  const raceBot = mode === 'bot';
+  const effectiveBotDifficulty = botDifficulty;
+  const raceBotName = botName(botDifficulty);
+
   const game = useRoundGame(sport, mode, {
     seedKey,
+    gameTimeSec: campaignLevel?.timeSec,
     onScoreChange,
     onFinished: onDuelFinished,
   });
@@ -93,6 +106,7 @@ export function GameScreen({
   const botScoreRef = useRef(0);
   const stakeSettledRef = useRef(false);
   const pvpRecordedRef = useRef(false);
+  const campaignRecordedRef = useRef(false);
   const [stakeInfo, setStakeInfo] = useState<{
     amount: number;
     label: string;
@@ -100,7 +114,7 @@ export function GameScreen({
   } | null>(null);
 
   useEffect(() => {
-    if (mode !== 'bot' || game.phase !== 'playing') return;
+    if (!raceBot || game.phase !== 'playing') return;
     let timer: ReturnType<typeof setTimeout> | null = null;
     let active = true;
     let attempts = 0;
@@ -108,14 +122,14 @@ export function GameScreen({
     const schedule = () => {
       timer = setTimeout(() => {
         if (!active) return;
-        const points = rollBotPoints(botDifficulty, Math.random, attempts === 0);
+        const points = rollBotPoints(effectiveBotDifficulty, Math.random, attempts === 0);
         attempts += 1;
         if (points > 0) {
           botScoreRef.current += points;
           setBotScore(botScoreRef.current);
         }
         schedule();
-      }, nextBotDelay(botDifficulty));
+      }, nextBotDelay(effectiveBotDifficulty));
     };
 
     schedule();
@@ -123,7 +137,17 @@ export function GameScreen({
       active = false;
       if (timer) clearTimeout(timer);
     };
-  }, [mode, botDifficulty, game.phase]);
+  }, [raceBot, effectiveBotDifficulty, game.phase]);
+
+  // Persist campaign stars once the run ends.
+  useEffect(() => {
+    if (mode !== 'campaign' || !campaignLevelId || !game.result || campaignRecordedRef.current) {
+      return;
+    }
+    if (!game.result.completed) return;
+    campaignRecordedRef.current = true;
+    recordCampaignLevelResult(campaignLevelId, game.result.score);
+  }, [mode, campaignLevelId, game.result]);
 
   // Persist PvP W-L-T + duelist achievement once the match result is known.
   useEffect(() => {
@@ -192,7 +216,7 @@ export function GameScreen({
         ...game.result,
         ...withStake,
         duel: {
-          opponentName: botName(botDifficulty),
+          opponentName: raceBotName,
           opponentScore: botScore,
           outcome,
         },
@@ -225,6 +249,7 @@ export function GameScreen({
     botScore,
     botDifficulty,
     stakeInfo,
+    raceBotName,
   ]);
 
   function handleQuit() {
@@ -255,7 +280,7 @@ export function GameScreen({
   });
   const versusMode = mode === 'duel' || mode === 'bot';
   const versusScore = mode === 'bot' ? botScore : opponentScore;
-  const versusName = mode === 'bot' ? botName(botDifficulty) : opponentName ?? 'Opponent';
+  const versusName = mode === 'bot' ? raceBotName : opponentName ?? 'Opponent';
   const boardChromeRem =
     versusMode && showHints ? 13.25 : versusMode ? 11.75 : showHints ? 11.25 : 10.5;
 

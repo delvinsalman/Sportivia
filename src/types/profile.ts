@@ -341,7 +341,7 @@ export const CHARACTERS: CharacterDef[] = [
     targetHeight: 1.72,
     poseMode: 'animated',
     customizable: true,
-    showcaseRestMs: [14_000, 26_000],
+    showcaseRestMs: [11_000, 19_000],
   },
   {
     id: 'athlete',

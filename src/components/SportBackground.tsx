@@ -370,6 +370,111 @@ function HockeyRink({
   );
 }
 
+const MIX_BALLS: Array<BallConfig & { sport: Sport }> = [
+  { id: 0, sport: 'soccer', xPct: 10, yPct: 22, size: 42, driftDelay: 0.2, driftDuration: 8 },
+  { id: 1, sport: 'basketball', xPct: 82, yPct: 18, size: 46, driftDelay: 0.8, driftDuration: 7.2 },
+  { id: 2, sport: 'baseball', xPct: 18, yPct: 70, size: 34, driftDelay: 1.1, driftDuration: 7.8 },
+  { id: 3, sport: 'football', xPct: 78, yPct: 64, size: 44, driftDelay: 0.4, driftDuration: 8.4 },
+  { id: 4, sport: 'hockey', xPct: 48, yPct: 82, size: 36, driftDelay: 1.4, driftDuration: 6.8 },
+];
+
+/** Soft color orbs — one wash per sport accent. */
+const SPORT_COLOR_BLOBS: Array<{
+  sport: Sport;
+  color: string;
+  x: string;
+  y: string;
+  w: string;
+  h: string;
+  opacity: number;
+}> = [
+  { sport: 'soccer', color: '#23a559', x: '8%', y: '12%', w: '58%', h: '42%', opacity: 0.28 },
+  { sport: 'basketball', color: '#f97316', x: '62%', y: '8%', w: '48%', h: '38%', opacity: 0.26 },
+  { sport: 'baseball', color: '#f4f4f5', x: '38%', y: '36%', w: '42%', h: '32%', opacity: 0.1 },
+  { sport: 'football', color: '#8b5a2b', x: '4%', y: '58%', w: '52%', h: '40%', opacity: 0.24 },
+  { sport: 'hockey', color: '#38bdf8', x: '55%', y: '58%', w: '50%', h: '42%', opacity: 0.24 },
+];
+
+function CampaignMixField({
+  mouse,
+  containerSize,
+}: {
+  mouse: { x: number; y: number } | null;
+  containerSize: { w: number; h: number };
+}) {
+  return (
+    <>
+      <div
+        className="absolute inset-0"
+        style={{
+          background: 'linear-gradient(180deg, #0c0e12 0%, #12151c 45%, #0d1016 100%)',
+        }}
+      />
+
+      {/* Blend of each sport accent */}
+      {SPORT_COLOR_BLOBS.map(blob => (
+        <motion.div
+          key={blob.sport}
+          aria-hidden
+          className="absolute rounded-full blur-3xl"
+          style={{
+            left: blob.x,
+            top: blob.y,
+            width: blob.w,
+            height: blob.h,
+            background: `radial-gradient(circle at 40% 40%, ${blob.color} 0%, transparent 68%)`,
+            opacity: blob.opacity,
+          }}
+          animate={{
+            scale: [1, 1.08, 1],
+            x: [0, blob.sport === 'soccer' || blob.sport === 'football' ? 12 : -10, 0],
+            y: [0, blob.sport === 'hockey' || blob.sport === 'baseball' ? -10 : 8, 0],
+          }}
+          transition={{
+            duration: 10 + blob.opacity * 12,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+      ))}
+
+      {/* Diagonal color wash tying accents together */}
+      <div
+        aria-hidden
+        className="absolute inset-0 opacity-40"
+        style={{
+          background: `
+            linear-gradient(
+              125deg,
+              rgba(35,165,89,0.22) 0%,
+              rgba(249,115,22,0.16) 22%,
+              rgba(244,244,245,0.08) 42%,
+              rgba(139,90,43,0.18) 68%,
+              rgba(56,189,248,0.2) 100%
+            )
+          `,
+          mixBlendMode: 'screen',
+        }}
+      />
+
+      {MIX_BALLS.map(b => (
+        <ReactiveBall
+          key={`${b.sport}-${b.id}`}
+          config={b}
+          sport={b.sport}
+          mouse={mouse}
+          containerSize={containerSize}
+          opacity={0.14}
+        />
+      ))}
+
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_28%,rgba(0,0,0,0.58)_100%)]" />
+      <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/55 to-transparent" />
+      <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/40 to-transparent" />
+    </>
+  );
+}
+
 interface SportBackgroundProps {
   sport: Sport;
 }
@@ -432,6 +537,50 @@ export function SportBackground({ sport }: SportBackgroundProps) {
           <BaseballField mouse={mouse} containerSize={containerSize} />
         )}
       </motion.div>
+    </div>
+  );
+}
+
+/** Neutral multi-sport backdrop for Campaign (not tied to one pitch). */
+export function CampaignBackground() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mouse, setMouse] = useState<{ x: number; y: number } | null>(null);
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 });
+
+  const handlePointerMove = useCallback((e: PointerEvent) => {
+    if (!containerRef.current) return;
+    const rect = containerRef.current.getBoundingClientRect();
+    setMouse({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }, []);
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const updateSize = () => {
+      setContainerSize({ w: el.clientWidth, h: el.clientHeight });
+    };
+    updateSize();
+
+    const ro = new ResizeObserver(updateSize);
+    ro.observe(el);
+
+    const onPointerMove = (e: PointerEvent) => handlePointerMove(e);
+    const onPointerOut = () => setMouse(null);
+
+    document.addEventListener('pointermove', onPointerMove);
+    document.addEventListener('pointerout', onPointerOut);
+
+    return () => {
+      ro.disconnect();
+      document.removeEventListener('pointermove', onPointerMove);
+      document.removeEventListener('pointerout', onPointerOut);
+    };
+  }, [handlePointerMove]);
+
+  return (
+    <div ref={containerRef} className="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+      <CampaignMixField mouse={mouse} containerSize={containerSize} />
     </div>
   );
 }

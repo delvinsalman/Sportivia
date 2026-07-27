@@ -122,7 +122,9 @@ export function generateShareText(
             ? '1v1 Duel'
             : mode === 'quick'
               ? 'Quick Play'
-              : 'Training';
+              : mode === 'campaign'
+                ? 'Campaign'
+                : 'Training';
   if (mode === 'quick') {
     return `${emoji} Sportivia Quick Play · ${score} pts · ${correct} correct\nBeat my streak!`;
   }

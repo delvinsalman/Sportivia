@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Share2, RotateCcw, Home, Sparkles } from 'lucide-react';
+import { Share2, RotateCcw, Home, Sparkles, Star, ChevronRight } from 'lucide-react';
 import { CoinIcon } from './CoinIcon';
 import { XpIcon } from './XpIcon';
 import type { GameResult } from '../types';
@@ -27,6 +27,8 @@ interface ResultModalProps {
   trophyFinish?: TrophyFinishId;
   onPlayAgain: () => void;
   onHome: () => void;
+  /** Campaign: jump straight into the next unlocked stage */
+  onNextLevel?: () => void;
   waitingForOpponent?: boolean;
 }
 
@@ -37,6 +39,7 @@ const modeLabels: Record<GameResult['mode'], string> = {
   bot: 'Vs AI',
   duel: '1v1 Duel',
   quick: 'Quick Play',
+  campaign: 'Campaign',
 };
 
 export function ResultModal({
@@ -52,6 +55,7 @@ export function ResultModal({
   trophyFinish,
   onPlayAgain,
   onHome,
+  onNextLevel,
   waitingForOpponent = false,
 }: ResultModalProps) {
   const [copied, setCopied] = useState(false);
@@ -60,6 +64,9 @@ export function ResultModal({
   const pet = petId ? getPetDef(petId) : null;
   const accent = SPORT_PODIUM_ACCENT[result.sport];
   const duel = result.duel;
+  const isCampaign = result.mode === 'campaign';
+  const campaignStars = result.campaignStars ?? 0;
+  const nextLevelId = result.campaignNextLevelId;
 
   const shareText = generateShareText(
     result.sport, result.mode, result.score, result.correct, result.boardFilled, result.date,
@@ -77,7 +84,17 @@ export function ResultModal({
             : "Time's Up!"
     : rewards?.leveledUp
       ? `Level ${rewards.newLevel}!`
-      : result.perfectBoard
+    : result.campaignBonus?.levelId === 40
+      ? 'Campaign Conquered!'
+      : result.campaignBonus
+        ? `${result.campaignBonus.title}!`
+        : isCampaign && result.completed
+          ? nextLevelId
+            ? `Level ${result.campaignLevelId} Cleared!`
+            : campaignStars > 0
+              ? `Level ${result.campaignLevelId} Done`
+              : `Level ${result.campaignLevelId}`
+        : result.perfectBoard
         ? result.mode === 'quick'
           ? 'Perfect Run!'
           : 'Perfect Board!'
@@ -219,7 +236,87 @@ export function ResultModal({
                 {result.score}
               </p>
               <p className="mt-2 text-[10px] font-black uppercase tracking-widest text-[#949ba4]">Final Score</p>
+              {isCampaign && (
+                <div className="mt-4 flex flex-col items-start gap-2">
+                  <div className="flex items-center gap-1.5">
+                    {[1, 2, 3].map(i => (
+                      <Star
+                        key={i}
+                        className={
+                          i <= campaignStars
+                            ? 'h-8 w-8 fill-[#f0b232] text-[#f0b232] drop-shadow-[0_2px_0_#8a6814] sm:h-9 sm:w-9'
+                            : 'h-8 w-8 text-white/20 sm:h-9 sm:w-9'
+                        }
+                        strokeWidth={2.4}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-[#f0b232]">
+                    {campaignStars === 0
+                      ? 'No stars · score higher for ★'
+                      : campaignStars === 1
+                        ? '1 star · need 2★ to advance'
+                        : campaignStars === 2
+                          ? '2 stars · next level unlocked'
+                          : '3 stars · perfect clear'}
+                  </p>
+                  {nextLevelId && (
+                    <p className="text-sm font-black text-[#4ade80]">
+                      Level {nextLevelId} unlocked
+                    </p>
+                  )}
+                  {!nextLevelId && campaignStars < 2 && result.completed && (
+                    <p className="text-xs font-semibold text-[#949ba4]">
+                      Hit 2★ to unlock the next stage
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
+
+            {result.campaignBonus && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.94, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ delay: 0.12, type: 'spring', stiffness: 320, damping: 20 }}
+                className={`mb-5 overflow-hidden rounded-[1.35rem] border-[3px] p-4 shadow-[0_6px_0_#0a0a0b] sm:p-5 ${
+                  result.campaignBonus.levelId === 40
+                    ? 'border-[#f0b232] bg-gradient-to-br from-[#3a2e10] via-[#1a160c] to-[#121316]'
+                    : 'border-[#ed4245]/70 bg-gradient-to-br from-[#3a1818] via-[#1a1212] to-[#121316]'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <img
+                    src={
+                      result.campaignBonus.levelId === 40
+                        ? '/icons/trophy-record.png'
+                        : '/icons/trophies/world-cup.png'
+                    }
+                    alt=""
+                    className={`object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] ${
+                      result.campaignBonus.levelId === 40 ? 'h-14 w-14' : 'h-11 w-11'
+                    }`}
+                    draggable={false}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className={`text-[10px] font-black uppercase tracking-[0.2em] ${
+                        result.campaignBonus.levelId === 40 ? 'text-[#f0b232]' : 'text-[#ff8a8c]'
+                      }`}
+                    >
+                      {result.campaignBonus.levelId === 40 ? 'Finale bonus' : 'Gate bonus'} · one-time
+                    </p>
+                    <p className="mt-1 text-xl font-black text-white sm:text-2xl">
+                      {result.campaignBonus.title}
+                    </p>
+                    <p className="mt-2 flex flex-wrap gap-3 text-sm font-black">
+                      <span className="text-[#f0b232]">+{result.campaignBonus.coins} coins</span>
+                      <span className="text-[#5865f2]">+{result.campaignBonus.xp} XP</span>
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
 
             {rewards && (
               <div className="mb-5 grid grid-cols-2 gap-3">
@@ -270,20 +367,34 @@ export function ResultModal({
               </div>
             )}
 
-            <div className="mb-6 grid grid-cols-3 gap-2 sm:gap-3">
-              {[
-                result.mode === 'quick'
-                  ? { label: 'Correct', value: result.correct }
-                  : { label: 'Filled', value: `${result.boardFilled}/9` },
-                { label: 'Skipped', value: result.skipped },
-                {
-                  label: 'Accuracy',
-                  value:
-                    result.correct + result.wrong > 0
-                      ? `${Math.round((result.correct / (result.correct + result.wrong)) * 100)}%`
-                      : '—',
-                },
-              ].map(({ label, value }) => (
+            <div className={`mb-6 grid gap-2 sm:gap-3 ${isCampaign || result.mode === 'quick' ? 'grid-cols-2' : 'grid-cols-3'}`}>
+              {(isCampaign
+                ? [
+                    { label: 'Correct', value: result.correct },
+                    {
+                      label: 'Accuracy',
+                      value:
+                        result.correct + result.wrong > 0
+                          ? `${Math.round((result.correct / (result.correct + result.wrong)) * 100)}%`
+                          : '—',
+                    },
+                  ]
+                : [
+                    result.mode === 'quick'
+                      ? { label: 'Correct', value: result.correct }
+                      : { label: 'Filled', value: `${result.boardFilled}/9` },
+                    ...(result.mode === 'quick'
+                      ? []
+                      : [{ label: 'Skipped', value: result.skipped }]),
+                    {
+                      label: 'Accuracy',
+                      value:
+                        result.correct + result.wrong > 0
+                          ? `${Math.round((result.correct / (result.correct + result.wrong)) * 100)}%`
+                          : '—',
+                    },
+                  ]
+              ).map(({ label, value }) => (
                 <div
                   key={label}
                   className="rounded-2xl border-[3px] border-[#3f4147] bg-[#1a1b1f] p-3 text-center shadow-[0_4px_0_#0c0d0f] sm:p-4"
@@ -293,6 +404,17 @@ export function ResultModal({
                 </div>
               ))}
             </div>
+
+            {isCampaign && nextLevelId && onNextLevel && (
+              <button
+                type="button"
+                onClick={onNextLevel}
+                className="mb-3 flex w-full min-h-14 items-center justify-center gap-2 rounded-2xl border-[3px] border-[#f0b232]/80 bg-gradient-to-b from-[#ffe08a] via-[#f0b232] to-[#d4921a] py-3.5 text-base font-black text-[#3a2600] shadow-[0_5px_0_#8a6814] transition-all hover:translate-y-[1px] hover:shadow-[0_4px_0_#8a6814]"
+              >
+                Next Level {nextLevelId}
+                <ChevronRight className="h-5 w-5" strokeWidth={2.75} />
+              </button>
+            )}
 
             <div className="grid grid-cols-3 gap-2 sm:gap-3">
               <button
@@ -318,7 +440,7 @@ export function ResultModal({
                 className="flex min-h-12 items-center justify-center gap-2 rounded-2xl border-[3px] border-[#3f4147] bg-[#1e1f22] py-3.5 text-sm font-black text-[#949ba4] shadow-[0_4px_0_#0c0d0f] transition-all hover:translate-y-[1px] hover:bg-[#2b2d31] hover:text-[#f2f3f5] hover:shadow-[0_3px_0_#0c0d0f]"
               >
                 <Home className="h-4 w-4" />
-                Menu
+                {isCampaign ? 'Map' : 'Menu'}
               </button>
             </div>
           </motion.div>

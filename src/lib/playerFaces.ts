@@ -105,6 +105,7 @@ const FACE_URL_BY_ID: Partial<Record<Sport, Record<string, string>>> = {
     zbo: '/faces/basketball/zbo.png',
     diaw: '/faces/basketball/diaw.png',
     lin: '/faces/basketball/lin.png',
+    marbury: '/faces/basketball/marbury.png',
     barea: '/faces/basketball/barea.png',
     ibaka: '/faces/basketball/ibaka.png',
     allen: '/faces/basketball/allen.png',

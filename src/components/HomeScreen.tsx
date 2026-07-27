@@ -46,6 +46,7 @@ const modeLabels: Record<GameMode, string> = {
   bot: 'Vs AI',
   duel: '1v1 Duel',
   quick: 'Quick Play',
+  campaign: 'Campaign',
 };
 
 const MODE_META: Record<
@@ -75,6 +76,13 @@ const MODE_META: Record<
     icon: '/icons/modes/quick.png',
     detail: '10 Qs · fast trivia · light coins',
     blurb: 'Ten rapid-fire trivia questions — no bingo board. Fast rounds with a light coin payout; Daily & Ranked pay more.',
+  },
+  campaign: {
+    tone: '#f0b232',
+    icon: '/icons/trophy-record.png',
+    detail: 'Special · 40 stages · all 5 sports',
+    blurb:
+      'Sportivia’s special path across all five top sports — soccer, basketball, baseball, football, and hockey. Climb 40 stages of player trivia + championship & award curveballs. Test what you know, learn as you go, and earn coins + XP with stars, chapter gates, and huge finale bonuses.',
   },
   bot: {
     tone: '#a855f7',
@@ -446,7 +454,7 @@ export function HomeScreen({
             )}
           </div>
 
-          <div className="flex flex-col items-center mt-1 sm:mt-2 shrink-0">
+          <div className="flex flex-col items-center gap-2.5 mt-1 sm:mt-2 shrink-0">
             <div className="play-snake-ring">
               <motion.button
                 type="button"
@@ -467,6 +475,29 @@ export function HomeScreen({
                 <span className="tracking-wide">Play</span>
               </motion.button>
             </div>
+
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.03, y: -1 }}
+              whileTap={{ scale: 0.97, y: 1 }}
+              onClick={() => {
+                playMenuConfirm();
+                setModeInfo(null);
+                onStart('campaign');
+              }}
+              className="group/camp relative z-[2] flex items-center gap-2 rounded-[0.85rem] border-[3px] border-[#f0b232]/70 bg-gradient-to-b from-[#2a2418] via-[#1a1b1f] to-[#14151a] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-[#ffe08a] shadow-[0_4px_0_#8a6814,0_0_18px_rgba(240,178,50,0.2)] transition-all hover:border-[#f0b232] sm:px-6 sm:py-3 sm:text-sm"
+            >
+              <img
+                src="/icons/trophy-record.png"
+                alt=""
+                className="h-5 w-5 object-contain drop-shadow-sm transition-transform duration-300 group-hover/camp:scale-110 group-hover/camp:-rotate-6 sm:h-6 sm:w-6"
+                draggable={false}
+              />
+              <span>Campaign</span>
+              <span className="rounded-full border border-[#f0b232]/60 bg-[#f0b232]/20 px-1.5 py-0.5 text-[8px] font-black tracking-wider text-[#f0b232]">
+                Special
+              </span>
+            </motion.button>
           </div>
         </motion.div>
       </div>

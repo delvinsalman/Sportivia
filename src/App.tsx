@@ -5,6 +5,7 @@ import { PageTransition } from './components/PageTransition';
 import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
 import { QuickPlayScreen } from './components/QuickPlayScreen';
+import { CampaignTriviaScreen } from './components/CampaignTriviaScreen';
 import { BallRainIntro } from './components/BallRainIntro';
 import { DuelVersusScreen } from './components/DuelVersusScreen';
 import { StoreScreen } from './components/StoreScreen';
@@ -14,6 +15,7 @@ import { CoinStakeScreen } from './components/CoinStakeScreen';
 import { AboutScreen } from './components/AboutScreen';
 import { SettingsScreen } from './components/SettingsScreen';
 import { CareerScreen } from './components/CareerScreen';
+import { CampaignScreen } from './components/CampaignScreen';
 import { UnlockShowcase, type UnlockReveal } from './components/UnlockShowcase';
 import {
   loadProfile,
@@ -52,6 +54,7 @@ import { useAmbientMusic } from './hooks/useAmbientMusic';
 import { useOnlineCount } from './hooks/useOnlineCount';
 import { useSettings } from './hooks/useSettings';
 import { playUnlockFanfare } from './lib/menuAudio';
+import { getCampaignLevel, pickLevelSport } from './lib/campaign';
 
 type Screen =
   | 'home'
@@ -60,6 +63,7 @@ type Screen =
   | 'store'
   | 'cards'
   | 'career'
+  | 'campaign'
   | 'lobby'
   | 'bot-stake'
   | 'duel-versus'
@@ -73,6 +77,7 @@ const modeLabels: Record<GameMode, string> = {
   bot: 'VS AI',
   duel: 'DUEL',
   quick: 'QUICK',
+  campaign: 'CAMPAIGN',
 };
 
 export default function App() {
@@ -80,6 +85,7 @@ export default function App() {
   const [sport, setSport] = useState<Sport>('soccer');
   const [mode, setMode] = useState<GameMode>('training');
   const [botDifficulty, setBotDifficulty] = useState<BotDifficulty>('beginner');
+  const [campaignLevelId, setCampaignLevelId] = useState<number | null>(null);
   const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
   const [gameKey, setGameKey] = useState(0);
   const [duelSeed, setDuelSeed] = useState<string | null>(null);
@@ -164,18 +170,36 @@ export default function App() {
   function handleStart(m: GameMode, difficulty?: BotDifficulty) {
     if (m === 'duel') {
       setMode('duel');
+      setCampaignLevelId(null);
       setDuelSeed(null);
       startedMatchRef.current = null;
       setScreen('lobby');
       return;
     }
+    if (m === 'campaign') {
+      setMode('campaign');
+      setCampaignLevelId(null);
+      setScreen('campaign');
+      return;
+    }
     setMode(m);
+    setCampaignLevelId(null);
     if (m === 'bot' && difficulty) {
       setBotDifficulty(difficulty);
       setScreen('bot-stake');
       return;
     }
     setDuelSeed(null);
+    setScreen('intro');
+  }
+
+  function handleCampaignPlayLevel(levelId: number) {
+    const level = getCampaignLevel(levelId);
+    const seed = `campaign-${levelId}-${Date.now()}`;
+    setCampaignLevelId(levelId);
+    setSport(pickLevelSport(level, seed));
+    setMode('campaign');
+    setDuelSeed(seed);
     setScreen('intro');
   }
 
@@ -216,6 +240,14 @@ export default function App() {
       setScreen('bot-stake');
       return;
     }
+    if (mode === 'campaign') {
+      if (campaignLevelId != null) {
+        handleCampaignPlayLevel(campaignLevelId);
+        return;
+      }
+      setScreen('campaign');
+      return;
+    }
     setScreen('intro');
   }
 
@@ -223,8 +255,9 @@ export default function App() {
     if (mode === 'duel') duel.leaveLobby();
     startedMatchRef.current = null;
     setDuelSeed(null);
+    setCampaignLevelId(null);
     setProfile(releaseCoinStake());
-    setScreen('home');
+    setScreen(mode === 'campaign' ? 'campaign' : 'home');
     refreshProfile();
   }
 
@@ -387,6 +420,19 @@ export default function App() {
           </PageTransition>
         )}
 
+        {screen === 'campaign' && (
+          <PageTransition key="campaign" variant="menu">
+            <CampaignScreen
+              sport={sport}
+              onBack={() => {
+                setCampaignLevelId(null);
+                setScreen('home');
+              }}
+              onPlayLevel={handleCampaignPlayLevel}
+            />
+          </PageTransition>
+        )}
+
         {screen === 'lobby' && (
           <PageTransition key="lobby" variant="menu">
             <LobbyScreen
@@ -437,8 +483,19 @@ export default function App() {
           <PageTransition key="intro" variant="play" className="fixed inset-0 z-50">
             <BallRainIntro
               sport={sport}
+              sports={
+                mode === 'campaign' && campaignLevelId
+                  ? getCampaignLevel(campaignLevelId).sports
+                  : undefined
+              }
               mode={modeLabels[mode]}
-              detail={mode === 'bot' ? botDifficulty.toUpperCase() : undefined}
+              detail={
+                mode === 'bot'
+                  ? botDifficulty.toUpperCase()
+                  : mode === 'campaign' && campaignLevelId
+                    ? `LVL ${campaignLevelId}`
+                    : undefined
+              }
               onComplete={handleIntroComplete}
             />
           </PageTransition>
@@ -464,7 +521,30 @@ export default function App() {
           </PageTransition>
         )}
 
-        {screen === 'game' && mode !== 'quick' && (
+        {screen === 'game' && mode === 'campaign' && campaignLevelId != null && (
+          <PageTransition key={`campaign-${sport}-${campaignLevelId}-${gameKey}`} variant="game">
+            <CampaignTriviaScreen
+              sport={sport}
+              campaignLevelId={campaignLevelId}
+              seedKey={duelSeed ?? undefined}
+              equippedCharacter={profile.equippedCharacter}
+              equippedPet={profile.equippedPet}
+              creativeLoadout={profile.creativeLoadout}
+              athleteLoadout={profile.athleteLoadout}
+              bobLoadout={profile.bobLoadout}
+              rabbitVariant={profile.rabbitVariant}
+              makoVariant={profile.makoVariant}
+              dogVariant={profile.dogVariant}
+              trophyFinish={profile.trophyFinish}
+              onHome={handleHome}
+              onReplay={handleReplay}
+              onNextLevel={handleCampaignPlayLevel}
+              onProfileChange={refreshProfile}
+            />
+          </PageTransition>
+        )}
+
+        {screen === 'game' && mode !== 'quick' && mode !== 'campaign' && (
           <PageTransition key={`game-${sport}-${mode}-${gameKey}`} variant="game">
             <GameScreen
               sport={sport}
