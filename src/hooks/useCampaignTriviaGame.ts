@@ -3,8 +3,14 @@ import type { GameResult, Sport } from '../types';
 import { getTodayKey } from '../lib/seed';
 import { isRunComplete } from '../lib/progression';
 import { recordGameWithRewards } from '../lib/profileStorage';
-import { recordCampaignLevelResult, tryClaimCampaignGateBonus } from '../lib/campaignStorage';
-import { getCampaignLevel, starsForScore, CAMPAIGN_LEVEL_COUNT } from '../lib/campaign';
+import { recordCampaignLevelResult, tryClaimCampaignGateBonus, loadCampaignProgress } from '../lib/campaignStorage';
+import {
+  getCampaignLevel,
+  starsForScore,
+  CAMPAIGN_LEVEL_COUNT,
+  campaignChapterForLevel,
+  campaignStreakArmed,
+} from '../lib/campaign';
 import {
   generateCampaignTriviaQueue,
   scoreCampaignAnswer,
@@ -104,10 +110,26 @@ export function useCampaignTriviaGame(
       const earnedStars = starsForScore(level, scoreRef.current);
       const advanced =
         completed && earnedStars >= 2 && campaignLevelId < CAMPAIGN_LEVEL_COUNT;
+      const progressBefore = loadCampaignProgress();
+      const streakArmed = campaignStreakArmed(progressBefore);
+      const coinMultiplier: 1 | 2 =
+        completed && earnedStars === 3 && streakArmed ? 2 : 1;
+      const nextStreak =
+        completed && earnedStars === 3 ? (progressBefore.threeStarStreak ?? 0) + 1 : 0;
       const campaignBonus =
         completed
           ? tryClaimCampaignGateBonus(campaignLevelId, scoreRef.current)
           : null;
+      const chapter = campaignChapterForLevel(campaignLevelId);
+      const chapterClear =
+        campaignBonus != null
+          ? {
+              chapterId: chapter.id,
+              title: chapter.title,
+              gateId: chapter.gateId,
+              isFinale: campaignLevelId === 40,
+            }
+          : undefined;
       const base: GameResult = {
         score: scoreRef.current,
         correct: correctRef.current,
@@ -124,7 +146,10 @@ export function useCampaignTriviaGame(
         endReason: reason,
         campaignLevelId,
         campaignStars: earnedStars,
+        campaignThreeStarStreak: nextStreak,
+        campaignCoinMultiplier: coinMultiplier,
         ...(advanced ? { campaignNextLevelId: campaignLevelId + 1 } : {}),
+        ...(chapterClear ? { campaignChapterClear: chapterClear } : {}),
         ...(campaignBonus
           ? {
               campaignBonus: {
@@ -162,7 +187,15 @@ export function useCampaignTriviaGame(
         setPickedId(null);
         setFeedback(null);
         setQuestionTimeLeft(CAMPAIGN_QUESTION_TIME);
-        setIndex(i => (i + 1) % questions.length);
+        setIndex(i => {
+          const next = i + 1;
+          if (next >= questions.length) {
+            // Unique pool exhausted — end the run cleanly (no wrap / no repeat Qs)
+            finish('timer');
+            return i;
+          }
+          return next;
+        });
       }, delayMs);
     },
     [finish, questions.length],

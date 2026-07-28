@@ -4,6 +4,7 @@ import { randomBytes } from 'crypto';
 import { createReadStream, existsSync, statSync } from 'fs';
 import { extname, join, normalize, resolve } from 'path';
 import { fileURLToPath } from 'url';
+import { campaignVoiceLimits, synthesizeCampaignVoice } from './campaignVoice.ts';
 
 const PORT = Number(process.env.PORT ?? process.env.DUEL_PORT ?? 3001);
 const ROOT = resolve(fileURLToPath(new URL('.', import.meta.url)), '..');
@@ -498,6 +499,76 @@ const server = createServer((req, res) => {
         broadcastOnline();
         res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', ...cors });
         res.end(JSON.stringify({ online }));
+      });
+      return;
+    }
+
+    res.writeHead(405, cors);
+    res.end();
+    return;
+  }
+
+  // Neural campaign question reader (Microsoft Edge neural voice → MP3)
+  if (url.startsWith('/api/campaign-voice')) {
+    const readBody = (cb: (raw: string) => void) => {
+      const chunks: Buffer[] = [];
+      let size = 0;
+      req.on('data', c => {
+        const buf = Buffer.isBuffer(c) ? c : Buffer.from(c);
+        size += buf.length;
+        if (size > 8_000) {
+          req.destroy();
+          cb('');
+          return;
+        }
+        chunks.push(buf);
+      });
+      req.on('end', () => cb(Buffer.concat(chunks).toString('utf8')));
+    };
+
+    if (req.method === 'GET') {
+      res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', ...cors });
+      res.end(JSON.stringify({ ok: true, ...campaignVoiceLimits() }));
+      return;
+    }
+
+    if (req.method === 'POST') {
+      readBody(raw => {
+        void (async () => {
+          let text = '';
+          try {
+            const parsed = JSON.parse(raw || '{}') as { text?: string };
+            text = typeof parsed.text === 'string' ? parsed.text : '';
+          } catch {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', ...cors });
+            res.end(JSON.stringify({ error: 'bad_json' }));
+            return;
+          }
+          if (!text.trim()) {
+            res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', ...cors });
+            res.end(JSON.stringify({ error: 'empty_text' }));
+            return;
+          }
+          try {
+            const audio = await synthesizeCampaignVoice(text);
+            if (!audio) {
+              res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8', ...cors });
+              res.end(JSON.stringify({ error: 'empty_text' }));
+              return;
+            }
+            res.writeHead(200, {
+              'Content-Type': 'audio/mpeg',
+              'Content-Length': audio.length,
+              'Cache-Control': 'public, max-age=86400',
+              ...cors,
+            });
+            res.end(audio);
+          } catch (err) {
+            console.error('[campaign-voice]', err);
+            res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8', ...cors });
+            res.end(JSON.stringify({ error: 'tts_failed' }));
+          }
+        })();
       });
       return;
     }

@@ -1,4 +1,5 @@
 import { X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import type { Sport } from '../types';
 import type {
@@ -11,14 +12,20 @@ import type {
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
+import type { RefBotLoadout } from '../types/refBotCharacter';
 import { useCampaignTriviaGame } from '../hooks/useCampaignTriviaGame';
 import { ResultModal } from './ResultModal';
+import { ChapterCompleteScreen } from './ChapterCompleteScreen';
 import { CountdownOverlay } from './GameUI';
 import { PlayerFace } from './PlayerFace';
 import { quickChoiceTone } from '../lib/quickPlay';
 import { SPORT_ACCENT, SPORT_LABEL } from '../lib/sportTheme';
 import { SportBall } from './SportBall';
 import { assetUrl } from '../lib/assetUrl';
+import { CampaignQuestionReader } from './CampaignQuestionReader';
+import { stopCampaignVoice } from '../lib/campaignVoice';
+import { loadCampaignProgress } from '../lib/campaignStorage';
+import { campaignStreakArmed } from '../lib/campaign';
 
 interface CampaignTriviaScreenProps {
   sport: Sport;
@@ -29,6 +36,7 @@ interface CampaignTriviaScreenProps {
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
+  refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
@@ -47,6 +55,7 @@ export function CampaignTriviaScreen({
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
+  refBotLoadout,
   rabbitVariant,
   makoVariant,
   dogVariant,
@@ -61,8 +70,15 @@ export function CampaignTriviaScreen({
   const accent = SPORT_ACCENT[qSport];
   const qPct = Math.max(0, (game.questionTimeLeft / game.questionTime) * 100);
   const matchPct = Math.max(0, (game.gameTimeLeft / game.level.timeSec) * 100);
+  const [showChapterClear, setShowChapterClear] = useState(false);
+  const [streakArmed] = useState(() => campaignStreakArmed(loadCampaignProgress()));
+
+  useEffect(() => {
+    if (game.result?.campaignChapterClear) setShowChapterClear(true);
+  }, [game.result]);
 
   function handleQuit() {
+    stopCampaignVoice();
     game.abandonRun();
     onHome();
   }
@@ -101,7 +117,7 @@ export function CampaignTriviaScreen({
         <button
           type="button"
           onClick={handleQuit}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] text-[#b5bac1] shadow-[0_3px_0_#0c0d0f] hover:text-[#f2f3f5]"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border-[2.5px] border-[#3f4147] bg-[#1e1f22] text-[#b5bac1] shadow-[0_3px_0_#0c0d0f] hover:text-[#f2f3f5]"
           aria-label="Quit"
         >
           <X className="h-4 w-4" strokeWidth={2.75} />
@@ -115,6 +131,14 @@ export function CampaignTriviaScreen({
             <span className="text-[10px] font-bold text-[#6d6f78]">
               {SPORT_LABEL[qSport]}
             </span>
+            {streakArmed && (
+              <span
+                className="rounded-full border border-[#f0b232]/70 bg-[#f0b232]/20 px-1.5 py-0.5 text-[9px] font-black tracking-wide text-[#ffe08a]"
+                title="3★ clears this level for 2× coins"
+              >
+                2× armed
+              </span>
+            )}
           </div>
           <div className="mt-1.5 flex flex-col gap-1">
             <div className="h-1.5 overflow-hidden rounded-full bg-[#1e1f22]">
@@ -187,6 +211,14 @@ export function CampaignTriviaScreen({
                   </h2>
                 </>
               )}
+
+              <CampaignQuestionReader
+                questionKey={q.id}
+                lead={q.kind === 'player' ? q.playerName : q.trophyLabel}
+                prompt={q.prompt}
+                enabled={game.phase === 'playing' && !game.locked && !game.feedback}
+              />
+
               {game.streak > 1 && (
                 <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#f0b232]">
                   {game.streak} streak
@@ -250,7 +282,19 @@ export function CampaignTriviaScreen({
       </AnimatePresence>
 
       <AnimatePresence>
-        {game.result && (
+        {game.result?.campaignChapterClear && showChapterClear && (
+          <ChapterCompleteScreen
+            chapterTitle={game.result.campaignChapterClear.title}
+            chapterId={game.result.campaignChapterClear.chapterId}
+            gateId={game.result.campaignChapterClear.gateId}
+            isFinale={game.result.campaignChapterClear.isFinale}
+            onContinue={() => setShowChapterClear(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {game.result && !showChapterClear && (
           <ResultModal
             result={game.result}
             characterId={equippedCharacter}
@@ -258,6 +302,7 @@ export function CampaignTriviaScreen({
             creativeLoadout={creativeLoadout}
             athleteLoadout={athleteLoadout}
             bobLoadout={bobLoadout}
+            refBotLoadout={refBotLoadout}
             rabbitVariant={rabbitVariant}
             makoVariant={makoVariant}
             dogVariant={dogVariant}

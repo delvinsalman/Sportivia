@@ -7,6 +7,7 @@ import { GameScreen } from './components/GameScreen';
 import { QuickPlayScreen } from './components/QuickPlayScreen';
 import { CampaignTriviaScreen } from './components/CampaignTriviaScreen';
 import { BallRainIntro } from './components/BallRainIntro';
+import { EntrySplash } from './components/EntrySplash';
 import { DuelVersusScreen } from './components/DuelVersusScreen';
 import { StoreScreen } from './components/StoreScreen';
 import { CharacterCardsScreen } from './components/CharacterCardsScreen';
@@ -29,6 +30,7 @@ import {
   saveCreativeLoadout,
   saveAthleteLoadout,
   saveBobLoadout,
+  saveRefBotLoadout,
   saveRabbitVariant,
   saveMakoVariant,
   saveDogVariant,
@@ -47,14 +49,17 @@ import type { StatPending } from './lib/characterCards';
 import type { CreativeLoadout } from './types/creativeCharacter';
 import type { AthleteLoadout } from './types/athleteCharacter';
 import type { BobLoadout } from './types/bobCharacter';
+import type { RefBotLoadout } from './types/refBotCharacter';
 import { useDuel } from './hooks/useDuel';
 import { useAmbientMusic } from './hooks/useAmbientMusic';
 import { useOnlineCount } from './hooks/useOnlineCount';
 import { useSettings } from './hooks/useSettings';
 import { playUnlockFanfare } from './lib/menuAudio';
 import { getCampaignLevel, pickLevelSport } from './lib/campaign';
+import { loadPreferredSport, savePreferredSport } from './lib/preferredSport';
 
 type Screen =
+  | 'entry'
   | 'home'
   | 'about'
   | 'settings'
@@ -79,8 +84,16 @@ const modeLabels: Record<GameMode, string> = {
 };
 
 export default function App() {
-  const [screen, setScreen] = useState<Screen>('home');
-  const [sport, setSport] = useState<Sport>('soccer');
+  const [screen, setScreen] = useState<Screen>('entry');
+  const finishEntry = useCallback(() => setScreen('home'), []);
+  const [sport, setSportState] = useState<Sport | null>(() => loadPreferredSport());
+  const uiSport: Sport = sport ?? 'soccer';
+
+  const setSport = useCallback((next: Sport) => {
+    setSportState(next);
+    savePreferredSport(next);
+  }, []);
+
   const [mode, setMode] = useState<GameMode>('training');
   const [botDifficulty, setBotDifficulty] = useState<BotDifficulty>('beginner');
   const [campaignLevelId, setCampaignLevelId] = useState<number | null>(null);
@@ -93,7 +106,7 @@ export default function App() {
   const duel = useDuel({
     playerName: profile.playerName,
     characterId: profile.equippedCharacter,
-    sport,
+    sport: uiSport,
     profile,
   });
 
@@ -307,6 +320,10 @@ export default function App() {
     setProfile(saveBobLoadout(loadout));
   }
 
+  function handleSaveRefBotLoadout(loadout: RefBotLoadout) {
+    setProfile(saveRefBotLoadout(loadout));
+  }
+
   function handleSaveRabbitVariant(variant: RabbitVariantId) {
     setProfile(saveRabbitVariant(variant));
   }
@@ -328,6 +345,12 @@ export default function App() {
   return (
     <div className="relative min-h-svh overflow-hidden bg-[#0a0a0b]">
       <AnimatePresence mode="wait">
+        {screen === 'entry' && (
+          <PageTransition key="entry" variant="entry" className="fixed inset-0 z-50">
+            <EntrySplash onComplete={finishEntry} />
+          </PageTransition>
+        )}
+
         {screen === 'home' && (
           <PageTransition key="home" variant="menu">
             <HomeScreen
@@ -350,7 +373,7 @@ export default function App() {
         {screen === 'settings' && (
           <PageTransition key="settings" variant="menu">
             <SettingsScreen
-              sport={sport}
+              sport={uiSport}
               onBack={() => setScreen('home')}
               onPromoRedeemed={refreshProfile}
             />
@@ -360,7 +383,7 @@ export default function App() {
         {screen === 'about' && (
           <PageTransition key="about" variant="menu">
             <AboutScreen
-              sport={sport}
+              sport={uiSport}
               profile={profile}
               onBack={() => setScreen('home')}
               onPlay={() => setScreen('home')}
@@ -371,7 +394,7 @@ export default function App() {
         {screen === 'store' && (
           <PageTransition key="store" variant="menu">
             <StoreScreen
-              sport={sport}
+              sport={uiSport}
               profile={profile}
               onBack={() => setScreen('home')}
               onPurchaseCharacter={handlePurchase}
@@ -382,6 +405,7 @@ export default function App() {
               onSaveCreativeLoadout={handleSaveCreativeLoadout}
               onSaveAthleteLoadout={handleSaveAthleteLoadout}
               onSaveBobLoadout={handleSaveBobLoadout}
+              onSaveRefBotLoadout={handleSaveRefBotLoadout}
               onSaveRabbitVariant={handleSaveRabbitVariant}
               onSaveMakoVariant={handleSaveMakoVariant}
               onSaveDogVariant={handleSaveDogVariant}
@@ -392,7 +416,7 @@ export default function App() {
         {screen === 'cards' && (
           <PageTransition key="cards" variant="menu">
             <CharacterCardsScreen
-              sport={sport}
+              sport={uiSport}
               profile={profile}
               onBack={() => setScreen('home')}
               onPurchaseCharacter={handlePurchase}
@@ -405,7 +429,7 @@ export default function App() {
         {screen === 'career' && (
           <PageTransition key="career" variant="menu">
             <CareerScreen
-              sport={sport}
+              sport={uiSport}
               profile={profile}
               onBack={() => setScreen('home')}
               onSportChange={setSport}
@@ -416,7 +440,7 @@ export default function App() {
         {screen === 'campaign' && (
           <PageTransition key="campaign" variant="menu">
             <CampaignScreen
-              sport={sport}
+              sport={uiSport}
               onBack={() => {
                 setCampaignLevelId(null);
                 setScreen('home');
@@ -429,7 +453,7 @@ export default function App() {
         {screen === 'lobby' && (
           <PageTransition key="lobby" variant="menu">
             <LobbyScreen
-              sport={sport}
+              sport={uiSport}
               profile={profile}
               status={duel.status}
               error={duel.error}
@@ -451,7 +475,7 @@ export default function App() {
         {screen === 'bot-stake' && (
           <PageTransition key="bot-stake" variant="menu">
             <CoinStakeScreen
-              sport={sport}
+              sport={uiSport}
               difficulty={botDifficulty}
               profile={profile}
               onBack={() => setScreen('home')}
@@ -463,7 +487,7 @@ export default function App() {
         {screen === 'duel-versus' && duel.match && (
           <PageTransition key="duel-versus" variant="play" className="fixed inset-0 z-50">
             <DuelVersusScreen
-              sport={sport}
+              sport={uiSport}
               profile={profile}
               match={duel.match}
               youId={duel.lobby?.youId ?? duel.you?.id ?? duel.match.players[0]?.id ?? ''}
@@ -475,7 +499,7 @@ export default function App() {
         {screen === 'intro' && (
           <PageTransition key="intro" variant="play" className="fixed inset-0 z-50">
             <BallRainIntro
-              sport={sport}
+              sport={uiSport}
               sports={
                 mode === 'campaign' && campaignLevelId
                   ? getCampaignLevel(campaignLevelId).sports
@@ -497,12 +521,13 @@ export default function App() {
         {screen === 'game' && mode === 'quick' && (
           <PageTransition key={`quick-${sport}-${gameKey}`} variant="game">
             <QuickPlayScreen
-              sport={sport}
+              sport={uiSport}
               equippedCharacter={profile.equippedCharacter}
               equippedPet={profile.equippedPet}
               creativeLoadout={profile.creativeLoadout}
               athleteLoadout={profile.athleteLoadout}
               bobLoadout={profile.bobLoadout}
+              refBotLoadout={profile.refBotLoadout}
               rabbitVariant={profile.rabbitVariant}
               makoVariant={profile.makoVariant}
               dogVariant={profile.dogVariant}
@@ -516,7 +541,7 @@ export default function App() {
         {screen === 'game' && mode === 'campaign' && campaignLevelId != null && (
           <PageTransition key={`campaign-${sport}-${campaignLevelId}-${gameKey}`} variant="game">
             <CampaignTriviaScreen
-              sport={sport}
+              sport={uiSport}
               campaignLevelId={campaignLevelId}
               seedKey={duelSeed ?? undefined}
               equippedCharacter={profile.equippedCharacter}
@@ -524,6 +549,7 @@ export default function App() {
               creativeLoadout={profile.creativeLoadout}
               athleteLoadout={profile.athleteLoadout}
               bobLoadout={profile.bobLoadout}
+              refBotLoadout={profile.refBotLoadout}
               rabbitVariant={profile.rabbitVariant}
               makoVariant={profile.makoVariant}
               dogVariant={profile.dogVariant}
@@ -538,7 +564,7 @@ export default function App() {
         {screen === 'game' && mode !== 'quick' && mode !== 'campaign' && (
           <PageTransition key={`game-${sport}-${mode}-${gameKey}`} variant="game">
             <GameScreen
-              sport={sport}
+              sport={uiSport}
               mode={mode}
               botDifficulty={botDifficulty}
               equippedCharacter={profile.equippedCharacter}
@@ -546,6 +572,7 @@ export default function App() {
               creativeLoadout={profile.creativeLoadout}
               athleteLoadout={profile.athleteLoadout}
               bobLoadout={profile.bobLoadout}
+              refBotLoadout={profile.refBotLoadout}
               rabbitVariant={profile.rabbitVariant}
               makoVariant={profile.makoVariant}
               dogVariant={profile.dogVariant}
@@ -569,10 +596,11 @@ export default function App() {
           <UnlockShowcase
             key={`${unlockReveal.kind}-${unlockReveal.id}`}
             reveal={unlockReveal}
-            sport={sport}
+            sport={uiSport}
             creativeLoadout={profile.creativeLoadout}
             athleteLoadout={profile.athleteLoadout}
             bobLoadout={profile.bobLoadout}
+            refBotLoadout={profile.refBotLoadout}
             rabbitVariant={profile.rabbitVariant}
             makoVariant={profile.makoVariant}
             dogVariant={profile.dogVariant}

@@ -38,16 +38,17 @@ function stageTime(level: number): number {
 }
 
 function starScoresFor(level: number): [number, number, number] {
-  // Championship trivia ≈ 5–7 pts/correct. Bars stay reachable on stage clocks.
+  // Championship trivia ≈ 5–7 pts/correct. Later chapters ask more of you.
   if (isGate(level)) {
-    const one = 20 + Math.floor(level * 0.45);
-    const two = Math.round(one * 1.5);
-    const three = Math.round(one * 2.05);
+    const one = 22 + Math.floor(level * 0.5);
+    const two = Math.round(one * 1.55);
+    const three = Math.round(one * 2.15);
     return [one, two, three];
   }
-  const one = 12 + Math.floor((level - 1) * 0.7);
+  const chapterBump = level <= 10 ? 0 : level <= 20 ? 2 : level <= 30 ? 5 : 8;
+  const one = 12 + Math.floor((level - 1) * 0.75) + chapterBump;
   const two = Math.round(one * 1.55);
-  const three = Math.round(one * 2.2);
+  const three = Math.round(one * 2.25);
   return [one, two, three];
 }
 
@@ -194,6 +195,11 @@ export interface CampaignProgress {
   seenIntro?: boolean;
   /** Gate / finale bonuses already paid out (level ids 10,20,30,40). */
   claimedGateBonuses?: number[];
+  /**
+   * Consecutive campaign clears with 3★.
+   * Second+ consecutive 3★ run pays 2× base campaign coins.
+   */
+  threeStarStreak?: number;
 }
 
 export function emptyCampaignProgress(): CampaignProgress {
@@ -203,6 +209,7 @@ export function emptyCampaignProgress(): CampaignProgress {
     unlockedThrough: 1,
     seenIntro: false,
     claimedGateBonuses: [],
+    threeStarStreak: 0,
   };
 }
 
@@ -248,6 +255,8 @@ export function applyCampaignResult(
     unlockedThrough: progress.unlockedThrough,
     seenIntro: progress.seenIntro,
     claimedGateBonuses: progress.claimedGateBonuses ?? [],
+    threeStarStreak:
+      earned === 3 ? (progress.threeStarStreak ?? 0) + 1 : 0,
   };
 
   if (nextStars >= 2 && levelId < CAMPAIGN_LEVEL_COUNT) {
@@ -303,4 +312,23 @@ export function getGateBonus(levelId: number): CampaignGateBonus | null {
 
 export function hasClaimedGateBonus(progress: CampaignProgress, levelId: number): boolean {
   return (progress.claimedGateBonuses ?? []).includes(levelId);
+}
+
+/** Map chapter metadata for clear screens / UI. */
+export const CAMPAIGN_CHAPTERS = [
+  { id: 0, from: 1, to: 10, title: 'Rookie Road', gateId: 10 },
+  { id: 1, from: 11, to: 20, title: 'Rising Heat', gateId: 20 },
+  { id: 2, from: 21, to: 30, title: 'Pressure Pack', gateId: 30 },
+  { id: 3, from: 31, to: 40, title: 'Final Stretch', gateId: 40 },
+] as const;
+
+export function campaignChapterForLevel(levelId: number) {
+  return (
+    CAMPAIGN_CHAPTERS.find(c => levelId >= c.from && levelId <= c.to) ?? CAMPAIGN_CHAPTERS[0]
+  );
+}
+
+/** True when the next 3★ clear would pay streak 2× coins. */
+export function campaignStreakArmed(progress: CampaignProgress): boolean {
+  return (progress.threeStarStreak ?? 0) >= 1;
 }

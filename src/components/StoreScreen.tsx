@@ -40,6 +40,14 @@ import {
   DEFAULT_BOB_LOADOUT,
   normalizeBobLoadout,
 } from '../types/bobCharacter';
+import type { RefBotLoadout, RefBotSlotId } from '../types/refBotCharacter';
+import {
+  DEFAULT_REF_BOT_LOADOUT,
+  normalizeRefBotLoadout,
+  REF_BOT_PRESETS,
+  REF_BOT_SLOTS,
+  refBotColorsForSlot,
+} from '../types/refBotCharacter';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SportBackground } from './SportBackground';
 import type { Sport } from '../types';
@@ -59,6 +67,7 @@ interface StoreScreenProps {
   onSaveCreativeLoadout: (loadout: CreativeLoadout) => void;
   onSaveAthleteLoadout: (loadout: AthleteLoadout) => void;
   onSaveBobLoadout: (loadout: BobLoadout) => void;
+  onSaveRefBotLoadout: (loadout: RefBotLoadout) => void;
   onSaveRabbitVariant: (variant: RabbitVariantId) => void;
   onSaveMakoVariant: (variant: MakoVariantId) => void;
   onSaveDogVariant: (variant: DogVariantId) => void;
@@ -78,6 +87,7 @@ export function StoreScreen({
   onSaveCreativeLoadout,
   onSaveAthleteLoadout,
   onSaveBobLoadout,
+  onSaveRefBotLoadout,
   onSaveRabbitVariant,
   onSaveMakoVariant,
   onSaveDogVariant,
@@ -103,6 +113,9 @@ export function StoreScreen({
   const [draftBobLoadout, setDraftBobLoadout] = useState<BobLoadout>(() =>
     normalizeBobLoadout(profile.bobLoadout),
   );
+  const [draftRefBotLoadout, setDraftRefBotLoadout] = useState<RefBotLoadout>(() =>
+    normalizeRefBotLoadout(profile.refBotLoadout),
+  );
   const [draftRabbitVariant, setDraftRabbitVariant] = useState<RabbitVariantId>(
     profile.rabbitVariant,
   );
@@ -110,6 +123,7 @@ export function StoreScreen({
   const [draftDogVariant, setDraftDogVariant] = useState<DogVariantId>(profile.dogVariant);
   const [slotId, setSlotId] = useState<CreativeSlotId>('face');
   const [athleteSlotId, setAthleteSlotId] = useState<AthleteSlotId>('jersey');
+  const [refBotSlotId, setRefBotSlotId] = useState<RefBotSlotId>('body');
   const [bobCategoryId, setBobCategoryId] = useState<BobCategoryId>(() =>
     categoryForFinishId(normalizeBobLoadout(profile.bobLoadout).finishId),
   );
@@ -143,6 +157,10 @@ export function StoreScreen({
   }, [profile.bobLoadout]);
 
   useEffect(() => {
+    setDraftRefBotLoadout(normalizeRefBotLoadout(profile.refBotLoadout));
+  }, [profile.refBotLoadout]);
+
+  useEffect(() => {
     setDraftRabbitVariant(profile.rabbitVariant);
   }, [profile.rabbitVariant]);
 
@@ -174,6 +192,7 @@ export function StoreScreen({
   const isCreativePreview = !isPets && safePreviewId === 'creative';
   const isAthletePreview = !isPets && safePreviewId === 'athlete';
   const isBobPreview = !isPets && safePreviewId === 'bob';
+  const isRefBotPreview = !isPets && safePreviewId === 'ref-bot';
   const isRabbitPreview = !isPets && safePreviewId === 'bunny';
   const isMakoPreview = !isPets && safePreviewId === 'mako';
   const isDogPreview = isPets && safePreviewId === 'dog';
@@ -181,6 +200,7 @@ export function StoreScreen({
     (isCreativePreview ||
       isAthletePreview ||
       isBobPreview ||
+      isRefBotPreview ||
       isRabbitPreview ||
       isMakoPreview ||
       isDogPreview) &&
@@ -197,13 +217,20 @@ export function StoreScreen({
       ? draftBobLoadout
       : profile.bobLoadout
     : undefined;
+  const previewRefBotLoadout = isRefBotPreview
+    ? customizing
+      ? draftRefBotLoadout
+      : profile.refBotLoadout
+    : undefined;
   const activeSlot = CREATIVE_SLOTS.find(s => s.id === slotId) ?? CREATIVE_SLOTS[0];
   const slotIndex = Math.max(0, CREATIVE_SLOTS.findIndex(s => s.id === activeSlot.id));
   const canSlotPrev = slotIndex > 0;
   const canSlotNext = slotIndex < CREATIVE_SLOTS.length - 1;
   const activeAthleteSlot = ATHLETE_SLOTS.find(s => s.id === athleteSlotId) ?? ATHLETE_SLOTS[0];
   const athleteSlotColors = colorsForSlot(activeAthleteSlot.id);
-  const isCompactColorEdit = isAthletePreview || isBobPreview;
+  const activeRefBotSlot = REF_BOT_SLOTS.find(s => s.id === refBotSlotId) ?? REF_BOT_SLOTS[0];
+  const refBotSlotColors = refBotColorsForSlot(activeRefBotSlot.id);
+  const isCompactColorEdit = isAthletePreview || isBobPreview || isRefBotPreview;
   const bobCategoryIndex = Math.max(
     0,
     BOB_CATEGORIES.findIndex(cat => cat.id === bobCategoryId),
@@ -266,11 +293,13 @@ export function StoreScreen({
     setDraftLoadout(normalizeCreativeLoadout(profile.creativeLoadout));
     setDraftAthleteLoadout(normalizeAthleteLoadout(profile.athleteLoadout));
     setDraftBobLoadout(normalizeBobLoadout(profile.bobLoadout));
+    setDraftRefBotLoadout(normalizeRefBotLoadout(profile.refBotLoadout));
     setDraftRabbitVariant(profile.rabbitVariant);
     setDraftMakoVariant(profile.makoVariant);
     setDraftDogVariant(profile.dogVariant);
     setSlotId('face');
     setAthleteSlotId('jersey');
+    setRefBotSlotId('body');
     setBobCategoryId(categoryForFinishId(normalizeBobLoadout(profile.bobLoadout).finishId));
     setCustomizing(true);
   };
@@ -282,6 +311,7 @@ export function StoreScreen({
     else if (isDogPreview) onSaveDogVariant(draftDogVariant);
     else if (isAthletePreview) onSaveAthleteLoadout(draftAthleteLoadout);
     else if (isBobPreview) onSaveBobLoadout(draftBobLoadout);
+    else if (isRefBotPreview) onSaveRefBotLoadout(draftRefBotLoadout);
     else onSaveCreativeLoadout(draftLoadout);
     setCustomizing(false);
   };
@@ -295,6 +325,9 @@ export function StoreScreen({
     else if (isBobPreview) {
       setDraftBobLoadout({ ...DEFAULT_BOB_LOADOUT });
       setBobCategoryId('solids');
+    } else if (isRefBotPreview) {
+      setDraftRefBotLoadout({ ...DEFAULT_REF_BOT_LOADOUT });
+      setRefBotSlotId('body');
     } else setDraftLoadout({ ...DEFAULT_CREATIVE_LOADOUT });
   };
 
@@ -316,6 +349,7 @@ export function StoreScreen({
                 setBobCategoryId(
                   categoryForFinishId(normalizeBobLoadout(profile.bobLoadout).finishId),
                 );
+                setDraftRefBotLoadout(normalizeRefBotLoadout(profile.refBotLoadout));
                 setDraftRabbitVariant(profile.rabbitVariant);
                 setDraftMakoVariant(profile.makoVariant);
                 setDraftDogVariant(profile.dogVariant);
@@ -389,6 +423,9 @@ export function StoreScreen({
                               ...(prevItem.id === 'bob'
                                 ? { bobLoadout: profile.bobLoadout }
                                 : {}),
+                              ...(prevItem.id === 'ref-bot'
+                                ? { refBotLoadout: profile.refBotLoadout }
+                                : {}),
                               ...(prevItem.id === 'bunny'
                                 ? { rabbitVariant: profile.rabbitVariant }
                                 : {}),
@@ -445,6 +482,9 @@ export function StoreScreen({
                               ? { athleteLoadout: previewAthleteLoadout }
                               : {}),
                             ...(previewBobLoadout ? { bobLoadout: previewBobLoadout } : {}),
+                            ...(previewRefBotLoadout
+                              ? { refBotLoadout: previewRefBotLoadout }
+                              : {}),
                             ...(isRabbitPreview
                               ? {
                                   rabbitVariant: customizing
@@ -513,6 +553,9 @@ export function StoreScreen({
                                 : {}),
                               ...(nextItem.id === 'bob'
                                 ? { bobLoadout: profile.bobLoadout }
+                                : {}),
+                              ...(nextItem.id === 'ref-bot'
+                                ? { refBotLoadout: profile.refBotLoadout }
                                 : {}),
                               ...(nextItem.id === 'bunny'
                                 ? { rabbitVariant: profile.rabbitVariant }
@@ -790,6 +833,101 @@ export function StoreScreen({
                       })}
                     </div>
                   </>
+                ) : isRefBotPreview ? (
+                  <>
+                    <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+                      {REF_BOT_PRESETS.map(preset => {
+                        const active =
+                          draftRefBotLoadout.eyes === preset.loadout.eyes &&
+                          draftRefBotLoadout.brows === preset.loadout.brows &&
+                          draftRefBotLoadout.head === preset.loadout.head &&
+                          draftRefBotLoadout.body === preset.loadout.body &&
+                          draftRefBotLoadout.arms === preset.loadout.arms;
+                        return (
+                          <button
+                            key={preset.id}
+                            type="button"
+                            onClick={() => {
+                              playMenuSelect();
+                              setDraftRefBotLoadout({ ...preset.loadout });
+                            }}
+                            className={`shrink-0 px-2.5 py-1.5 rounded-lg text-[10px] font-black border-2 transition-all flex items-center gap-1.5 ${
+                              active
+                                ? 'border-[#fbbf24] bg-[#1e1f22] text-[#f2f3f5]'
+                                : 'border-[#3f4147] bg-[#151618] text-[#949ba4]'
+                            }`}
+                          >
+                            <span className="flex gap-0.5">
+                              {[
+                                preset.loadout.body,
+                                preset.loadout.arms,
+                                preset.loadout.head,
+                              ].map((hex, i) => (
+                                <span
+                                  key={i}
+                                  className="w-2.5 h-2.5 rounded-full border border-white/20"
+                                  style={{ background: hex }}
+                                />
+                              ))}
+                            </span>
+                            {preset.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="grid grid-cols-5 gap-1">
+                      {REF_BOT_SLOTS.map(slot => {
+                        const active = slot.id === activeRefBotSlot.id;
+                        return (
+                          <button
+                            key={slot.id}
+                            type="button"
+                            onClick={() => {
+                              playMenuClick();
+                              setRefBotSlotId(slot.id);
+                            }}
+                            className={`px-1 py-1.5 rounded-lg text-[10px] font-black border-2 transition-all ${
+                              active
+                                ? 'text-[#f2f3f5] border-[#fbbf24] bg-[#1e1f22]'
+                                : 'text-[#949ba4] border-[#3f4147] bg-[#151618]'
+                            }`}
+                          >
+                            {slot.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="grid grid-cols-8 gap-1">
+                      {refBotSlotColors.map(opt => {
+                        const active =
+                          draftRefBotLoadout[activeRefBotSlot.id].toLowerCase() ===
+                          opt.hex.toLowerCase();
+                        return (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            title={opt.label}
+                            aria-label={opt.label}
+                            onClick={() => {
+                              playMenuSelect();
+                              setDraftRefBotLoadout(prev => ({
+                                ...prev,
+                                [activeRefBotSlot.id]: opt.hex,
+                              }));
+                            }}
+                            className={`h-7 rounded-md border-2 transition-all ${
+                              active
+                                ? 'border-white ring-2 ring-[#fbbf24]'
+                                : 'border-[#3f4147]'
+                            }`}
+                            style={{ background: opt.hex }}
+                          />
+                        );
+                      })}
+                    </div>
+                  </>
                 ) : (
                   <>
                 <div className="flex items-center gap-1.5">
@@ -908,7 +1046,9 @@ export function StoreScreen({
                             ? 'Save Kit'
                             : isBobPreview
                               ? 'Save Color'
-                              : 'Save Look'}
+                              : isRefBotPreview
+                                ? 'Save Kit'
+                                : 'Save Look'}
                   </button>
                 </div>
               </div>
@@ -933,7 +1073,9 @@ export function StoreScreen({
                                 ? 'Customize Jersey'
                                 : isBobPreview
                                   ? 'Pick Color'
-                                  : 'Customize Kit'}
+                                  : isRefBotPreview
+                                    ? 'Paint the Call'
+                                    : 'Customize Kit'}
                       </button>
                     )}
                     <button

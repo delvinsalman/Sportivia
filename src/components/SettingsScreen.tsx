@@ -13,6 +13,7 @@ import {
   Timer,
   RotateCcw,
   Ticket,
+  Mic,
 } from 'lucide-react';
 import type { Sport } from '../types';
 import { SportBackground } from './SportBackground';
@@ -331,6 +332,24 @@ export function SettingsScreen({ sport, onBack, onPromoRedeemed }: SettingsScree
                     on={settings.menuSoundsEnabled && !audioLocked}
                     accent={accent}
                     onToggle={() => update({ menuSoundsEnabled: !settings.menuSoundsEnabled })}
+                  />
+                </SettingRow>
+
+                <SettingRow
+                  icon={Mic}
+                  title="Read questions aloud"
+                  detail="Campaign voice helper — on by default"
+                  onClick={() =>
+                    update({ campaignVoiceEnabled: !settings.campaignVoiceEnabled })
+                  }
+                  dimmed={audioLocked}
+                >
+                  <Toggle
+                    on={settings.campaignVoiceEnabled && !audioLocked}
+                    accent={accent}
+                    onToggle={() =>
+                      update({ campaignVoiceEnabled: !settings.campaignVoiceEnabled })
+                    }
                   />
                 </SettingRow>
 

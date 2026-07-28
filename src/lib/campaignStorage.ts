@@ -25,6 +25,10 @@ export function loadCampaignProgress(): CampaignProgress {
       claimedGateBonuses: Array.isArray(parsed.claimedGateBonuses)
         ? parsed.claimedGateBonuses.map(Number).filter(n => Number.isFinite(n))
         : [],
+      threeStarStreak:
+        typeof parsed.threeStarStreak === 'number'
+          ? Math.max(0, Math.floor(parsed.threeStarStreak))
+          : 0,
     };
   } catch {
     return emptyCampaignProgress();

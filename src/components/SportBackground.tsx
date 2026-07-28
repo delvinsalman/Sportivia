@@ -476,7 +476,7 @@ function CampaignMixField({
 }
 
 interface SportBackgroundProps {
-  sport: Sport;
+  sport: Sport | null;
 }
 
 export function SportBackground({ sport }: SportBackgroundProps) {
@@ -514,6 +514,14 @@ export function SportBackground({ sport }: SportBackgroundProps) {
       document.removeEventListener('pointerout', onPointerOut);
     };
   }, [handlePointerMove]);
+
+  if (!sport) {
+    return (
+      <div ref={containerRef} className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        <CampaignMixField mouse={mouse} containerSize={containerSize} />
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className="fixed inset-0 overflow-hidden pointer-events-none z-0">

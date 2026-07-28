@@ -26,6 +26,71 @@ import { assetUrl } from '../lib/assetUrl';
 
 const CAMPAIGN_ACCENT = '#f0b232';
 
+/** Unique milestone podium palette per chapter gate. */
+const GATE_PODIUM: Record<
+  number,
+  {
+    faceActive: string;
+    faceOpen: string;
+    rim: string;
+    rimHi: string;
+    text: string;
+    textShadow: string;
+    glow: string;
+    snakeClass: string;
+    icon: string;
+  }
+> = {
+  10: {
+    faceActive:
+      'radial-gradient(ellipse at 40% 30%, #6ee7b7 0%, #10b981 42%, #047857 78%, #064e3b 100%)',
+    faceOpen: 'radial-gradient(ellipse at 40% 30%, #3d7a5c 0%, #1f4d38 55%, #0f2a1e 100%)',
+    rim: '#065f46',
+    rimHi: '#34d399',
+    text: 'text-[#34d399]',
+    textShadow: 'drop-shadow-[0_2px_0_#065f46]',
+    glow: 'inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -3px 6px rgba(0,0,0,0.35), 0 0 18px rgba(16,185,129,0.45)',
+    snakeClass: 'campaign-podium-snake-gate-10',
+    icon: 'text-[#34d399]',
+  },
+  20: {
+    faceActive:
+      'radial-gradient(ellipse at 40% 30%, #7dd3fc 0%, #0ea5e9 42%, #0369a1 78%, #0c4a6e 100%)',
+    faceOpen: 'radial-gradient(ellipse at 40% 30%, #3a6a88 0%, #1e4560 55%, #0f2436 100%)',
+    rim: '#075985',
+    rimHi: '#38bdf8',
+    text: 'text-[#38bdf8]',
+    textShadow: 'drop-shadow-[0_2px_0_#075985]',
+    glow: 'inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -3px 6px rgba(0,0,0,0.35), 0 0 18px rgba(14,165,233,0.45)',
+    snakeClass: 'campaign-podium-snake-gate-20',
+    icon: 'text-[#38bdf8]',
+  },
+  30: {
+    faceActive:
+      'radial-gradient(ellipse at 40% 30%, #fdba74 0%, #f97316 42%, #c2410c 78%, #7c2d12 100%)',
+    faceOpen: 'radial-gradient(ellipse at 40% 30%, #8a5530 0%, #5c3518 55%, #2a180c 100%)',
+    rim: '#9a3412',
+    rimHi: '#fb923c',
+    text: 'text-[#fb923c]',
+    textShadow: 'drop-shadow-[0_2px_0_#9a3412]',
+    glow: 'inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -3px 6px rgba(0,0,0,0.35), 0 0 18px rgba(249,115,22,0.45)',
+    snakeClass: 'campaign-podium-snake-gate-30',
+    icon: 'text-[#fb923c]',
+  },
+  40: {
+    faceActive:
+      'radial-gradient(ellipse at 40% 30%, #ffe08a 0%, #f0b232 35%, #a78bfa 70%, #6d28d9 100%)',
+    faceOpen: 'radial-gradient(ellipse at 40% 30%, #6a5828 0%, #4a3560 55%, #2a1840 100%)',
+    rim: '#6d28d9',
+    rimHi: '#f0b232',
+    text: 'text-[#ffe08a]',
+    textShadow: 'drop-shadow-[0_2px_0_#6d28d9]',
+    glow: 'inset 0 1px 2px rgba(255,255,255,0.45), inset 0 -3px 6px rgba(0,0,0,0.35), 0 0 22px rgba(167,139,250,0.5)',
+    snakeClass: 'campaign-podium-snake-gate-40',
+    icon: 'text-[#ffe08a]',
+  },
+};
+
 interface CampaignScreenProps {
   sport: Sport;
   onBack: () => void;
@@ -89,30 +154,25 @@ function PlatformNode({
 }) {
   const isGate = node.kind === 'gate';
   const glow = active && open;
+  const gateStyle = isGate ? GATE_PODIUM[node.id] : null;
 
-  // Selected = bright gold; other unlocked = dull gold; locked = dark
+  // Selected = bright gold; gates = milestone colors; other unlocked = dull gold; locked = dark
   const face = glow
-    ? isGate
-      ? 'radial-gradient(ellipse at 40% 30%, #ff6b6e 0%, #ed4245 42%, #a11f24 78%, #6b1418 100%)'
-      : 'radial-gradient(ellipse at 40% 30%, #ffe08a 0%, #f0b232 42%, #c48a18 78%, #8a6814 100%)'
+    ? gateStyle?.faceActive ??
+      'radial-gradient(ellipse at 40% 30%, #ffe08a 0%, #f0b232 42%, #c48a18 78%, #8a6814 100%)'
     : open
-      ? isGate
-        ? 'radial-gradient(ellipse at 40% 30%, #9a6a3a 0%, #6a4a28 55%, #3a2a18 100%)'
-        : 'radial-gradient(ellipse at 40% 30%, #a89048 0%, #7a6834 55%, #3e3418 100%)'
+      ? gateStyle?.faceOpen ??
+        'radial-gradient(ellipse at 40% 30%, #a89048 0%, #7a6834 55%, #3e3418 100%)'
       : 'radial-gradient(ellipse at 40% 30%, #3a3c42 0%, #222428 60%, #141518 100%)';
 
   const rim = glow
-    ? isGate
-      ? '#8f1e22'
-      : '#8a6814'
+    ? gateStyle?.rim ?? '#8a6814'
     : open
       ? '#4a3a18'
       : '#0a0a0b';
 
   const rimHi = glow
-    ? isGate
-      ? '#ed4245'
-      : '#d4a017'
+    ? gateStyle?.rimHi ?? '#d4a017'
     : open
       ? '#6a5828'
       : '#1a1b1f';
@@ -126,8 +186,8 @@ function PlatformNode({
       <span
         className={`mb-1 text-[1.75rem] font-black leading-none tracking-tight sm:text-[2.05rem] ${
           glow
-            ? isGate
-              ? 'text-[#ed4245] drop-shadow-[0_2px_0_#8f1e22]'
+            ? gateStyle
+              ? `${gateStyle.text} ${gateStyle.textShadow}`
               : 'text-[#f0b232] drop-shadow-[0_2px_0_#8a6814]'
             : open
               ? 'text-[#c4a86a] drop-shadow-[0_2px_0_rgba(0,0,0,0.55)]'
@@ -139,9 +199,13 @@ function PlatformNode({
 
       {/* Flat podium disc — ellipse top, thin front rim */}
       <span
-        className={`relative z-10 h-[2.65rem] w-[5rem] sm:h-[2.95rem] sm:w-[5.6rem] ${
-          glow ? 'scale-110' : 'group-hover:scale-105'
-        } transition-transform`}
+        className={`campaign-podium-snake relative z-10 h-[2.65rem] w-[5rem] sm:h-[2.95rem] sm:w-[5.6rem] ${
+          glow
+            ? `campaign-podium-snake-active${gateStyle ? ` ${gateStyle.snakeClass}` : ''}`
+            : open
+              ? `campaign-podium-snake-open${gateStyle ? ` ${gateStyle.snakeClass}` : ''}`
+              : 'campaign-podium-snake-locked'
+        } ${glow ? 'scale-110' : 'group-hover:scale-105'} transition-transform`}
       >
         {/* Ground shadow */}
         <span
@@ -165,9 +229,8 @@ function PlatformNode({
           style={{
             background: face,
             boxShadow: glow
-              ? isGate
-                ? 'inset 0 1px 2px rgba(255,255,255,0.4), inset 0 -3px 6px rgba(0,0,0,0.35), 0 0 18px rgba(237,66,69,0.4)'
-                : 'inset 0 1px 2px rgba(255,255,255,0.45), inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 20px rgba(240,178,50,0.5)'
+              ? gateStyle?.glow ??
+                'inset 0 1px 2px rgba(255,255,255,0.45), inset 0 -3px 6px rgba(0,0,0,0.3), 0 0 20px rgba(240,178,50,0.5)'
               : open
                 ? 'inset 0 1px 2px rgba(255,224,138,0.15), inset 0 -3px 6px rgba(0,0,0,0.4)'
                 : 'inset 0 1px 2px rgba(255,255,255,0.12), inset 0 -3px 6px rgba(0,0,0,0.45)',
@@ -194,7 +257,7 @@ function PlatformNode({
           className={`pointer-events-none absolute inset-x-[4%] bottom-[26%] top-[6%] rounded-[100%] border-[2px] ${
             glow
               ? isGate
-                ? 'border-white/25'
+                ? 'border-white/30'
                 : 'border-[#ffe08a]/50'
               : open
                 ? 'border-[#c4a86a]/30'
@@ -207,7 +270,10 @@ function PlatformNode({
           {!open ? (
             <Lock className="h-5 w-5 text-white/75 sm:h-6 sm:w-6" strokeWidth={2.75} />
           ) : isGate && !showAvatar ? (
-            <Zap className="h-5 w-5 text-[#ed4245] sm:h-6 sm:w-6" strokeWidth={2.5} />
+            <Zap
+              className={`h-5 w-5 sm:h-6 sm:w-6 ${gateStyle?.icon ?? 'text-[#ed4245]'}`}
+              strokeWidth={2.5}
+            />
           ) : null}
         </span>
 
@@ -229,6 +295,9 @@ function PlatformNode({
                 : {})}
               {...(profile.equippedCharacter === 'bob'
                 ? { bobLoadout: profile.bobLoadout }
+                : {})}
+              {...(profile.equippedCharacter === 'ref-bot'
+                ? { refBotLoadout: profile.refBotLoadout }
                 : {})}
               {...(profile.equippedCharacter === 'bunny'
                 ? { rabbitVariant: profile.rabbitVariant }
@@ -341,7 +410,7 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
               playMenuBack();
               onBack();
             }}
-            className="flex items-center gap-1.5 rounded-full border-[2.5px] border-white/15 bg-black/45 px-3 py-1.5 text-xs font-black text-[#dbdee1] backdrop-blur-md shadow-[0_3px_0_rgba(0,0,0,0.45)]"
+            className="flex min-h-11 items-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-2 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] transition-all hover:border-[#5c5e66] hover:text-[#f2f3f5] hover:translate-y-[1px] hover:shadow-[0_2px_0_#1a1b1f]"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -364,11 +433,11 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
                   playMenuClick();
                   setShowInfo(cur => !cur);
                 }}
-                className={`relative z-10 p-0.5 transition-colors ${
+                className={`relative z-10 flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
                   showInfo ? 'text-[#f0b232]' : 'text-white/55 hover:text-[#f0b232]'
                 }`}
               >
-                <Info className="h-3.5 w-3.5" strokeWidth={2.5} />
+                <Info className="h-4 w-4" strokeWidth={2.5} />
               </button>
             </div>
             <h1
@@ -440,6 +509,14 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
                 {level.kind === 'gate' ? ' · Gate' : ''}
               </p>
               <div className="flex shrink-0 items-center gap-2">
+                {(progress.threeStarStreak ?? 0) >= 1 && (
+                  <span
+                    className="rounded-full border border-[#f0b232]/70 bg-[#f0b232]/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#ffe08a]"
+                    title="Land 3★ again for double coins"
+                  >
+                    2× streak
+                  </span>
+                )}
                 {stars >= 2 && (
                   <span className="rounded-full border border-[#4ade80]/70 bg-[#23a559]/90 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
                     Completed
@@ -449,7 +526,7 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
               </div>
             </div>
 
-            <div className="mt-1 flex items-end gap-4">
+            <div className="mt-1 flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
               <div className="min-w-0 flex-1">
                 <h2 className="text-xl font-black text-white sm:text-2xl">{level.title}</h2>
                 <p className="mt-0.5 text-xs font-semibold text-white/60">
@@ -508,7 +585,7 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
                   playMenuConfirm();
                   onPlayLevel(level.id);
                 }}
-                className="mb-0.5 shrink-0 rounded-xl border-2 border-white/25 bg-[#23a559] px-5 py-2.5 text-sm font-black uppercase tracking-wide text-white shadow-[0_3px_0_#14532d] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 sm:px-6"
+                className="mb-0.5 w-full shrink-0 rounded-xl border-2 border-white/25 bg-[#23a559] px-5 py-3 text-sm font-black uppercase tracking-wide text-white shadow-[0_3px_0_#14532d] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:px-6 sm:py-2.5"
                 style={
                   stars >= 2
                     ? { background: '#3a3c42', boxShadow: '0 3px 0 #1a1b1f' }
@@ -613,17 +690,21 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
             </button>
           </div>
 
-          <div className="mt-2 flex justify-center gap-1.5">
+          <div className="mt-2 flex justify-center gap-1">
             {CHAPTERS.map(ch => (
               <button
                 key={ch.id}
                 type="button"
                 aria-label={`Chapter ${ch.id + 1}`}
                 onClick={() => goChapter(ch.id)}
-                className={`h-2 rounded-full transition-all ${
-                  ch.id === chapterId ? 'w-6 bg-[#f0b232]' : 'w-2 bg-white/30 hover:bg-white/50'
-                }`}
-              />
+                className="flex h-11 min-w-11 items-center justify-center"
+              >
+                <span
+                  className={`block h-2 rounded-full transition-all ${
+                    ch.id === chapterId ? 'w-6 bg-[#f0b232]' : 'w-2 bg-white/30'
+                  }`}
+                />
+              </button>
             ))}
           </div>
           <p className="sr-only">{sport}</p>

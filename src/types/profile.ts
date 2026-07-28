@@ -2,9 +2,11 @@ import type { PlayerStats } from '../types';
 import type { CreativeLoadout } from './creativeCharacter';
 import type { AthleteLoadout } from './athleteCharacter';
 import type { BobLoadout } from './bobCharacter';
+import type { RefBotLoadout } from './refBotCharacter';
 import { DEFAULT_CREATIVE_LOADOUT } from './creativeCharacter';
 import { DEFAULT_ATHLETE_LOADOUT } from './athleteCharacter';
 import { DEFAULT_BOB_LOADOUT } from './bobCharacter';
+import { DEFAULT_REF_BOT_LOADOUT } from './refBotCharacter';
 
 export type CharacterId =
   | 'cube-man'
@@ -124,6 +126,8 @@ export interface PlayerProfile {
   athleteLoadout: AthleteLoadout;
   /** Body tint for Boxscore Bob */
   bobLoadout: BobLoadout;
+  /** Kit colors for Bribe Ref */
+  refBotLoadout: RefBotLoadout;
   /** Selected look included with the Lane Hopper skin bundle */
   rabbitVariant: RabbitVariantId;
   /** Selected look included with the Finisher Mako skin */
@@ -254,7 +258,7 @@ export const CHARACTERS: CharacterDef[] = [
   {
     id: 'ref-bot',
     name: 'Bribe Ref',
-    tagline: 'Whistle for hire · calls favor the bag',
+    tagline: 'Paint the call · customize anytime',
     price: 4_500,
     modelPath: '/models/ref-bot.glb',
     cardImage: '/cards/ref-bot.png',
@@ -262,6 +266,8 @@ export const CHARACTERS: CharacterDef[] = [
     accent: '#fbbf24',
     footOffsetY: 0,
     targetHeight: 1.68,
+    customizable: true,
+    showcaseRestMs: [2_400, 4_600],
   },
   {
     id: 'officer',
@@ -388,6 +394,7 @@ export const CHARACTERS: CharacterDef[] = [
     cardImage: '/cards/ninja.png',
     accent: '#a78bfa',
     footOffsetY: 0,
+    showcaseRestMs: [2_800, 5_200],
   },
   {
     id: 'mako',
@@ -570,6 +577,7 @@ export const DEFAULT_DOG_VARIANT: DogVariantId = 'husky';
 export { DEFAULT_CREATIVE_LOADOUT };
 export { DEFAULT_ATHLETE_LOADOUT };
 export { DEFAULT_BOB_LOADOUT };
+export { DEFAULT_REF_BOT_LOADOUT };
 
 export const RABBIT_VARIANTS: RabbitVariantDef[] = [
   { id: 'base', name: 'Classic', modelPath: '/models/rabbit/base.glb' },

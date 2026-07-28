@@ -84,6 +84,17 @@ export interface GameResult {
   campaignStars?: 0 | 1 | 2 | 3;
   /** Next stage unlocked by this run (2★+), if any */
   campaignNextLevelId?: number;
+  /** Active 3★ streak length after this result (0 if broken). */
+  campaignThreeStarStreak?: number;
+  /** Base campaign coin multiplier from consecutive 3★ clears (1 or 2). */
+  campaignCoinMultiplier?: 1 | 2;
+  /** Chapter clear payload when a gate (10/20/30/40) is secured. */
+  campaignChapterClear?: {
+    chapterId: number;
+    title: string;
+    gateId: number;
+    isFinale: boolean;
+  };
   /** One-time gate / finale clear bonus (already claimed in storage). */
   campaignBonus?: {
     levelId: number;

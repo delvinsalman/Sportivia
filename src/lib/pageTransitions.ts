@@ -31,6 +31,12 @@ export const PAGE_VARIANTS = {
     animate: { opacity: 1, y: 0, scale: 1 },
     exit: { opacity: 0, y: -22, scale: 0.97 },
   },
+  /** Boot splash — opacity only so it doesn’t fight the home mount */
+  entry: {
+    initial: { opacity: 0 },
+    animate: { opacity: 1 },
+    exit: { opacity: 0 },
+  },
 } satisfies Record<string, Variants>;
 
 export type PageTransitionVariant = keyof typeof PAGE_VARIANTS;

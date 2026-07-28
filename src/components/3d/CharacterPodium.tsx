@@ -53,6 +53,13 @@ import {
   getBobFinish,
   isBobLockedMaterial,
 } from '../../types/bobCharacter';
+import type { RefBotLoadout } from '../../types/refBotCharacter';
+import {
+  DEFAULT_REF_BOT_LOADOUT,
+  refBotLoadoutKey,
+  refBotResolvePartName,
+  refBotSlotForPart,
+} from '../../types/refBotCharacter';
 import type { Sport } from '../../types';
 
 const TARGET_HEIGHT = 1.35;
@@ -184,10 +191,48 @@ const SPORT_FLOURISH_PATTERNS: Partial<Record<Sport, string[]>> = {
 const SPORT_FLOURISH_CHANCE = 0.14;
 const CLIP_FLOURISH_CHANCE = 0.55;
 
-type ProceduralMove = 'hop' | 'lean' | 'celebrate' | 'nod' | 'doubleHop' | 'spin';
+type ProceduralMove =
+  | 'hop'
+  | 'lean'
+  | 'celebrate'
+  | 'nod'
+  | 'doubleHop'
+  | 'spin'
+  | 'shadowStep'
+  | 'vanish'
+  | 'readyStance'
+  | 'slash'
+  | 'smokeBurst'
+  | 'teleport'
+  | 'whistleCall'
+  | 'cardFlash'
+  | 'bribeShake'
+  | 'callTimeout';
 
 const PROCEDURAL_MOVES: ProceduralMove[] = ['hop', 'lean', 'celebrate', 'nod'];
 const RABBIT_PROCEDURAL_MOVES: ProceduralMove[] = ['doubleHop', 'hop', 'spin', 'celebrate', 'nod'];
+/** Shadow Stealer — stealth / blink / ready flourishes (model has no clips). */
+const NINJA_PROCEDURAL_MOVES: ProceduralMove[] = [
+  'shadowStep',
+  'vanish',
+  'readyStance',
+  'slash',
+  'smokeBurst',
+  'teleport',
+  'spin',
+];
+/** Bribe Ref — whistle / card / bag swagger on top of robot clips */
+const REF_BOT_PROCEDURAL_MOVES: ProceduralMove[] = [
+  'whistleCall',
+  'cardFlash',
+  'bribeShake',
+  'callTimeout',
+  'celebrate',
+  'spin',
+  'nod',
+  'hop',
+  'lean',
+];
 
 /** Rabbit-only showcase clips — hoppy / playful set */
 const RABBIT_FLOURISH_PATTERNS = [
@@ -210,6 +255,37 @@ const ATHLETE_FLOURISH_PATTERNS = [
 ];
 
 const ATHLETE_FLOURISH_CHANCE = 0.88;
+
+/** Shadow Stealer — hand/body clips from the rig */
+const NINJA_FLOURISH_PATTERNS = [
+  'punch',
+  'wave',
+  'weapon',
+  'duck',
+  'jump(?!_land|_idle)',
+  'yes',
+  'no',
+];
+
+const NINJA_CLIP_FLOURISH_CHANCE = 0.72;
+const NINJA_ROOT_FLOURISH_CHANCE = 0.38;
+
+/** Bribe Ref — robot body clips (Dance, Punch, ThumbsUp, …) */
+const REF_BOT_FLOURISH_PATTERNS = [
+  'dance',
+  'punch',
+  'wave',
+  'thumbs',
+  'yes',
+  'no',
+  'walkjump',
+  'robot_jump$',
+  'jump(?!_land|_idle)',
+  'sitting',
+];
+
+const REF_BOT_CLIP_FLOURISH_CHANCE = 0.84;
+const REF_BOT_ROOT_FLOURISH_CHANCE = 0.36;
 
 interface ProceduralState {
   move: ProceduralMove | null;
@@ -312,7 +388,44 @@ function proceduralDuration(move: ProceduralMove) {
       return 1.35;
     case 'spin':
       return 1.5;
+    case 'shadowStep':
+      return 0.85;
+    case 'vanish':
+      return 1.15;
+    case 'readyStance':
+      return 1.35;
+    case 'slash':
+      return 0.95;
+    case 'smokeBurst':
+      return 1.05;
+    case 'teleport':
+      return 1.2;
+    case 'whistleCall':
+      return 1.15;
+    case 'cardFlash':
+      return 1.05;
+    case 'bribeShake':
+      return 1.2;
+    case 'callTimeout':
+      return 1.3;
   }
+}
+
+/** Fade / restore ninja materials for vanish & teleport flourishes. */
+function setSceneOpacity(root: Object3D, opacity: number) {
+  root.traverse(obj => {
+    const mesh = obj as Mesh;
+    if (!mesh.isMesh || !mesh.material) return;
+    const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+    for (const m of mats) {
+      if (!m || !('opacity' in m)) continue;
+      const mat = m as MeshStandardMaterial;
+      mat.transparent = opacity < 0.97;
+      mat.opacity = Math.max(0.05, Math.min(1, opacity));
+      mat.depthWrite = opacity > 0.82;
+      mat.needsUpdate = true;
+    }
+  });
 }
 
 function collectRabbitFlourishes(names: string[], idleName?: string): string[] {
@@ -347,6 +460,45 @@ function collectAthleteFlourishes(names: string[], idleName?: string): string[] 
   return found;
 }
 
+function collectNinjaFlourishes(names: string[], idleName?: string): string[] {
+  // Keep Punch / Wave / Weapon / Duck / Jump — do not use the global SHOWCASE_EXCLUDE
+  // list (it strips `weapon` + `jump` for other skins).
+  const pool = filterAnimNames(names, [
+    'death',
+    'hitreact',
+    'run',
+    'walk',
+    'jump_land',
+    'jump_idle',
+  ]).filter(n => n !== idleName);
+  const found: string[] = [];
+  for (const pattern of NINJA_FLOURISH_PATTERNS) {
+    const hits = pool.filter(n => new RegExp(pattern, 'i').test(n));
+    for (const hit of hits) {
+      if (!found.includes(hit)) found.push(hit);
+    }
+  }
+  return found;
+}
+
+function collectRefBotFlourishes(names: string[], idleName?: string): string[] {
+  const base = (n: string) => n.replace(/^.*\|/, '');
+  const pool = names.filter(n => {
+    if (n === idleName) return false;
+    const b = base(n);
+    if (/death|running|^robot_walking$|^robot_standing$/i.test(b)) return false;
+    return REF_BOT_FLOURISH_PATTERNS.some(p => new RegExp(p, 'i').test(b));
+  });
+  const found: string[] = [];
+  for (const pattern of REF_BOT_FLOURISH_PATTERNS) {
+    const hits = pool.filter(n => new RegExp(pattern, 'i').test(base(n)));
+    for (const hit of hits) {
+      if (!found.includes(hit)) found.push(hit);
+    }
+  }
+  return found;
+}
+
 /**
  * Home page only: loop idle, then every few seconds play a random cool flourish
  * (skeletal clip when available, otherwise a procedural move).
@@ -374,6 +526,8 @@ function useHomeShowcase(
   const petId = opts?.petId;
   const characterId = opts?.characterId;
   const isAthlete = characterId === 'athlete';
+  const isNinja = characterId === 'ninja';
+  const isRefBot = characterId === 'ref-bot';
 
   useEffect(() => {
     if (!enabled) return;
@@ -382,15 +536,26 @@ function useHomeShowcase(
     const idleName = findIdleName(names);
     const flourishes = petId
       ? collectPetFlourishes(names, idleName)
-      : isAthlete
-        ? collectAthleteFlourishes(names, idleName)
-        : collectFlourishes(names, idleName, sport);
-    const sportFlourishes = isAthlete ? [] : collectSportFlourishes(names, sport);
+      : isNinja
+        ? collectNinjaFlourishes(names, idleName)
+        : isRefBot
+          ? collectRefBotFlourishes(names, idleName)
+          : isAthlete
+            ? collectAthleteFlourishes(names, idleName)
+            : collectFlourishes(names, idleName, sport);
+    const sportFlourishes =
+      isAthlete || isNinja || isRefBot ? [] : collectSportFlourishes(names, sport);
     const idleAction = idleName ? actions[idleName] : null;
     // Single Mixamo-style clip: keep it as ambient idle, never "flourish" with itself
     const onlyGenericClip =
       names.length === 1 && !/idle|stand|breath|float/i.test(names[0] ?? '');
-    const clipChance = isAthlete ? ATHLETE_FLOURISH_CHANCE : CLIP_FLOURISH_CHANCE;
+    const clipChance = isRefBot
+      ? REF_BOT_CLIP_FLOURISH_CHANCE
+      : isNinja
+        ? NINJA_CLIP_FLOURISH_CHANCE
+        : isAthlete
+          ? ATHLETE_FLOURISH_CHANCE
+          : CLIP_FLOURISH_CHANCE;
 
     const clearTimers = () => {
       clearTimeout(restTimerRef.current);
@@ -424,8 +589,27 @@ function useHomeShowcase(
       scheduleNextFlourish();
     };
 
+    const rootMoves = isNinja
+      ? NINJA_PROCEDURAL_MOVES
+      : isRefBot
+        ? REF_BOT_PROCEDURAL_MOVES
+        : PROCEDURAL_MOVES;
+
     const playFlourish = () => {
       if (cancelled) return;
+
+      // Ninja / Ref: mix root personality moves with hand/body clips
+      if (
+        (isNinja && Math.random() < NINJA_ROOT_FLOURISH_CHANCE) ||
+        (isRefBot && Math.random() < REF_BOT_ROOT_FLOURISH_CHANCE)
+      ) {
+        const move = pickRandom(rootMoves);
+        onProcedural(move);
+        endTimerRef.current = setTimeout(() => {
+          if (!cancelled) scheduleNextFlourish();
+        }, proceduralDuration(move) * 1000 + 220);
+        return;
+      }
 
       const pickPool = (): string[] => {
         const useSport =
@@ -450,7 +634,7 @@ function useHomeShowcase(
         lastFlourishRef.current = clipName;
         const action = actions[clipName];
         if (!action) {
-          const move = pickRandom(PROCEDURAL_MOVES);
+          const move = pickRandom(rootMoves);
           onProcedural(move);
           endTimerRef.current = setTimeout(() => {
             if (!cancelled) scheduleNextFlourish();
@@ -467,7 +651,9 @@ function useHomeShowcase(
         action.reset();
         action.setLoop(LoopOnce, 1);
         action.clampWhenFinished = true;
-        action.timeScale = randBetween(0.95, 1.15) * timeScale;
+        action.timeScale =
+          randBetween(isNinja || isRefBot ? 1.0 : 0.95, isNinja || isRefBot ? 1.22 : 1.15) *
+          timeScale;
         action.fadeIn(0.28).play();
 
         const mixer = action.getMixer();
@@ -493,7 +679,11 @@ function useHomeShowcase(
 
       // Procedural flourish on top of idle (hop / lean / nod / celebrate)
       const move = pickRandom(
-        isAthlete ? (['hop', 'celebrate', 'doubleHop', 'spin'] as ProceduralMove[]) : PROCEDURAL_MOVES,
+        isNinja || isRefBot
+          ? rootMoves
+          : isAthlete
+            ? (['hop', 'celebrate', 'doubleHop', 'spin'] as ProceduralMove[])
+            : PROCEDURAL_MOVES,
       );
       onProcedural(move);
       endTimerRef.current = setTimeout(() => {
@@ -507,9 +697,10 @@ function useHomeShowcase(
       idleAction.timeScale = (onlyGenericClip ? 0.9 : 1) * timeScale;
       idleAction.fadeIn(0.25).play();
     }
-    // Athlete kicks off flourishes sooner so Jump/Punch show up quickly
-    const firstMin = isAthlete ? Math.max(restMin, 2200) : Math.max(restMin, 6000);
-    const firstMax = isAthlete ? Math.max(restMax, 4200) : restMax;
+    // Athlete / ninja / ref kick off flourishes sooner
+    const lively = isNinja || isAthlete || isRefBot;
+    const firstMin = lively ? Math.max(restMin, 1600) : Math.max(restMin, 6000);
+    const firstMax = lively ? Math.max(restMax, 3600) : restMax;
     restTimerRef.current = setTimeout(() => {
       if (!cancelled) playFlourish();
     }, randBetween(firstMin, firstMax));
@@ -522,7 +713,21 @@ function useHomeShowcase(
         a?.stop();
       });
     };
-  }, [actions, names, enabled, onProcedural, timeScale, restMin, restMax, sport, petId, characterId, isAthlete]);
+  }, [
+    actions,
+    names,
+    enabled,
+    onProcedural,
+    timeScale,
+    restMin,
+    restMax,
+    sport,
+    petId,
+    characterId,
+    isAthlete,
+    isNinja,
+    isRefBot,
+  ]);
 }
 
 /**
@@ -1475,11 +1680,14 @@ function PodiumRig({
   const isCreativeSkeletal = skeletalIdle && characterId === 'creative';
   const isRabbit = characterId === 'bunny';
   const isCreative = characterId === 'creative';
+  const isNinja = characterId === 'ninja';
+  const isRefBot = characterId === 'ref-bot';
   const { actions, names } = useAnimations(
     isNaturalPet || proceduralOnly || skeletalIdle ? [] : animations,
     scene,
   );
   const procedural = useRef<ProceduralState>({ move: null, start: 0, duration: 1 });
+  const ninjaSideRef = useRef(1);
 
   useEffect(() => {
     baseY.current = position[1];
@@ -1544,19 +1752,33 @@ function PodiumRig({
   useEffect(() => {
     if (!proceduralOnly) return;
     let cancelled = false;
+    const pool = isNinja ? NINJA_PROCEDURAL_MOVES : PROCEDURAL_MOVES;
     const tick = () => {
       if (cancelled) return;
-      triggerProcedural(pickRandom(PROCEDURAL_MOVES));
-      const restDelay = showcase ? randBetween(3200, 6200) : randBetween(7500, 14000);
+      triggerProcedural(pickRandom(pool));
+      const restDelay = isNinja
+        ? showcase
+          ? randBetween(2200, 4200)
+          : randBetween(5500, 10_000)
+        : showcase
+          ? randBetween(3200, 6200)
+          : randBetween(7500, 14_000);
       timer = setTimeout(tick, restDelay);
     };
-    const initialDelay = showcase ? randBetween(1600, 2800) : randBetween(4500, 9000);
+    const initialDelay = isNinja
+      ? showcase
+        ? randBetween(900, 1800)
+        : randBetween(2800, 5200)
+      : showcase
+        ? randBetween(1600, 2800)
+        : randBetween(4500, 9000);
     let timer = setTimeout(tick, initialDelay);
     return () => {
       cancelled = true;
       clearTimeout(timer);
+      setSceneOpacity(scene, 1);
     };
-  }, [showcase, proceduralOnly, triggerProcedural]);
+  }, [showcase, proceduralOnly, triggerProcedural, isNinja, scene]);
 
   useFrame(state => {
     if (!group.current) return;
@@ -1617,6 +1839,245 @@ function PodiumRig({
       group.current.rotation.x = rotX;
       group.current.rotation.z = rotZ;
       group.current.scale.set(s * stretch, s * squash, s * stretch);
+      return;
+    }
+
+    // Shadow Stealer — soft stealth idle; root vanish/slash on top of hand/body clips
+    if (isNinja) {
+      const amp = showcase ? 1 : 0.55;
+      let y = baseY.current + Math.sin(t * 1.85) * 0.016 * amp;
+      let x = position[0];
+      let rotX = Math.sin(t * 1.35) * 0.018 * amp;
+      let rotZ = Math.sin(t * 0.95) * 0.022 * amp;
+      let yaw = faceYaw;
+      let sx = scale;
+      let sy = scale;
+      let sz = scale;
+      let opacity = 1;
+
+      // Light ready-stance breathe — keeps clips readable
+      sy *= 1 - Math.max(0, Math.sin(t * 1.05)) * 0.012 * amp;
+      rotX += 0.02 * amp;
+
+      const proc = procedural.current;
+      if (proc.move) {
+        const elapsed = performance.now() / 1000 - proc.start;
+        const u = Math.min(1, elapsed / proc.duration);
+        const ease = Math.sin(u * Math.PI);
+        const side = ninjaSideRef.current;
+
+        switch (proc.move) {
+          case 'shadowStep': {
+            // Quick lateral blink-step
+            const dash = Math.sin(u * Math.PI);
+            x += side * dash * (showcase ? 0.42 : 0.28);
+            y += Math.abs(Math.sin(u * Math.PI * 2)) * 0.08;
+            sx = scale * (1 + dash * 0.12);
+            sz = scale * (1 - dash * 0.1);
+            opacity = 1 - ease * 0.35;
+            if (u >= 0.98) ninjaSideRef.current = -side;
+            break;
+          }
+          case 'vanish': {
+            // Smoke-out, soft rise, reappear
+            const ghost = u < 0.45 ? 1 - u / 0.45 : (u - 0.45) / 0.55;
+            opacity = Math.max(0.08, ghost);
+            y += (u < 0.45 ? ease : Math.sin((1 - u) * Math.PI)) * 0.16;
+            sy = scale * (1 + (1 - opacity) * 0.2);
+            sx = scale * (1 - (1 - opacity) * 0.12);
+            break;
+          }
+          case 'readyStance': {
+            // Drop into stance, then spring
+            const crouch = u < 0.55 ? u / 0.55 : 1 - (u - 0.55) / 0.45;
+            sy = scale * (1 - crouch * 0.12);
+            sx = scale * (1 + crouch * 0.06);
+            rotX += crouch * 0.22;
+            y -= crouch * 0.06;
+            if (u > 0.55) {
+              const spring = Math.sin(((u - 0.55) / 0.45) * Math.PI);
+              y += spring * 0.2;
+            }
+            break;
+          }
+          case 'slash': {
+            // Sharp twist + lean like a cut
+            yaw = faceYaw + Math.sin(u * Math.PI) * side * 0.85;
+            rotZ += Math.sin(u * Math.PI) * side * 0.32;
+            rotX -= ease * 0.1;
+            x += Math.sin(u * Math.PI) * side * 0.08;
+            if (u >= 0.98) ninjaSideRef.current = -side;
+            break;
+          }
+          case 'smokeBurst': {
+            const pulse = Math.sin(u * Math.PI);
+            sx = scale * (1 + pulse * 0.18);
+            sy = scale * (1 + pulse * 0.1);
+            sz = scale * (1 + pulse * 0.18);
+            opacity = 1 - pulse * 0.45;
+            y += pulse * 0.1;
+            yaw = faceYaw + pulse * side * 0.4;
+            break;
+          }
+          case 'teleport': {
+            // Fade out → snap side → fade in
+            if (u < 0.4) {
+              opacity = 1 - u / 0.4;
+              sy = scale * (1 + (1 - opacity) * 0.15);
+            } else if (u < 0.55) {
+              opacity = 0.08;
+              x += side * (showcase ? 0.55 : 0.36);
+            } else {
+              opacity = (u - 0.55) / 0.45;
+              x += side * (showcase ? 0.55 : 0.36);
+              y += Math.sin(((u - 0.55) / 0.45) * Math.PI) * 0.1;
+            }
+            if (u >= 0.98) ninjaSideRef.current = -side;
+            break;
+          }
+          case 'spin':
+            yaw = faceYaw + u * Math.PI * 2;
+            y += ease * 0.12;
+            opacity = 1 - ease * 0.2;
+            break;
+          case 'hop':
+            y += Math.sin(u * Math.PI) * 0.2;
+            break;
+          case 'lean':
+            rotZ += Math.sin(u * Math.PI * 2) * 0.2;
+            break;
+          case 'celebrate':
+            y += ease * 0.14;
+            break;
+          case 'nod':
+            rotX += Math.sin(u * Math.PI * 2) * 0.2;
+            break;
+          case 'doubleHop':
+            y += Math.abs(Math.sin(u * Math.PI * 2)) * 0.18;
+            break;
+        }
+
+        setSceneOpacity(scene, opacity);
+
+        if (u >= 1) {
+          procedural.current.move = null;
+          setSceneOpacity(scene, 1);
+        }
+      } else {
+        setSceneOpacity(scene, 1);
+      }
+
+      group.current.position.x = x;
+      group.current.position.y = y;
+      group.current.position.z = position[2];
+      group.current.rotation.y = yaw;
+      group.current.rotation.x = rotX;
+      group.current.rotation.z = rotZ;
+      group.current.scale.set(sx, sy, sz);
+      return;
+    }
+
+    // Bribe Ref — cocky whistle swagger + card / bag root flourishes over robot clips
+    if (isRefBot) {
+      const amp = showcase ? 1 : 0.5;
+      let y = baseY.current + Math.sin(t * 1.55) * 0.022 * amp;
+      let x = position[0];
+      let rotX = Math.sin(t * 1.15) * 0.02 * amp;
+      let rotZ = Math.sin(t * 0.85) * 0.028 * amp;
+      let yaw = faceYaw + Math.sin(t * 0.55) * 0.04 * amp;
+      let sx = scale;
+      let sy = scale;
+      let sz = scale;
+
+      // Soft weight-shift swagger so Dance/Punch clips still read
+      rotZ += Math.sin(t * 1.4) * 0.018 * amp;
+      sy *= 1 + Math.sin(t * 2.1) * 0.01 * amp;
+
+      const proc = procedural.current;
+      if (proc.move) {
+        const elapsed = performance.now() / 1000 - proc.start;
+        const u = Math.min(1, elapsed / proc.duration);
+        const ease = Math.sin(u * Math.PI);
+
+        switch (proc.move) {
+          case 'whistleCall': {
+            // Lean in, toe-rise, sharp nod — blowing the whistle
+            const lean = Math.sin(u * Math.PI);
+            rotX -= lean * 0.28;
+            y += lean * 0.1;
+            yaw = faceYaw + Math.sin(u * Math.PI * 2) * 0.18;
+            sy = scale * (1 + lean * 0.04);
+            break;
+          }
+          case 'cardFlash': {
+            // Snap lean + flash stretch — yellow card pocket
+            const flash = Math.sin(u * Math.PI);
+            const snap = u < 0.35 ? u / 0.35 : 1 - (u - 0.35) / 0.65;
+            rotZ += snap * 0.38;
+            rotX -= flash * 0.08;
+            x += snap * 0.1;
+            sx = scale * (1 + flash * 0.08);
+            sz = scale * (1 - flash * 0.05);
+            yaw = faceYaw + snap * 0.35;
+            break;
+          }
+          case 'bribeShake': {
+            // Side-to-side bag bounce
+            const shake = Math.sin(u * Math.PI * 4);
+            rotZ += shake * 0.22;
+            x += shake * 0.07;
+            y += Math.abs(Math.sin(u * Math.PI * 2)) * 0.06;
+            sx = scale * (1 + Math.abs(shake) * 0.04);
+            break;
+          }
+          case 'callTimeout': {
+            // Drop into T-pose crouch, then pop back
+            const crouch = u < 0.5 ? u / 0.5 : 1 - (u - 0.5) / 0.5;
+            sy = scale * (1 - crouch * 0.14);
+            sx = scale * (1 + crouch * 0.08);
+            sz = scale * (1 + crouch * 0.08);
+            y -= crouch * 0.08;
+            rotX += crouch * 0.12;
+            if (u > 0.55) {
+              const pop = Math.sin(((u - 0.55) / 0.45) * Math.PI);
+              y += pop * 0.14;
+              yaw = faceYaw + pop * 0.25;
+            }
+            break;
+          }
+          case 'spin':
+            yaw = faceYaw + u * Math.PI * 2;
+            y += ease * 0.1;
+            break;
+          case 'celebrate':
+            y += ease * 0.16;
+            sy = scale * (1 + ease * 0.08);
+            rotX -= ease * 0.06;
+            break;
+          case 'nod':
+            rotX += Math.sin(u * Math.PI * 2) * 0.26;
+            break;
+          case 'hop':
+            y += Math.sin(u * Math.PI) * 0.2;
+            break;
+          case 'lean':
+            rotZ += Math.sin(u * Math.PI * 2) * 0.2;
+            break;
+          case 'doubleHop':
+            y += Math.abs(Math.sin(u * Math.PI * 2)) * 0.18;
+            break;
+        }
+
+        if (u >= 1) procedural.current.move = null;
+      }
+
+      group.current.position.x = x;
+      group.current.position.y = y;
+      group.current.position.z = position[2];
+      group.current.rotation.y = yaw;
+      group.current.rotation.x = rotX;
+      group.current.rotation.z = rotZ;
+      group.current.scale.set(sx, sy, sz);
       return;
     }
 
@@ -1948,12 +2409,48 @@ uniform vec3 bobShift;`,
   });
 }
 
+function applyRefBotLoadout(scene: Object3D, loadout: RefBotLoadout) {
+  scene.traverse(child => {
+    const mesh = child as Mesh;
+    if (!mesh.isMesh || !mesh.material) return;
+    // Multi-prim Head/Torso land as unnamed Mesh children under a named Group
+    const meshName = refBotResolvePartName(child);
+
+    const paint = (mat: MeshStandardMaterial) => {
+      const slot = refBotSlotForPart(meshName, mat.name || '');
+      const hex = loadout[slot];
+      const next = mat.clone();
+      next.name = mat.name;
+      next.color.set(hex);
+      if (next.emissive) next.emissive.set('#000000');
+      if ('emissiveIntensity' in next) next.emissiveIntensity = 0;
+      next.vertexColors = false;
+      if (slot === 'eyes') {
+        next.metalness = Math.max(next.metalness ?? 0.4, 0.55);
+        next.roughness = Math.min(next.roughness ?? 0.4, 0.32);
+      } else {
+        next.metalness = 0.38;
+        next.roughness = 0.42;
+      }
+      next.needsUpdate = true;
+      return next;
+    };
+
+    if (Array.isArray(mesh.material)) {
+      mesh.material = mesh.material.map(m => paint(m as MeshStandardMaterial));
+    } else {
+      mesh.material = paint(mesh.material as MeshStandardMaterial);
+    }
+  });
+}
+
 function GlbModel({
   def,
   showcase = false,
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
+  refBotLoadout,
   sport,
   petId,
 }: {
@@ -1962,6 +2459,7 @@ function GlbModel({
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
+  refBotLoadout?: RefBotLoadout;
   sport?: Sport;
   petId?: PetId;
 }) {
@@ -1969,6 +2467,7 @@ function GlbModel({
     'customizable' in def && !!def.customizable && def.modelPath.includes('creative');
   const isAthlete = 'id' in def && def.id === 'athlete';
   const isBob = 'id' in def && def.id === 'bob';
+  const isRefBot = 'id' in def && def.id === 'ref-bot';
   const { scene, animations: embeddedAnims } = useGLTF(def.modelPath);
   const animations = useMemo(() => {
     // Quaternius animals often ship each clip twice (Idle + AnimalArmature|Idle).
@@ -1992,21 +2491,25 @@ function GlbModel({
   const loadout = creativeLoadout ?? DEFAULT_CREATIVE_LOADOUT;
   const kit = athleteLoadout ?? DEFAULT_ATHLETE_LOADOUT;
   const bobKit = bobLoadout ?? DEFAULT_BOB_LOADOUT;
+  const refKit = refBotLoadout ?? DEFAULT_REF_BOT_LOADOUT;
   const loadoutKey = isCreative
     ? creativeLoadoutKey(loadout)
     : isAthlete
       ? athleteLoadoutKey(kit)
       : isBob
         ? bobLoadoutKey(bobKit)
-        : '';
+        : isRefBot
+          ? refBotLoadoutKey(refKit)
+          : '';
   const clone = useMemo(() => {
     const next = SkeletonUtils.clone(scene);
     if (isCreative) applyCreativeLoadout(next, loadout);
     if (isAthlete) applyAthleteLoadout(next, kit);
     if (isBob) applyBobLoadout(next, bobKit);
+    if (isRefBot) applyRefBotLoadout(next, refKit);
     return next;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scene, isCreative, isAthlete, isBob, loadoutKey]);
+  }, [scene, isCreative, isAthlete, isBob, isRefBot, loadoutKey]);
 
   return (
     <PodiumRig
@@ -2027,6 +2530,7 @@ function CharacterModel({
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
+  refBotLoadout,
   rabbitVariant,
   makoVariant,
   sport,
@@ -2034,6 +2538,7 @@ function CharacterModel({
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
+  refBotLoadout?: RefBotLoadout;
   sport?: Sport;
 }) {
   const baseDef = getCharacterDef(characterId);
@@ -2051,6 +2556,7 @@ function CharacterModel({
         creativeLoadout={creativeLoadout}
         athleteLoadout={athleteLoadout}
         bobLoadout={bobLoadout}
+        refBotLoadout={refBotLoadout}
         sport={sport}
       />
     );
@@ -2146,6 +2652,7 @@ function Scene({
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
+  refBotLoadout,
   rabbitVariant,
   makoVariant,
   dogVariant,
@@ -2160,6 +2667,7 @@ function Scene({
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
+  refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
@@ -2196,6 +2704,7 @@ function Scene({
             creativeLoadout={creativeLoadout}
             athleteLoadout={athleteLoadout}
             bobLoadout={bobLoadout}
+            refBotLoadout={refBotLoadout}
             rabbitVariant={rabbitVariant}
             makoVariant={makoVariant}
             sport={sport}
@@ -2241,6 +2750,8 @@ interface CharacterPodiumProps {
   athleteLoadout?: AthleteLoadout;
   /** Body tint for Boxscore Bob */
   bobLoadout?: BobLoadout;
+  /** Kit colors for Bribe Ref */
+  refBotLoadout?: RefBotLoadout;
   /** Appearance included with the Lane Hopper skin */
   rabbitVariant?: RabbitVariantId;
   /** Appearance included with the Finisher Mako skin */
@@ -2264,6 +2775,7 @@ export function CharacterPodium({
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
+  refBotLoadout,
   rabbitVariant,
   makoVariant,
   dogVariant,
@@ -2279,7 +2791,9 @@ export function CharacterPodium({
         ? athleteLoadoutKey(athleteLoadout)
         : characterId === 'bob' && bobLoadout
           ? bobLoadoutKey(bobLoadout)
-          : '';
+          : characterId === 'ref-bot' && refBotLoadout
+            ? refBotLoadoutKey(refBotLoadout)
+            : '';
   const sceneKey = petId ? `pet-${petId}` : `char-${characterId}-${loadoutKey}`;
   const variantKey =
     characterId === 'bunny'
@@ -2352,6 +2866,7 @@ export function CharacterPodium({
             creativeLoadout={creativeLoadout}
             athleteLoadout={athleteLoadout}
             bobLoadout={bobLoadout}
+            refBotLoadout={refBotLoadout}
             rabbitVariant={rabbitVariant}
             makoVariant={makoVariant}
             dogVariant={dogVariant}

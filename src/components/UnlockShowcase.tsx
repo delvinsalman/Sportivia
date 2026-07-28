@@ -14,6 +14,7 @@ import {
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
+import type { RefBotLoadout } from '../types/refBotCharacter';
 import type { Sport } from '../types';
 import { playMenuClick } from '../lib/menuAudio';
 
@@ -27,6 +28,7 @@ interface UnlockShowcaseProps {
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
+  refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
@@ -50,6 +52,7 @@ export function UnlockShowcase({
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
+  refBotLoadout,
   rabbitVariant,
   makoVariant,
   dogVariant,
@@ -175,6 +178,7 @@ export function UnlockShowcase({
               ? { athleteLoadout }
               : {})}
             {...(characterId === 'bob' && bobLoadout ? { bobLoadout } : {})}
+            {...(characterId === 'ref-bot' && refBotLoadout ? { refBotLoadout } : {})}
             {...(characterId === 'bunny' && rabbitVariant
               ? { rabbitVariant }
               : {})}

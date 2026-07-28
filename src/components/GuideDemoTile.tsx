@@ -26,7 +26,7 @@ export function GuideDemoTile({ src, label, accent }: GuideDemoTileProps) {
     ? ''
     : resolved.includes('?')
       ? resolved
-      : `${resolved}?v=3`;
+      : `${resolved}?v=12`;
 
   const startPreview = useCallback(() => {
     const video = previewRef.current;

@@ -294,6 +294,9 @@ export function CharacterCardsScreen({
                         ? { athleteLoadout: profile.athleteLoadout }
                         : {})}
                       {...(selectedId === 'bob' ? { bobLoadout: profile.bobLoadout } : {})}
+                      {...(selectedId === 'ref-bot'
+                        ? { refBotLoadout: profile.refBotLoadout }
+                        : {})}
                       {...(selectedId === 'bunny'
                         ? { rabbitVariant: profile.rabbitVariant }
                         : {})}

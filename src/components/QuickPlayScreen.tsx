@@ -11,6 +11,7 @@ import type {
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
+import type { RefBotLoadout } from '../types/refBotCharacter';
 import { useQuickPlayGame } from '../hooks/useQuickPlayGame';
 import { PlayerFace } from './PlayerFace';
 import { ResultModal } from './ResultModal';
@@ -26,6 +27,7 @@ interface QuickPlayScreenProps {
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
+  refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
@@ -41,6 +43,7 @@ export function QuickPlayScreen({
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
+  refBotLoadout,
   rabbitVariant,
   makoVariant,
   dogVariant,
@@ -198,6 +201,7 @@ export function QuickPlayScreen({
           creativeLoadout={creativeLoadout}
           athleteLoadout={athleteLoadout}
           bobLoadout={bobLoadout}
+          refBotLoadout={refBotLoadout}
           rabbitVariant={rabbitVariant}
           makoVariant={makoVariant}
           dogVariant={dogVariant}

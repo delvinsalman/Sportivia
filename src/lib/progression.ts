@@ -120,6 +120,10 @@ export function computeGameRewards(result: GameResult): GameRewards {
   if (result.mode === 'campaign') {
     coins += 28;
     xp += 16;
+    if (result.campaignCoinMultiplier === 2) {
+      // Double run earnings; gate bonuses are added after (full amount once)
+      coins *= 2;
+    }
   }
   if (result.campaignBonus) {
     coins += result.campaignBonus.coins;

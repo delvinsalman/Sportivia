@@ -14,6 +14,8 @@ export interface GameSettings {
   showHints: boolean;
   /** Soft clock ticks in the last seconds */
   clockTicks: boolean;
+  /** Campaign mode: read each question aloud (natural voice). On by default. */
+  campaignVoiceEnabled: boolean;
 }
 
 const STORAGE_KEY = 'sportivia-settings-v1';
@@ -29,6 +31,7 @@ export const DEFAULT_SETTINGS: GameSettings = {
   showOnlineCount: true,
   showHints: true,
   clockTicks: true,
+  campaignVoiceEnabled: true,
 };
 
 let cached: GameSettings | null = null;
@@ -52,6 +55,7 @@ function normalize(partial?: Partial<GameSettings>): GameSettings {
     showOnlineCount: Boolean(base.showOnlineCount),
     showHints: Boolean(base.showHints),
     clockTicks: Boolean(base.clockTicks),
+    campaignVoiceEnabled: base.campaignVoiceEnabled !== false,
   };
 }
 

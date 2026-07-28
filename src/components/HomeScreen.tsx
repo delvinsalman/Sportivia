@@ -13,7 +13,7 @@ import { SportPicker } from './SportPicker';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { HeaderStats, LevelCorner } from './LevelBar';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import { SPORT_ACCENT, SPORT_PODIUM_ACCENT, SPORT_LABEL, SPORT_RAIL_BG } from '../lib/sportTheme';
+import { SPORT_ACCENT, SPORT_PODIUM_ACCENT, SPORT_LABEL, SPORT_RAIL_BG, SPORTS } from '../lib/sportTheme';
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 import { PAGE_TRANSITION } from '../lib/pageTransitions';
 import { useSettings } from '../hooks/useSettings';
@@ -25,7 +25,7 @@ import type { DailySpinPrize } from '../lib/dailySpin';
 import { DAILY_SPIN_ICON } from '../lib/dailySpin';
 
 interface HomeScreenProps {
-  sport: Sport;
+  sport: Sport | null;
   onSportChange: (sport: Sport) => void;
   onStart: (mode: GameMode, botDifficulty?: BotDifficulty) => void;
   profile: PlayerProfile;
@@ -175,6 +175,8 @@ export function HomeScreen({
   online,
 }: HomeScreenProps) {
   const [showModes, setShowModes] = useState(false);
+  const [showSportPick, setShowSportPick] = useState(false);
+  const [pendingAfterSport, setPendingAfterSport] = useState<'modes' | 'campaign' | null>(null);
   const [showBotDifficulties, setShowBotDifficulties] = useState(false);
   const [showDailySpin, setShowDailySpin] = useState(false);
   const [modeInfo, setModeInfo] = useState<GameMode | null>(null);
@@ -190,11 +192,12 @@ export function HomeScreen({
     modeInfoLeaveRef.current = setTimeout(() => setModeInfo(null), 140);
   };
   const { settings } = useSettings();
-  const s = profile.stats[sport];
+  const homeSport = sport;
+  const s = homeSport ? profile.stats[homeSport] : null;
   const today = getTodayKey();
-  const dailyDone = s.dailyCompleted.includes(today);
+  const dailyDone = Boolean(s?.dailyCompleted.includes(today));
   const spinReady = isDailySpinAvailable(profile);
-  const accent = SPORT_ACCENT[sport];
+  const accent = homeSport ? SPORT_ACCENT[homeSport] : '#f0b232';
   const character = getCharacterDef(profile.equippedCharacter);
   const showOnline = settings.showOnlineCount ? online : null;
 
@@ -202,12 +205,50 @@ export function HomeScreen({
     onProfileChange?.(next);
   }
 
+  function requestPlay() {
+    playMenuClick();
+    setShowBotDifficulties(false);
+    setModeInfo(null);
+    if (!homeSport) {
+      setPendingAfterSport('modes');
+      setShowSportPick(true);
+      return;
+    }
+    setShowModes(true);
+  }
+
+  function requestCampaign() {
+    playMenuConfirm();
+    setModeInfo(null);
+    if (!homeSport) {
+      setPendingAfterSport('campaign');
+      setShowSportPick(true);
+      return;
+    }
+    onStart('campaign');
+  }
+
+  function pickSport(next: Sport) {
+    playMenuConfirm();
+    onSportChange(next);
+    setShowSportPick(false);
+    const pending = pendingAfterSport;
+    setPendingAfterSport(null);
+    if (pending === 'campaign') {
+      onStart('campaign');
+      return;
+    }
+    if (pending === 'modes') {
+      setShowModes(true);
+    }
+  }
+
   return (
     <div className="relative h-svh overflow-hidden">
-      <SportBackground sport={sport} />
+      <SportBackground sport={homeSport} />
 
       <div
-        className={`transition-opacity duration-300 ${showModes ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
+        className={`transition-opacity duration-300 ${showModes || showSportPick ? 'pointer-events-none opacity-0' : 'opacity-100'}`}
       >
       {/* Sportivia — very top left */}
       <motion.div
@@ -215,25 +256,32 @@ export function HomeScreen({
         animate={{ opacity: 1, x: 0 }}
         className="fixed top-0 left-0 z-30 flex items-center gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-2 pb-2 sm:p-4"
       >
-        <SportBall sport={sport} size={30} className="shrink-0 drop-shadow-sm" />
+        {homeSport ? (
+          <SportBall sport={homeSport} size={30} className="shrink-0 drop-shadow-sm" />
+        ) : (
+          <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border-2 border-[#f0b232]/50 bg-[#1a1b1f] text-[11px] font-black text-[#f0b232] shadow-[0_2px_0_rgba(0,0,0,0.4)]">
+            S
+          </span>
+        )}
         <h1 className="text-xl sm:text-4xl font-black tracking-tight text-[#f2f3f5] leading-none">
           Sportivia
         </h1>
       </motion.div>
 
-      {/* Left-center sport rail + record */}
+      {/* Left-center sport rail + record — only after a sport is chosen */}
+      {homeSport && (
       <motion.aside
         initial={{ opacity: 0, x: -16 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-30 flex flex-col items-stretch gap-2.5 sm:gap-3.5 pl-[max(0.45rem,env(safe-area-inset-left))] sm:pl-4 max-sm:scale-[0.9] max-sm:origin-left"
+        className="fixed left-0 top-1/2 z-30 flex -translate-y-1/2 flex-col items-stretch gap-2.5 pl-0 sm:gap-3.5 max-sm:origin-left max-sm:scale-[0.9]"
       >
-        <SportPicker sport={sport} onSportChange={onSportChange} layout="rail" />
+        <SportPicker sport={homeSport} onSportChange={onSportChange} layout="rail" />
 
         <div
           className="game-sport-record"
           style={
             {
-              '--sport-rail-bg': SPORT_RAIL_BG[sport].base,
+              '--sport-rail-bg': SPORT_RAIL_BG[homeSport].base,
             } as CSSProperties
           }
         >
@@ -252,17 +300,17 @@ export function HomeScreen({
               Record
             </p>
             <p className="text-sm sm:text-base font-black text-[#f2f3f5] font-mono leading-none">
-              {s.bestScore > 0 ? s.bestScore : '—'}
+              {s && s.bestScore > 0 ? s.bestScore : '—'}
               <span className="text-[10px] font-black text-[#949ba4] ml-1.5 tracking-wide">
                 ALL-TIME BEST
               </span>
             </p>
-            {(s.dailyStreak > 0 || dailyDone) && (
+            {(s && s.dailyStreak > 0 || dailyDone) && (
               <p className="text-[10px] font-black mt-1.5 leading-none">
-                {s.dailyStreak > 0 && (
+                {s && s.dailyStreak > 0 && (
                   <span className="text-[#f0b232]">🔥 {s.dailyStreak}d</span>
                 )}
-                {s.dailyStreak > 0 && dailyDone && (
+                {s && s.dailyStreak > 0 && dailyDone && (
                   <span className="text-[#5c5e66]"> · </span>
                 )}
                 {dailyDone && <span className="text-[#23a559]">Daily done</span>}
@@ -274,11 +322,12 @@ export function HomeScreen({
               Best
             </p>
             <p className="text-xs font-black text-[#f2f3f5] font-mono leading-none">
-              {s.bestScore > 0 ? s.bestScore : '—'}
+              {s && s.bestScore > 0 ? s.bestScore : '—'}
             </p>
           </div>
         </div>
       </motion.aside>
+      )}
 
       {/* Coins + game nav tabs — top right */}
       <motion.div
@@ -385,13 +434,17 @@ export function HomeScreen({
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="fixed bottom-0 right-0 z-30 pb-[max(0.5rem,env(safe-area-inset-bottom))] pr-[max(0.5rem,env(safe-area-inset-right))] pl-2 pt-2 sm:p-4 max-sm:scale-90 max-sm:origin-bottom-right"
+        className="fixed bottom-0 right-0 z-30 pb-[max(0.5rem,env(safe-area-inset-bottom))] pr-[max(0.5rem,env(safe-area-inset-right))] pl-2 pt-2 sm:p-4 max-sm:scale-[0.82] max-sm:origin-bottom-right"
       >
         <LevelCorner profile={profile} accent={accent} />
       </motion.div>
 
       {/* Hero — character center stage */}
-      <div className="relative z-10 h-svh flex flex-col items-center justify-center pl-[4.75rem] sm:pl-4 pr-3 sm:px-4 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] sm:pt-14 pb-[max(4rem,calc(env(safe-area-inset-bottom)+3.5rem))] sm:pb-10 max-sm:translate-y-0 sm:-translate-y-4">
+      <div
+        className={`relative z-10 h-svh flex flex-col items-center justify-center pr-3 sm:px-4 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] sm:pt-14 pb-[max(5.75rem,calc(env(safe-area-inset-bottom)+5rem))] sm:pb-10 max-sm:translate-y-0 sm:-translate-y-4 ${
+          homeSport ? 'pl-[4.75rem] sm:pl-4' : 'pl-3 sm:pl-4'
+        }`}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -410,11 +463,11 @@ export function HomeScreen({
             <div className="max-sm:scale-[0.82] max-sm:origin-top">
             <CharacterPodium
               characterId={profile.equippedCharacter}
-              accent={SPORT_PODIUM_ACCENT[sport]}
+              accent={homeSport ? SPORT_PODIUM_ACCENT[homeSport] : '#f0b232'}
               height={330}
               bare
               hero
-              sport={sport}
+              sport={homeSport ?? 'soccer'}
               className="w-full max-w-[400px] sm:max-w-[450px] mx-auto"
               {...(profile.equippedCharacter === 'creative'
                 ? { creativeLoadout: profile.creativeLoadout }
@@ -424,6 +477,9 @@ export function HomeScreen({
                 : {})}
               {...(profile.equippedCharacter === 'bob'
                 ? { bobLoadout: profile.bobLoadout }
+                : {})}
+              {...(profile.equippedCharacter === 'ref-bot'
+                ? { refBotLoadout: profile.refBotLoadout }
                 : {})}
               {...(profile.equippedCharacter === 'bunny'
                 ? { rabbitVariant: profile.rabbitVariant }
@@ -451,7 +507,7 @@ export function HomeScreen({
             )}
           </div>
 
-          <div className="flex flex-col items-center gap-2.5 mt-1 sm:mt-2 shrink-0">
+          <div className="flex flex-col items-center gap-2.5 mt-1 sm:mt-2 shrink-0 max-sm:-translate-x-2 sm:translate-x-0">
             <div className="play-snake-ring">
               <motion.button
                 type="button"
@@ -461,40 +517,38 @@ export function HomeScreen({
                   transition: { type: 'spring', stiffness: 420, damping: 18 },
                 }}
                 whileTap={{ scale: 0.97, y: 2 }}
-                onClick={() => {
-                  playMenuClick();
-                  setShowBotDifficulties(false);
-                  setShowModes(true);
-                }}
-                className="group/play relative z-[1] flex items-center gap-2.5 rounded-[0.9rem] border-[3px] border-white/20 bg-gradient-to-b from-[#ffe08a] via-[#f0b232] to-[#d4921a] px-9 py-3.5 text-sm font-black text-[#3a2600] shadow-[0_5px_0_#a5711a] transition-all hover:brightness-105 sm:px-11 sm:py-4 sm:text-base"
+                onClick={requestPlay}
+                className="group/play relative z-[1] flex min-h-11 items-center gap-2.5 rounded-[0.9rem] border-2 border-white/25 bg-gradient-to-b from-[#ffe08a] via-[#f0b232] to-[#d4921a] px-8 py-3.5 text-sm font-black text-[#3a2600] transition-all hover:brightness-105 sm:px-11 sm:py-4 sm:text-base"
               >
                 <Play className="h-5 w-5 fill-current drop-shadow-sm transition-transform duration-300 ease-out group-hover/play:scale-110 group-hover/play:-rotate-12" />
                 <span className="tracking-wide">Play</span>
               </motion.button>
             </div>
 
-            <motion.button
-              type="button"
-              whileHover={{ scale: 1.03, y: -1 }}
-              whileTap={{ scale: 0.97, y: 1 }}
-              onClick={() => {
-                playMenuConfirm();
-                setModeInfo(null);
-                onStart('campaign');
-              }}
-              className="group/camp relative z-[2] flex items-center gap-2 rounded-[0.85rem] border-[3px] border-[#f0b232]/70 bg-gradient-to-b from-[#2a2418] via-[#1a1b1f] to-[#14151a] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-[#ffe08a] shadow-[0_4px_0_#8a6814,0_0_18px_rgba(240,178,50,0.2)] transition-all hover:border-[#f0b232] sm:px-6 sm:py-3 sm:text-sm"
-            >
-              <img
-                src="/icons/trophy-record.png"
-                alt=""
-                className="h-5 w-5 object-contain drop-shadow-sm transition-transform duration-300 group-hover/camp:scale-110 group-hover/camp:-rotate-6 sm:h-6 sm:w-6"
-                draggable={false}
-              />
-              <span>Campaign</span>
-              <span className="rounded-full border border-[#f0b232]/60 bg-[#f0b232]/20 px-1.5 py-0.5 text-[8px] font-black tracking-wider text-[#f0b232]">
-                Special
-              </span>
-            </motion.button>
+            <div className="play-snake-ring play-snake-ring-camp">
+              <motion.button
+                type="button"
+                whileHover={{
+                  scale: 1.03,
+                  y: -1,
+                  transition: { type: 'spring', stiffness: 420, damping: 18 },
+                }}
+                whileTap={{ scale: 0.97, y: 1 }}
+                onClick={requestCampaign}
+                className="group/camp relative z-[1] flex min-h-11 items-center gap-2 rounded-[0.85rem] border-2 border-white/20 bg-gradient-to-b from-[#7dffa8] via-[#23a559] to-[#157a3f] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-[#062816] transition-all hover:brightness-105 sm:px-7 sm:py-3 sm:text-sm"
+              >
+                <img
+                  src="/icons/trophy-record.png"
+                  alt=""
+                  className="h-5 w-5 object-contain drop-shadow-sm transition-transform duration-300 group-hover/camp:scale-110 group-hover/camp:-rotate-6 sm:h-5 sm:w-5"
+                  draggable={false}
+                />
+                <span>Campaign</span>
+                <span className="rounded-full border border-[#062816]/20 bg-[#062816]/15 px-1.5 py-0.5 text-[8px] font-black tracking-wider text-[#062816]">
+                  Special
+                </span>
+              </motion.button>
+            </div>
           </div>
         </motion.div>
       </div>
@@ -546,7 +600,7 @@ export function HomeScreen({
                     color: accent === '#f4f4f5' ? '#f2f3f5' : accent,
                   }}
                 >
-                  {SPORT_LABEL[sport]}
+                  {homeSport ? SPORT_LABEL[homeSport] : 'Sport'}
                 </span>
               </div>
 
@@ -733,6 +787,97 @@ export function HomeScreen({
                         )}
                       </AnimatePresence>
                     </motion.div>
+                  );
+                })}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* First-time / required sport pick */}
+      <AnimatePresence>
+        {showSportPick && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
+            className="fixed inset-0 z-50 bg-black/55 backdrop-blur-[2px]"
+            onClick={() => {
+              playMenuBack();
+              setPendingAfterSport(null);
+              setShowSportPick(false);
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => {
+                playMenuBack();
+                setPendingAfterSport(null);
+                setShowSportPick(false);
+              }}
+              className="fixed top-0 left-0 z-50 m-3 flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-2 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] sm:m-4"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back
+            </button>
+
+            <motion.div
+              initial={{ opacity: 0, y: 36, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 28, scale: 0.97 }}
+              transition={PAGE_TRANSITION}
+              className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-6 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8"
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="mx-auto mb-5 w-full max-w-lg text-center sm:mb-6">
+                <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#f0b232]">
+                  First up
+                </p>
+                <h3 className="mt-1.5 text-2xl font-black tracking-tight text-[#f2f3f5] sm:text-3xl">
+                  Pick your sport
+                </h3>
+                <p className="mt-2 text-sm font-semibold text-[#949ba4]">
+                  We’ll save it for next time — switch anytime from the home menu.
+                </p>
+              </div>
+
+              <div className="mx-auto flex w-full max-w-lg flex-col gap-2.5 sm:gap-3">
+                {SPORTS.map((sp, i) => {
+                  const spAccent = SPORT_ACCENT[sp];
+                  return (
+                    <motion.button
+                      key={sp}
+                      type="button"
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ ...PAGE_TRANSITION, delay: 0.035 * i }}
+                      onClick={() => pickSport(sp)}
+                      className="flex h-[72px] w-full items-center gap-3.5 rounded-2xl border-[3px] bg-[#15161a] px-4 text-left shadow-[0_4px_0_#0c0d0f] transition-all hover:translate-y-[1px] hover:brightness-110 sm:h-[78px] sm:px-5"
+                      style={{
+                        borderColor: `${spAccent}99`,
+                        background: `linear-gradient(160deg, ${spAccent}24 0%, #15161a 58%)`,
+                      }}
+                    >
+                      <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 border-white/15 bg-black/30">
+                        <SportBall sport={sp} size={sp === 'football' || sp === 'hockey' ? 28 : 32} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-base font-black uppercase tracking-wide text-[#f2f3f5] sm:text-lg">
+                          {SPORT_LABEL[sp]}
+                        </span>
+                        <span className="mt-0.5 block text-[11px] font-bold text-[#949ba4]">
+                          Same game · this sport’s stars
+                        </span>
+                      </span>
+                      <span
+                        className="rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider"
+                        style={{ background: `${spAccent}22`, color: spAccent === '#f4f4f5' ? '#f2f3f5' : spAccent }}
+                      >
+                        Play
+                      </span>
+                    </motion.button>
                   );
                 })}
               </div>

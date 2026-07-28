@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Sports trivia built for speed.</strong><br />
-  Match stars to categories on a live 3×3 board across soccer, basketball, baseball, football, and hockey.
+  Match stars to categories on a live 3×3 board — or climb a 40-stage Campaign across soccer, basketball, baseball, football, and hockey.
 </p>
 
 <p align="center">
@@ -16,6 +16,7 @@
 <p align="center">
   <a href="#play">Play</a> ·
   <a href="#gameplay">Gameplay</a> ·
+  <a href="#campaign">Campaign</a> ·
   <a href="#modes">Modes</a> ·
   <a href="#systems">Systems</a> ·
   <a href="#architecture">Architecture</a> ·
@@ -26,6 +27,7 @@
 <p align="center">
   <a href="https://sportivia.up.railway.app/"><img alt="Live" src="https://img.shields.io/badge/live-sportivia.up.railway.app-23a559?style=for-the-badge" /></a>
   <img alt="Sports" src="https://img.shields.io/badge/sports-5-23a559?style=for-the-badge" />
+  <img alt="Campaign" src="https://img.shields.io/badge/campaign-40_stages-f0b232?style=for-the-badge" />
   <img alt="Athletes" src="https://img.shields.io/badge/athletes-1000%2B-f0b232?style=for-the-badge" />
   <img alt="Faces" src="https://img.shields.io/badge/portraits-600%2B-38bdf8?style=for-the-badge" />
   <img alt="Stack" src="https://img.shields.io/badge/React_19%20%7C%20Three.js%20%7C%20WS-0a0a0b?style=for-the-badge" />
@@ -35,10 +37,10 @@
 
 ## The hub
 
-Your home stage — sport-reactive backgrounds, equipped skin + pet, daily spin, cards, store, career, and a gold **Play** CTA.
+Your home stage — sport-reactive backgrounds, 3D skin + pet on a lit podium, daily spin, cards, store, career, level XP, and gold **Play** / emerald **Campaign** CTAs. Pick a sport from the left rail; first visit starts neutral until you choose.
 
 <p align="center">
-  <img src="docs/readme/home.png" alt="Sportivia home hub" width="920" />
+  <img src="docs/readme/home.png" alt="Sportivia home hub — soccer" width="920" />
 </p>
 
 <table>
@@ -63,6 +65,24 @@ Your home stage — sport-reactive backgrounds, equipped skin + pet, daily spin,
     </td>
   </tr>
 </table>
+
+Each sport swaps the field background, accent chrome, ball art, and your all-time record on the rail.
+
+---
+
+<a id="campaign"></a>
+
+## Campaign
+
+Sportivia’s long climb — **40 stages** across all five sports, grouped into chapters with gate levels at 10 / 20 / 30 / 40. Player trivia mixes with championship, award, and era curveballs. Earn up to **3★** per stage; **2★+** unlocks the next level. Three-star streaks can **double coin payouts**. Chapter gates pay one-time coin + XP bonuses.
+
+<p align="center">
+  <img src="docs/readme/campaign.png" alt="Campaign — chapter map and level detail" width="920" />
+</p>
+
+- **Podium gates** — milestone levels get a special stage presentation.
+- **Campaign voice** — optional neural read-aloud for each question (Settings → *Read questions aloud*; needs duel server in dev).
+- **Deep trivia pool** — sport-specific championship / award questions layered on top of roster data.
 
 ---
 
@@ -89,6 +109,8 @@ Tap fast. Place the current star into the right category cell. Boards reset afte
 
 Same rules in every sport. Only the rosters and category language change.
 
+The **About** screen walks through every major feature with short demo clips (board, sports, modes, store, cards, settings, and more).
+
 ---
 
 <a id="modes"></a>
@@ -102,10 +124,12 @@ Same rules in every sport. Only the rosters and category language change.
 | Mode | Feel | Payoff |
 | --- | --- | --- |
 | **Daily Challenge** | Shared board · first finish energy | Daily payday + streak |
+| **Quick Play** | 10-question Kahoot-style sprint | Light coins · fast reps |
 | **Training** | 1:00 practice sprint | No rewards — pure reps |
 | **Ranked** | Competitive solo clock | Ranked bonus + XP |
 | **VS AI** | Race Beginner / Pro / Expert bots | Optional coin stakes |
 | **1v1 Duel** | Live lobby · optional stakes | Winner takes the pot |
+| **Campaign** | 40-stage path · chapter gates | Stars · gate bonuses · streak 2× |
 
 ### Live duels
 
@@ -134,7 +158,7 @@ Realtime sync runs over **WebSockets** (`ws`) — shared board state, scores, fi
 
 ### Store · skins
 
-Unlock once. Customize forever. Browse 3D skins on pedestals, equip your look, jump into kit customize.
+Unlock once. Customize forever. Browse 3D skins on pedestals, equip your look, and paint kits — **Boxscore Bob** finishes, **Pro Athlete** jersey colors, **Bribe Ref** per-part paint (eyes, brows, head, body, arms), **Fitness Geek** modular parts, breed variants for **Street Dog**, and more.
 
 <table>
   <tr>
@@ -143,11 +167,13 @@ Unlock once. Customize forever. Browse 3D skins on pedestals, equip your look, j
       <sub>Store · skins carousel</sub>
     </td>
     <td width="50%" align="center">
-      <img src="docs/readme/storecustom.png" alt="Customize kit" /><br />
-      <sub>Customize kit entry</sub>
+      <img src="docs/readme/storecustom.png" alt="Customize look" /><br />
+      <sub>Customize · breeds & kits</sub>
     </td>
   </tr>
 </table>
+
+Hub skins get **showcase flourishes** — skeletal clips plus procedural root moves (Shadow Stealer vanish steps, Bribe Ref whistle/card shakes, rabbit hops, etc.).
 
 ### Pets
 
@@ -167,7 +193,7 @@ FIFA-style cards with PAC / SHO / PAS / DRI / DEF / PHY, rarity tiers, search + 
 
 ### Career · settings · economy
 
-Track per-sport records, streaks, and XP. Tune audio, motion, and tips. Spend coins on skins, pets, upgrades, and high-risk bot stakes. Spin once every 24h for coins or free upgrades.
+Track per-sport records, streaks, and XP. Tune audio, motion, tips, and campaign voice. Spend coins on skins, pets, upgrades, and high-risk bot stakes. Spin once every 24h for coins or free upgrades.
 
 <table>
   <tr>
@@ -191,18 +217,19 @@ A dense sports knowledge + presentation layer, not a thin trivia wrapper.
 | Layer | Scale (approx.) |
 | --- | ---: |
 | Sports | **5** — soccer · basketball · baseball · football · hockey |
+| Campaign stages | **40** — 4 chapters · gate bonuses at 10/20/30/40 |
 | Athletes in data | **1,000+** rostered players |
 | Local portraits | **600+** faces under `public/faces/` |
-| 3D skins | **20** characters / variants |
+| 3D skins | **20+** characters / variants |
 | Pets | **13** companions |
 | GLB / FBX models | **45+** files under `public/models/` |
 | Card art | **20** card renders |
 | Categories | **250+** category definitions & intersections |
-| React screens / components | **30+** UI modules |
-| Domain libs | **20+** modules (`src/lib`) |
-| Game hooks | **6** (board, duel, audio, profile flows…) |
-| Duel server | **~850** lines realtime lobby/match protocol |
-| TypeScript app source | **~20k** lines across `src/` |
+| React screens / components | **35+** UI modules |
+| Domain libs | **25+** modules (`src/lib`) |
+| Game hooks | **8+** (board, duel, campaign trivia, audio…) |
+| Duel + voice server | Node `ws` lobbies + campaign TTS route |
+| TypeScript app source | **~22k** lines across `src/` |
 | Tooling scripts | **14** data / face / build utilities |
 
 ### Athlete data by sport
@@ -217,6 +244,15 @@ A dense sports knowledge + presentation layer, not a thin trivia wrapper.
 
 Rosters carry clubs, leagues, nations, trophies, decades, and sport-specific fields so category boards stay fair and deep.
 
+### Recent highlights
+
+- **Campaign mode** — 40-stage path, stars, chapter gates, podium milestones, deep championship trivia.
+- **About guide** — scrollable feature tour with embedded demo videos per section.
+- **Sport-first home** — neutral first launch, sport pick modal, persisted preferred sport.
+- **Character polish** — home showcase animations, multi-slot color kits, entry splash.
+- **Campaign voice** — neural TTS for question read-aloud (server-side, toggle in Settings).
+- **UX pass** — Play/Campaign CTA styling, level corner HUD, sport rail, daily spin chip.
+
 ---
 
 <a id="architecture"></a>
@@ -226,18 +262,20 @@ Rosters carry clubs, leagues, nations, trophies, decades, and sport-specific fie
 ```text
 ┌──────────────────────────────────────────────────────────┐
 │  React 19 + Vite 8 + Tailwind 4                          │
-│  Home · Modes · Board · Store · Cards · Career · Settings│
+│  Home · Modes · Board · Campaign · Store · Cards · About  │
 │  Framer Motion UI · Lucide icons                         │
 ├────────────────────────────┬─────────────────────────────┤
 │  @react-three/fiber        │  Profile (localStorage)     │
 │  drei · Three.js           │  coins · XP · unlocks       │
 │  skins · pets · pedestals  │  card levels · PvP W-L-T    │
+│  loadouts · flourishes     │  campaign progress · spin   │
 ├────────────────────────────┴─────────────────────────────┤
 │  Game engine (hooks)                                     │
 │  board gen · timers · scoring · bot AI · stakes          │
+│  campaign trivia · chapter gates · voice client          │
 ├──────────────────────────────────────────────────────────┤
-│  Duel WebSocket server (Node + ws + tsx)                 │
-│  lobbies · ready · shared board · results · stakes       │
+│  Node server (tsx)                                       │
+│  duel WebSocket lobbies · campaign voice (Edge TTS)       │
 └──────────────────────────────────────────────────────────┘
 ```
 
@@ -249,16 +287,18 @@ Rosters carry clubs, leagues, nations, trophies, decades, and sport-specific fie
 | 3D | Three.js, React Three Fiber, Drei |
 | Build | Vite 8, `tsc -b`, oxlint |
 | Realtime | Node.js, `ws`, concurrent Vite + duel process |
-| Persistence | Client profile storage (coins, unlocks, stats, spin cooldown) |
-| Assets | Local faces, GLB/FBX models, card PNGs, SFX, sport chrome |
+| Voice | `msedge-tts` on duel server for campaign read-aloud |
+| Persistence | Client profile storage (coins, unlocks, stats, spin cooldown, loadouts) |
+| Assets | Local faces, GLB/FBX models, card PNGs, SFX, sport chrome, About demos |
 
 ### Notable product systems
 
 - **Sport theme engine** — backgrounds, accents, balls, and hub chrome swap with the selected sport.
 - **Board generation** — category intersections validated against athlete metadata.
+- **Campaign progression** — stars, unlock rules, gate payouts, chapter UI, deep trivia injection.
 - **Portrait pipeline** — localized faces + override scripts (`scripts/localizeSoccerFaces.mts`, etc.).
-- **Economy** — coins, bot stakes, duel pots, card upgrades, daily spin weights.
-- **Cosmetic loop** — store skins/pets, kit customize, hub showcase, unlock fanfare.
+- **Economy** — coins, bot stakes, duel pots, card upgrades, daily spin weights, campaign streak 2×.
+- **Cosmetic loop** — store skins/pets, per-character loadouts, hub showcase, unlock fanfare.
 - **Cards** — overall ratings, rarity, free-upgrade bank, Icon/99 presentation.
 - **Duels** — lobby codes, host/ready, stake presets, matchup cards, live score HUD.
 
@@ -290,10 +330,10 @@ npm start          # serves dist/ + WebSocket on /duel
 
 ```bash
 npm install
-npm run dev:all    # Vite + duel WebSocket server
+npm run dev:all    # Vite + duel WebSocket server (+ campaign voice API)
 ```
 
-Open `http://localhost:5173`. Duels proxy through Vite to `/duel`.
+Open `http://localhost:5173`. Duels proxy through Vite to `/duel`. Campaign voice hits `/api/campaign-voice` on the duel server.
 
 | Script | Purpose |
 | --- | --- |
@@ -313,15 +353,16 @@ Open `http://localhost:5173`. Duels proxy through Vite to `/duel`.
 
 ```text
 src/
-  components/     screens + HUD (home, board, store, cards, duel…)
-  hooks/          game board, duel client, audio, profile helpers
-  lib/            themes, bots, stakes, faces, cards, spin, storage
+  components/     screens + HUD (home, board, campaign, store, cards, about…)
+  hooks/          game board, duel client, campaign trivia, audio, profile
+  lib/            themes, bots, stakes, faces, cards, spin, campaign storage
   data/           athletes + categories per sport
-  types/          profile, characters, pets, game types
-server/           duel WebSocket lobbies + match protocol
+  types/          profile, characters, pets, campaign, loadouts
+server/           duel WebSocket + campaign voice API
 public/
   faces/          localized athlete portraits
   models/         GLB / FBX skins & pets
+  demos/          About screen feature clips
   cards/          card art
   icons/          modes, spin, chrome
 docs/readme/      README screenshots + gameplay capture
@@ -337,11 +378,20 @@ scripts/          face localize, audits, transforms
   <img src="docs/readme/home.png" alt="Home" width="48%" />
 </p>
 <p align="center">
+  <img src="docs/readme/campaign.png" alt="Campaign" width="48%" />
   <img src="docs/readme/gamemodes.png" alt="Modes" width="48%" />
-  <img src="docs/readme/cardmenu.png" alt="Cards" width="48%" />
 </p>
 <p align="center">
-  <img src="docs/readme/duelmenu.png" alt="Duel" width="48%" />
+  <img src="docs/readme/basketballhomepage.png" alt="Basketball" width="32%" />
+  <img src="docs/readme/baseballhomepage.png" alt="Baseball" width="32%" />
+  <img src="docs/readme/footballhomepage.png" alt="Football" width="32%" />
+</p>
+<p align="center">
+  <img src="docs/readme/storecustom.png" alt="Customize" width="48%" />
+  <img src="docs/readme/settings.png" alt="Settings" width="48%" />
+</p>
+<p align="center">
+  <img src="docs/readme/cardmenu.png" alt="Cards" width="48%" />
   <img src="docs/readme/duelmenupreview.png" alt="Matchup" width="48%" />
 </p>
 
@@ -356,7 +406,7 @@ I’ve put a lot of work into Sportivia myself — the idea, the systems, the po
 ---
 
 <p align="center">
-  <strong>Sportivia</strong> — five sports · one board · built for speed.<br />
+  <strong>Sportivia</strong> — five sports · one board · 40-stage campaign · built for speed.<br />
   <a href="https://sportivia.up.railway.app/">Play live</a>
   ·
   <a href="https://github.com/delvinsalman/Sportivia">GitHub</a>

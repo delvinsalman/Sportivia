@@ -4,6 +4,7 @@ import {
   CHARACTERS,
   DEFAULT_ATHLETE_LOADOUT,
   DEFAULT_BOB_LOADOUT,
+  DEFAULT_REF_BOT_LOADOUT,
   DEFAULT_CHARACTER,
   DEFAULT_CREATIVE_LOADOUT,
   DEFAULT_DOG_VARIANT,
@@ -23,6 +24,7 @@ import {
   type AthleteLoadout,
 } from '../types/athleteCharacter';
 import { normalizeBobLoadout, type BobLoadout } from '../types/bobCharacter';
+import { normalizeRefBotLoadout, type RefBotLoadout } from '../types/refBotCharacter';
 import { applyRewards, computeGameRewards, levelFromXp } from './progression';
 import { loadStats, saveStats, recordGameResult } from './storage';
 import { applySeasonFromResult, grantDuelWinAchievement } from './seasonMeta';
@@ -232,6 +234,7 @@ function defaultProfile(): PlayerProfile {
     creativeLoadout: { ...DEFAULT_CREATIVE_LOADOUT },
     athleteLoadout: { ...DEFAULT_ATHLETE_LOADOUT },
     bobLoadout: { ...DEFAULT_BOB_LOADOUT },
+    refBotLoadout: { ...DEFAULT_REF_BOT_LOADOUT },
     rabbitVariant: DEFAULT_RABBIT_VARIANT,
     makoVariant: DEFAULT_MAKO_VARIANT,
     dogVariant: DEFAULT_DOG_VARIANT,
@@ -274,6 +277,7 @@ export function loadProfile(): PlayerProfile {
     const creativeLoadout = normalizeCreativeLoadout(parsed.creativeLoadout);
     const athleteLoadout = normalizeAthleteLoadout(parsed.athleteLoadout);
     const bobLoadout = normalizeBobLoadout(parsed.bobLoadout);
+    const refBotLoadout = normalizeRefBotLoadout(parsed.refBotLoadout);
     const rabbitVariant = RABBIT_VARIANTS.some(variant => variant.id === parsed.rabbitVariant)
       ? (parsed.rabbitVariant as RabbitVariantId)
       : DEFAULT_RABBIT_VARIANT;
@@ -321,6 +325,7 @@ export function loadProfile(): PlayerProfile {
       creativeLoadout,
       athleteLoadout,
       bobLoadout,
+      refBotLoadout,
       rabbitVariant,
       makoVariant,
       dogVariant,
@@ -690,6 +695,14 @@ export function saveBobLoadout(loadout: BobLoadout): PlayerProfile {
   const profile = loadProfile();
   if (!profile.unlockedCharacters.includes('bob')) return profile;
   profile.bobLoadout = normalizeBobLoadout(loadout);
+  saveProfile(profile);
+  return profile;
+}
+
+export function saveRefBotLoadout(loadout: RefBotLoadout): PlayerProfile {
+  const profile = loadProfile();
+  if (!profile.unlockedCharacters.includes('ref-bot')) return profile;
+  profile.refBotLoadout = normalizeRefBotLoadout(loadout);
   saveProfile(profile);
   return profile;
 }

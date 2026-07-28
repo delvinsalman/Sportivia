@@ -13,6 +13,7 @@ import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId }
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
+import type { RefBotLoadout } from '../types/refBotCharacter';
 
 interface ResultModalProps {
   result: GameResult;
@@ -21,6 +22,7 @@ interface ResultModalProps {
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
+  refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
@@ -48,6 +50,7 @@ export function ResultModal({
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
+  refBotLoadout,
   rabbitVariant,
   makoVariant,
   dogVariant,
@@ -154,6 +157,7 @@ export function ResultModal({
                   ? { athleteLoadout }
                   : {})}
                 {...(characterId === 'bob' && bobLoadout ? { bobLoadout } : {})}
+                {...(characterId === 'ref-bot' && refBotLoadout ? { refBotLoadout } : {})}
                 {...(characterId === 'bunny' && rabbitVariant
                   ? { rabbitVariant }
                   : {})}
@@ -325,7 +329,14 @@ export function ResultModal({
                     <p className="font-mono text-xl font-black text-[#f0b232] sm:text-2xl">
                       +{rewards.coinsEarned}
                     </p>
-                    <p className="text-[10px] font-black uppercase tracking-wide text-[#949ba4]">Coins</p>
+                    <p className="text-[10px] font-black uppercase tracking-wide text-[#949ba4]">
+                      Coins
+                      {result.campaignCoinMultiplier === 2 ? (
+                        <span className="ml-1.5 rounded-full border border-[#f0b232]/60 bg-[#f0b232]/20 px-1.5 py-0.5 text-[8px] text-[#ffe08a]">
+                          2× streak
+                        </span>
+                      ) : null}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 rounded-[22px] border-[3px] border-[#5865f2]/75 bg-[#12152a] p-4 shadow-[0_5px_0_#2f3aa8] sm:p-5">

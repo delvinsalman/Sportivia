@@ -8,9 +8,9 @@ import {
   Gamepad2,
   Swords,
   ShoppingBag,
-  Trophy,
-  Wifi,
   Settings,
+  Map,
+  Sparkles,
 } from 'lucide-react';
 import type { Sport } from '../types';
 import type { PlayerProfile } from '../types/profile';
@@ -56,20 +56,28 @@ const GUIDE: Array<{
     demo: '/demos/match-stars.mp4',
   },
   {
+    eyebrow: 'Campaign',
+    title: '40 stages · all five sports',
+    body: 'Sportivia’s special path across soccer, basketball, baseball, football, and hockey. Climb stages of player trivia plus championship & award curveballs. Hit chapter gates, earn stars, and bank bigger coin + XP payouts — three-star streaks can double your coins.',
+    Icon: Map,
+    glare: 'rgba(35, 165, 89, 0.18)',
+    demo: '/demos/campaign.mp4',
+  },
+  {
     eyebrow: 'Five sports',
     title: 'One game, five worlds',
-    body: 'Soccer, Basketball, Baseball, Football, and Hockey each have their own pool, look, and record. Switch sports from the home rail anytime.',
+    body: 'Soccer, Basketball, Baseball, Football, and Hockey each have their own pool, look, and record. First time in? You’ll pick a sport when you hit Play — then switch anytime from the home rail.',
     Icon: Globe2,
     glare: 'rgba(35, 165, 89, 0.15)',
-    demo: '',
+    demo: '/demos/five-sports.mp4',
   },
   {
     eyebrow: 'Modes',
     title: 'Play how you want',
-    body: 'Training is practice with no rewards. Quick Play is Kahoot-style trivia with light coins. Daily is a shared board with a first-finish payday. Ranked is timed and competitive. Vs AI races a bot. 1v1 Duel is a live lobby with a code.',
+    body: 'Training is practice with no rewards. Quick Play is Kahoot-style trivia with light coins. Daily is a shared board with a first-finish payday. Ranked is timed and competitive. Vs AI races a bot. 1v1 Duel is a live lobby with a code. Campaign is the long climb.',
     Icon: Gamepad2,
     glare: 'rgba(240, 178, 50, 0.14)',
-    demo: '',
+    demo: '/demos/modes.mp4',
   },
   {
     eyebrow: 'Vs AI & Duels',
@@ -77,7 +85,15 @@ const GUIDE: Array<{
     body: 'Pick Beginner, Pro, or Expert against the bot. Online, create or join a room, ready up together, and the highest score wins the match.',
     Icon: Swords,
     glare: 'rgba(237, 66, 69, 0.14)',
-    demo: '',
+    demo: '/demos/vs-ai-duels.mp4',
+  },
+  {
+    eyebrow: 'Daily Spin',
+    title: 'Free rewards every day',
+    body: 'Spin once a day from home for coins, XP, or free card-upgrade credits. Come back tomorrow for another pull.',
+    Icon: Sparkles,
+    glare: 'rgba(244, 114, 182, 0.14)',
+    demo: '/demos/daily-spin.mp4',
   },
   {
     eyebrow: 'Store',
@@ -85,7 +101,7 @@ const GUIDE: Array<{
     body: 'Unlock characters and companions with coins. Equip them on home, About, and results. Some skins have loadouts and breed variants.',
     Icon: ShoppingBag,
     glare: 'rgba(56, 189, 248, 0.14)',
-    demo: '',
+    demo: '/demos/store.mp4',
   },
   {
     eyebrow: 'Cards',
@@ -93,31 +109,15 @@ const GUIDE: Array<{
     body: 'Every skin has a six-stat card. Spend coins to upgrade PAC, SHO, PAS, DRI, DEF, and PHY one by one — overall rises with them. Unlock looks in the Store.',
     Icon: LayoutGrid,
     glare: 'rgba(168, 85, 247, 0.14)',
-    demo: '',
-  },
-  {
-    eyebrow: 'Progress',
-    title: 'Coins, XP, and career',
-    body: 'Finishing scoring runs earns coins and XP. Level up for milestones. Career tracks best scores, streaks, and perfect boards per sport.',
-    Icon: Trophy,
-    glare: 'rgba(253, 224, 71, 0.13)',
-    demo: '',
-  },
-  {
-    eyebrow: 'Live & identity',
-    title: 'Your name. Your lobby',
-    body: 'Edit your display name on home. See who’s online. Host or join a duel with a short code — same board, fair race.',
-    Icon: Wifi,
-    glare: 'rgba(74, 222, 128, 0.13)',
-    demo: '',
+    demo: '/demos/cards.mp4',
   },
   {
     eyebrow: 'Settings',
-    title: 'Sound, motion, tips',
-    body: 'Mute audio, tune music and SFX, reduce motion, or turn off match tips. Promo codes redeem from Settings when you have one.',
+    title: 'Sound, motion, tips, voice',
+    body: 'Mute audio, tune music and SFX, reduce motion, or turn off match tips. Campaign read-aloud lives here too. Promo codes redeem from Settings when you have one.',
     Icon: Settings,
     glare: 'rgba(148, 163, 184, 0.16)',
-    demo: '',
+    demo: '/demos/settings.mp4',
   },
 ];
 
@@ -128,6 +128,7 @@ const MODES = [
   { name: 'Ranked', detail: '2 min · climb' },
   { name: 'Vs AI', detail: 'Bot race' },
   { name: '1v1 Duel', detail: 'Lobby · highest wins' },
+  { name: 'Campaign', detail: '40 stages · special' },
 ] as const;
 
 export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps) {
@@ -149,7 +150,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
     <div className="relative min-h-svh overflow-x-hidden [scrollbar-gutter:stable]">
       <SportBackground sport={sport} />
 
-      <div className="relative z-30 sticky top-0 flex items-center justify-between gap-2 px-4 sm:px-6 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-transparent">
+      <div className="relative z-30 sticky top-0 flex items-center justify-between gap-2 px-4 sm:px-6 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-[#0a0a0b]/85 backdrop-blur-md">
         <button
           type="button"
           onClick={back}
@@ -194,21 +195,26 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                 <span className="block" style={{ color: accent }}>built for speed.</span>
               </h1>
               <p className="text-base sm:text-lg text-[#b5bac1] leading-relaxed max-w-md mb-6">
-                Match stars to categories on a live 3×3 board across Soccer, Basketball, Baseball, Football, and Hockey.
+                Match stars to categories on a live 3×3 board — or climb Campaign’s 40-stage path across all five sports.
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex w-full max-w-md flex-wrap gap-1.5 sm:gap-2">
                 {SPORTS.map(s => (
                   <span
                     key={s}
-                    className="inline-flex items-center gap-1.5 whitespace-nowrap px-3 py-1.5 rounded-full text-[11px] sm:text-xs font-black border-[2.5px] shadow-[0_3px_0_rgba(0,0,0,0.35)]"
+                    title={SPORT_LABEL[s]}
+                    className="inline-flex min-h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-[2.5px] px-2.5 py-1.5 text-[10px] font-black shadow-[0_3px_0_rgba(0,0,0,0.35)] sm:min-h-10 sm:gap-1.5 sm:px-3 sm:text-[11px]"
                     style={{
                       background: SPORT_ACCENT[s],
                       color: onAccentFg(SPORT_ACCENT[s]),
                       borderColor: 'rgba(255,255,255,0.35)',
                     }}
                   >
-                    <SportBall sport={s} size={15} />
-                    {SPORT_LABEL[s]}
+                    <SportBall
+                      sport={s}
+                      size={s === 'football' || s === 'hockey' ? 12 : 14}
+                      className="shrink-0"
+                    />
+                    <span>{SPORT_LABEL[s]}</span>
                   </span>
                 ))}
               </div>
@@ -224,7 +230,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                 className="absolute inset-8 rounded-full blur-3xl opacity-40"
                 style={{ background: accent }}
               />
-              <div className="relative h-[420px] w-full max-w-[460px] shrink-0">
+              <div className="relative h-[280px] w-full max-w-[460px] shrink-0 sm:h-[420px]">
                 <CharacterPodium
                   characterId={profile.equippedCharacter}
                   accent={SPORT_PODIUM_ACCENT[sport]}
@@ -241,6 +247,9 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                     : {})}
                   {...(profile.equippedCharacter === 'bob'
                     ? { bobLoadout: profile.bobLoadout }
+                    : {})}
+                  {...(profile.equippedCharacter === 'ref-bot'
+                    ? { refBotLoadout: profile.refBotLoadout }
                     : {})}
                   {...(profile.equippedCharacter === 'bunny'
                     ? { rabbitVariant: profile.rabbitVariant }
@@ -286,7 +295,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
               Everything in Sportivia
             </h2>
             <p className="mt-3 text-sm sm:text-base text-[#949ba4] leading-relaxed">
-              From the board to duels and your career — here’s how the whole app fits together.
+              From the board to Campaign, duels, and your career — here’s how the whole app fits together.
             </p>
           </motion.div>
 

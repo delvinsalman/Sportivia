@@ -2,11 +2,28 @@ import type { Sport } from '../types';
 import { shuffleWithSeed, hashString } from './seed';
 import { generateQuickQuestions } from './quickPlay';
 import { CAMPAIGN_AWARDS } from './campaignAwards';
+import { CAMPAIGN_DEEP_TRIVIA } from './campaignDeepTrivia';
 
 /** Points tuned to campaign star bars (not bingo). */
 export const CAMPAIGN_Q_POINTS = 5;
 export const CAMPAIGN_SPEED_BONUS = 2;
 export const CAMPAIGN_QUESTION_TIME = 10;
+
+/** Chapter bands: 1–10, 11–20, 21–30, 31–40 */
+export function campaignChapterBand(levelId: number): 0 | 1 | 2 | 3 {
+  if (levelId <= 10) return 0;
+  if (levelId <= 20) return 1;
+  if (levelId <= 30) return 2;
+  return 3;
+}
+
+/** Soft min / hard max for question unlock level by chapter (keeps early easy, late hard). */
+const CHAPTER_Q_RANGE: Record<0 | 1 | 2 | 3, { softMin: number; hardMax: number }> = {
+  0: { softMin: 1, hardMax: 10 },
+  1: { softMin: 6, hardMax: 20 },
+  2: { softMin: 12, hardMax: 30 },
+  3: { softMin: 18, hardMax: 40 },
+};
 
 export interface CampaignTriviaChoice {
   id: string;
@@ -694,14 +711,40 @@ function buildChoices(answer: string, distractors: string[], seed: number): Camp
 
 export function questionsForSports(sports: Sport[], levelId = 1): RawChampQ[] {
   const set = new Set(sports);
+  const band = campaignChapterBand(levelId);
+  const { softMin, hardMax } = CHAPTER_Q_RANGE[band];
+
   const titles = BANK.filter(q => set.has(q.sport)).map(q => ({
     ...q,
-    minLevel: q.minLevel ?? 1,
+    minLevel: q.minLevel ?? inferBankMinLevel(q),
   }));
-  const awards = CAMPAIGN_AWARDS.filter(
-    q => set.has(q.sport) && q.minLevel <= levelId,
-  );
-  return [...titles, ...awards];
+  const awards = CAMPAIGN_AWARDS.filter(q => set.has(q.sport)).map(q => ({
+    ...q,
+    minLevel: q.minLevel,
+  }));
+  const deep = CAMPAIGN_DEEP_TRIVIA.filter(q => set.has(q.sport));
+
+  const all = [...titles, ...awards, ...deep];
+  return all.filter(q => {
+    const min = q.minLevel ?? 1;
+    // Must be unlocked by this stage, and within this chapter's difficulty ceiling
+    if (min > levelId || min > hardMax) return false;
+    // Later chapters drop the easiest trivia so the pool feels harder
+    if (band >= 2 && min < softMin - 4) return false;
+    if (band === 3 && min < softMin - 2) return false;
+    return true;
+  });
+}
+
+/** Heuristic unlock for older BANK rows that never set minLevel. */
+function inferBankMinLevel(q: RawChampQ): number {
+  const id = q.id;
+  if (/^(wc|euro|ucl|nba|ws|sb|sc)-(202[0-4]|201[89])/.test(id)) return 1;
+  if (/^(wc|euro|ucl|nba|ws|sb|sc)-(201[0-7])/.test(id)) return 4;
+  if (/^(wc|euro|ucl)-(200[0-9]|199)/.test(id)) return 11;
+  if (/^(wc|euro)-(19)/.test(id)) return 22;
+  if (id.includes('europa') || id.includes('fa-cup') || id.includes('copa')) return 8;
+  return 1;
 }
 
 function championshipQueue(
@@ -711,40 +754,53 @@ function championshipQueue(
   levelId: number,
 ): CampaignTriviaQuestion[] {
   const pool = questionsForSports(sports, levelId);
-  if (pool.length === 0) return [];
+  if (pool.length === 0 || count <= 0) return [];
   const seed = hashString(`champ-${seedKey}`);
-  // Freshly unlocked awards show up more often
+  const band = campaignChapterBand(levelId);
+  const softMin = CHAPTER_Q_RANGE[band].softMin;
+
+  // Prefer freshly unlocked + harder-than-softMin questions (no duplicate raw ids)
   const weighted = pool.flatMap(q => {
     const min = q.minLevel ?? 1;
     const fresh = min > 1 && min >= levelId - 4;
-    return fresh ? [q, q, q] : [q];
+    const hardFit = min >= softMin;
+    const copies = (fresh ? 3 : 1) + (hardFit ? 2 : 0);
+    return Array.from({ length: copies }, () => q);
   });
   const shuffled = shuffleWithSeed(weighted, seed);
-  const out: CampaignTriviaQuestion[] = [];
-  for (let i = 0; i < count; i++) {
-    const raw = shuffled[i % shuffled.length]!;
-    out.push({
-      id: `${raw.id}-c-${i}`,
-      kind: 'championship',
-      sport: raw.sport,
-      prompt: raw.prompt,
-      trophyIcon: raw.trophyIcon,
-      trophyLabel: raw.trophyLabel,
-      choices: buildChoices(raw.answer, raw.distractors, seed + i * 97),
-    });
+  const seen = new Set<string>();
+  const picked: RawChampQ[] = [];
+  for (const raw of shuffled) {
+    if (seen.has(raw.id)) continue;
+    seen.add(raw.id);
+    picked.push(raw);
+    if (picked.length >= count) break;
   }
-  return out;
+
+  return picked.map((raw, i) => ({
+    id: `${raw.id}-c-${i}`,
+    kind: 'championship' as const,
+    sport: raw.sport,
+    prompt: raw.prompt,
+    trophyIcon: raw.trophyIcon,
+    trophyLabel: raw.trophyLabel,
+    choices: buildChoices(raw.answer, raw.distractors, seed + i * 97),
+  }));
 }
 
 function playerQueue(sports: Sport[], seedKey: string, count: number): CampaignTriviaQuestion[] {
   if (sports.length === 0 || count <= 0) return [];
   const seed = hashString(`player-${seedKey}`);
-  const perSport = Math.max(8, Math.ceil(count / sports.length) + 4);
+  const perSport = Math.max(10, Math.ceil(count / sports.length) + 6);
   const pooled: CampaignTriviaQuestion[] = [];
+  const seenPlayers = new Set<string>();
 
   sports.forEach((sport, sIdx) => {
     const qs = generateQuickQuestions(sport, perSport, `${seedKey}-p-${sport}-${sIdx}`);
     for (const q of qs) {
+      const key = `${sport}:${q.playerId}:${q.prompt}`;
+      if (seenPlayers.has(key)) continue;
+      seenPlayers.add(key);
       pooled.push({
         id: `player-${q.id}-${sIdx}`,
         kind: 'player',
@@ -762,7 +818,8 @@ function playerQueue(sports: Sport[], seedKey: string, count: number): CampaignT
 
 /**
  * Mixed queue: player trivia + titles/awards.
- * Higher campaign levels unlock Ballon d’Or, rookies, MVPs, etc. and lean harder into them.
+ * Higher campaign levels unlock deeper cups/awards and lean harder into them.
+ * Never repeats the same prompt content within a run.
  */
 export function generateCampaignTriviaQueue(
   sports: Sport[],
@@ -770,10 +827,11 @@ export function generateCampaignTriviaQueue(
   levelId = 1,
 ): CampaignTriviaQuestion[] {
   const seed = hashString(seedKey);
-  const target = 36;
-  // As levels climb, award/title share grows
+  const band = campaignChapterBand(levelId);
+  // Later chapters: fewer total unique Qs but harder mix; still enough for a full clock
+  const target = band >= 2 ? 40 : 36;
   const champShare =
-    levelId >= 30 ? 0.62 : levelId >= 20 ? 0.56 : levelId >= 10 ? 0.5 : levelId >= 5 ? 0.48 : 0.42;
+    band === 3 ? 0.68 : band === 2 ? 0.6 : band === 1 ? 0.52 : levelId >= 5 ? 0.46 : 0.4;
   const champCount = Math.round(target * champShare);
   const playerCount = target - champCount;
 
@@ -789,12 +847,14 @@ export function generateCampaignTriviaQueue(
     if (b[i]) mixed.push(b[i]!);
   }
 
+  // Deduplicate by prompt text (safety net) — never cycle/pad duplicates
+  const seenPrompts = new Set<string>();
   const queue: CampaignTriviaQuestion[] = [];
-  const want = Math.max(48, mixed.length * 2);
-  for (let i = 0; i < want; i++) {
-    const q = mixed[i % mixed.length];
-    if (!q) break;
-    queue.push({ ...q, id: `${q.id}-r${i}` });
+  for (const q of mixed) {
+    const key = `${q.kind}:${q.prompt}`;
+    if (seenPrompts.has(key)) continue;
+    seenPrompts.add(key);
+    queue.push(q);
   }
   return queue;
 }

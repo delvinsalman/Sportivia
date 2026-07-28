@@ -12,6 +12,7 @@ import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId }
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
+import type { RefBotLoadout } from '../types/refBotCharacter';
 import type { DuelMatchResult } from '../lib/duelTypes';
 import { Swords } from 'lucide-react';
 import { getSettings } from '../lib/settings';
@@ -32,6 +33,7 @@ interface GameScreenProps {
   creativeLoadout?: CreativeLoadout;
   athleteLoadout?: AthleteLoadout;
   bobLoadout?: BobLoadout;
+  refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
   dogVariant?: DogVariantId;
@@ -73,6 +75,7 @@ export function GameScreen({
   creativeLoadout,
   athleteLoadout,
   bobLoadout,
+  refBotLoadout,
   rabbitVariant,
   makoVariant,
   dogVariant,
@@ -383,6 +386,7 @@ export function GameScreen({
           creativeLoadout={creativeLoadout}
           athleteLoadout={athleteLoadout}
           bobLoadout={bobLoadout}
+          refBotLoadout={refBotLoadout}
           rabbitVariant={rabbitVariant}
           makoVariant={makoVariant}
           dogVariant={dogVariant}
