@@ -150,7 +150,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
     <div className="relative min-h-svh overflow-x-hidden [scrollbar-gutter:stable]">
       <SportBackground sport={sport} />
 
-      <div className="relative z-30 sticky top-0 flex items-center justify-between gap-2 px-4 sm:px-6 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-[#0a0a0b]/85 backdrop-blur-md">
+      <div className="relative z-30 sticky top-0 flex items-center justify-between gap-2 px-4 sm:px-6 py-3 pt-[max(0.75rem,env(safe-area-inset-top))] bg-transparent">
         <button
           type="button"
           onClick={back}
@@ -197,12 +197,12 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
               <p className="text-base sm:text-lg text-[#b5bac1] leading-relaxed max-w-md mb-6">
                 Match stars to categories on a live 3×3 board — or climb Campaign’s 40-stage path across all five sports.
               </p>
-              <div className="flex w-full max-w-md flex-wrap gap-1.5 sm:gap-2">
+              <div className="flex w-full max-w-lg flex-nowrap items-center gap-1 sm:gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 {SPORTS.map(s => (
                   <span
                     key={s}
                     title={SPORT_LABEL[s]}
-                    className="inline-flex min-h-9 items-center justify-center gap-1.5 whitespace-nowrap rounded-full border-[2.5px] px-2.5 py-1.5 text-[10px] font-black shadow-[0_3px_0_rgba(0,0,0,0.35)] sm:min-h-10 sm:gap-1.5 sm:px-3 sm:text-[11px]"
+                    className="inline-flex shrink-0 min-h-8 items-center justify-center gap-1 whitespace-nowrap rounded-full border-[2.5px] px-2 py-1 text-[9px] font-black shadow-[0_3px_0_rgba(0,0,0,0.35)] sm:min-h-9 sm:gap-1.5 sm:px-2.5 sm:text-[11px]"
                     style={{
                       background: SPORT_ACCENT[s],
                       color: onAccentFg(SPORT_ACCENT[s]),
@@ -211,7 +211,7 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                   >
                     <SportBall
                       sport={s}
-                      size={s === 'football' || s === 'hockey' ? 12 : 14}
+                      size={s === 'football' || s === 'hockey' ? 11 : 12}
                       className="shrink-0"
                     />
                     <span>{SPORT_LABEL[s]}</span>
