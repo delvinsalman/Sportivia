@@ -150,6 +150,18 @@ Create or join a lobby code, set an optional stake, ready up, then slam into a *
 
 Realtime sync runs over **WebSockets** (`ws`) — shared board state, scores, finish flags, and stake settlement.
 
+### Quick Play · Kahoot-style trivia
+
+Portrait up top, four big answer tiles, **8-second clock**, and a running score — **10 questions** per run. Same multiple-choice engine powers Campaign gates. Light coin payout on finish; Daily and Ranked pay more.
+
+<p align="center">
+  <img src="docs/readme/quickplay.png" alt="Quick Play — Kahoot-style multiple choice trivia" width="720" />
+</p>
+
+- **Four choices** — nationality, club, league, position, trophy, decade, and more.
+- **Sport-aware pool** — questions pull from the active sport’s roster data.
+- **Fast reps** — no board placement; tap the right tile before time runs out.
+
 ---
 
 <a id="systems"></a>
@@ -379,6 +391,9 @@ scripts/          face localize, audits, transforms
 </p>
 <p align="center">
   <img src="docs/readme/campaign.png" alt="Campaign" width="48%" />
+  <img src="docs/readme/quickplay.png" alt="Quick Play trivia" width="48%" />
+</p>
+<p align="center">
   <img src="docs/readme/gamemodes.png" alt="Modes" width="48%" />
 </p>
 <p align="center">

@@ -75,13 +75,30 @@ function uniquePool(values: string[]): string[] {
   return [...new Set(values.map(v => v.trim()).filter(Boolean))];
 }
 
+function normalizeLeagueKey(name: string): string {
+  return name.toLowerCase().replace(/^\d+\.\s*/, '').trim();
+}
+
+/** Reject distractors that read like the same league (Bundesliga vs 2. Bundesliga, etc.). */
+export function isSimilarLeagueChoice(correct: string, candidate: string): boolean {
+  if (correct.toLowerCase() === candidate.toLowerCase()) return true;
+  const a = normalizeLeagueKey(correct);
+  const b = normalizeLeagueKey(candidate);
+  if (a === b) return true;
+  const shorter = a.length <= b.length ? a : b;
+  const longer = a.length <= b.length ? b : a;
+  return shorter.length >= 4 && longer.includes(shorter);
+}
+
 function pickDistractors(
   correct: string,
   pool: string[],
   count: number,
   seed: number,
+  isTooSimilar: (correct: string, candidate: string) => boolean = (a, b) =>
+    a.toLowerCase() === b.toLowerCase(),
 ): string[] {
-  const others = uniquePool(pool).filter(v => v.toLowerCase() !== correct.toLowerCase());
+  const others = uniquePool(pool).filter(v => !isTooSimilar(correct, v));
   return shuffleWithSeed(others, seed).slice(0, count);
 }
 
@@ -163,7 +180,7 @@ function tryBuildQuestion(
     if (mine.length === 0) return null;
     const correct = shuffleWithSeed(mine, seed)[0]!;
     const pool = roster.flatMap(leaguesOf);
-    const distractors = pickDistractors(correct, pool, 3, seed + 7);
+    const distractors = pickDistractors(correct, pool, 3, seed + 7, isSimilarLeagueChoice);
     if (distractors.length < 3) return null;
     return {
       id: `${player.id}-lg-${seed}`,
