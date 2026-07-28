@@ -197,12 +197,12 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
               <p className="text-base sm:text-lg text-[#b5bac1] leading-relaxed max-w-md mb-6">
                 Match stars to categories on a live 3×3 board — or climb Campaign’s 40-stage path across all five sports.
               </p>
-              <div className="flex w-full max-w-lg flex-nowrap items-center gap-1 sm:gap-1.5 overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+              <div className="grid w-full grid-cols-5 gap-1 sm:gap-1.5">
                 {SPORTS.map(s => (
                   <span
                     key={s}
                     title={SPORT_LABEL[s]}
-                    className="inline-flex shrink-0 min-h-8 items-center justify-center gap-1 whitespace-nowrap rounded-full border-[2.5px] px-2 py-1 text-[9px] font-black shadow-[0_3px_0_rgba(0,0,0,0.35)] sm:min-h-9 sm:gap-1.5 sm:px-2.5 sm:text-[11px]"
+                    className="inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-0.5 rounded-full border-[2.5px] px-1 py-1 text-[8px] font-black leading-none shadow-[0_3px_0_rgba(0,0,0,0.35)] sm:min-h-9 sm:gap-1 sm:px-1.5 sm:text-[10px] md:text-[11px]"
                     style={{
                       background: SPORT_ACCENT[s],
                       color: onAccentFg(SPORT_ACCENT[s]),
@@ -211,10 +211,10 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                   >
                     <SportBall
                       sport={s}
-                      size={s === 'football' || s === 'hockey' ? 11 : 12}
+                      size={10}
                       className="shrink-0"
                     />
-                    <span>{SPORT_LABEL[s]}</span>
+                    <span className="truncate">{SPORT_LABEL[s]}</span>
                   </span>
                 ))}
               </div>
