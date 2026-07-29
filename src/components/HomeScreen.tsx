@@ -254,15 +254,8 @@ export function HomeScreen({
       <motion.div
         initial={{ opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed top-0 left-0 z-30 flex items-center gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-2 pb-2 sm:p-4"
+        className="fixed top-0 left-0 z-30 flex items-center pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-2 pb-2 sm:p-4"
       >
-        {homeSport ? (
-          <SportBall sport={homeSport} size={30} className="shrink-0 drop-shadow-sm" />
-        ) : (
-          <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full border-2 border-[#f0b232]/50 bg-[#1a1b1f] text-[11px] font-black text-[#f0b232] shadow-[0_2px_0_rgba(0,0,0,0.4)]">
-            S
-          </span>
-        )}
         <h1 className="text-xl sm:text-4xl font-black tracking-tight text-[#f2f3f5] leading-none">
           Sportivia
         </h1>
