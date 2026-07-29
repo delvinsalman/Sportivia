@@ -23,6 +23,7 @@ import { isDailySpinAvailable } from '../lib/profileStorage';
 import { DailySpinModal } from './DailySpinModal';
 import type { DailySpinPrize } from '../lib/dailySpin';
 import { DAILY_SPIN_ICON } from '../lib/dailySpin';
+import { assetUrl } from '../lib/assetUrl';
 
 interface HomeScreenProps {
   sport: Sport | null;
@@ -254,11 +255,25 @@ export function HomeScreen({
       <motion.div
         initial={{ opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
-        className="fixed top-0 left-0 z-30 flex items-center pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-2 pb-2 sm:p-4"
+        className="fixed top-0 left-0 z-30 flex items-center gap-2 pt-[max(0.75rem,env(safe-area-inset-top))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-2 pb-2 sm:gap-3 sm:p-4"
       >
         <h1 className="text-xl sm:text-4xl font-black tracking-tight text-[#f2f3f5] leading-none">
           Sportivia
         </h1>
+        <a
+          href="https://www.y8.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="Play games on Y8"
+          title="Y8 Games"
+          className="shrink-0 rounded-md transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0b232]"
+        >
+          <img
+            src={assetUrl('/y8-logo.png')}
+            alt="Y8"
+            className="h-6 w-auto drop-shadow-[0_2px_0_rgba(0,0,0,0.4)] sm:h-8"
+          />
+        </a>
       </motion.div>
 
       {/* Left-center sport rail + record — only after a sport is chosen */}
