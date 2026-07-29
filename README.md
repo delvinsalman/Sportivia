@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://sportivia.up.railway.app/"><strong>Play live → sportivia.up.railway.app</strong></a>
+  <a href="https://sportivia.xyz/"><strong>Play live → sportivia.xyz</strong></a>
 </p>
 
 <p align="center">
@@ -25,7 +25,7 @@
 </p>
 
 <p align="center">
-  <a href="https://sportivia.up.railway.app/"><img alt="Live" src="https://img.shields.io/badge/live-sportivia.up.railway.app-23a559?style=for-the-badge" /></a>
+  <a href="https://sportivia.xyz/"><img alt="Live" src="https://img.shields.io/badge/live-sportivia.xyz-23a559?style=for-the-badge" /></a>
   <img alt="Sports" src="https://img.shields.io/badge/sports-5-23a559?style=for-the-badge" />
   <img alt="Campaign" src="https://img.shields.io/badge/campaign-40_stages-f0b232?style=for-the-badge" />
   <img alt="Athletes" src="https://img.shields.io/badge/athletes-1000%2B-f0b232?style=for-the-badge" />
@@ -320,7 +320,7 @@ Rosters carry clubs, leagues, nations, trophies, decades, and sport-specific fie
 
 ## Play / deploy
 
-**Live:** [https://sportivia.up.railway.app/](https://sportivia.up.railway.app/)
+**Live:** [https://sportivia.xyz/](https://sportivia.xyz/)
 
 **GitHub Pages cannot host the duel server** (static only — no WebSockets). The production build runs on Railway with the static client and duel WebSocket together. You can also ship the full app to Render or similar.
 
@@ -422,7 +422,7 @@ I’ve put a lot of work into Sportivia myself — the idea, the systems, the po
 
 <p align="center">
   <strong>Sportivia</strong> — five sports · one board · 40-stage campaign · built for speed.<br />
-  <a href="https://sportivia.up.railway.app/">Play live</a>
+  <a href="https://sportivia.xyz/">Play live</a>
   ·
   <a href="https://github.com/delvinsalman/Sportivia">GitHub</a>
 </p>
