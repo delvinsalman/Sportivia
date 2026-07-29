@@ -8,7 +8,6 @@ import { QuickPlayScreen } from './components/QuickPlayScreen';
 import { CampaignTriviaScreen } from './components/CampaignTriviaScreen';
 import { BallRainIntro } from './components/BallRainIntro';
 import { EntrySplash } from './components/EntrySplash';
-import { FirstVisitGuide } from './components/FirstVisitGuide';
 import { DuelVersusScreen } from './components/DuelVersusScreen';
 import { StoreScreen } from './components/StoreScreen';
 import { CharacterCardsScreen } from './components/CharacterCardsScreen';
@@ -58,11 +57,9 @@ import { useSettings } from './hooks/useSettings';
 import { playUnlockFanfare } from './lib/menuAudio';
 import { getCampaignLevel, pickLevelSport } from './lib/campaign';
 import { loadPreferredSport, savePreferredSport } from './lib/preferredSport';
-import { completeFirstVisitGuide, hasCompletedFirstVisitGuide } from './lib/firstVisitGuide';
 
 type Screen =
   | 'entry'
-  | 'welcome'
   | 'home'
   | 'about'
   | 'settings'
@@ -88,17 +85,9 @@ const modeLabels: Record<GameMode, string> = {
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('entry');
+  const finishEntry = useCallback(() => setScreen('home'), []);
   const [sport, setSportState] = useState<Sport | null>(() => loadPreferredSport());
   const uiSport: Sport = sport ?? 'soccer';
-  const finishEntry = useCallback(() => {
-    const isNewPlayer = sport === null && !hasCompletedFirstVisitGuide();
-    setScreen(isNewPlayer ? 'welcome' : 'home');
-  }, [sport]);
-
-  const finishFirstVisitGuide = useCallback(() => {
-    completeFirstVisitGuide();
-    setScreen('home');
-  }, []);
 
   const setSport = useCallback((next: Sport) => {
     setSportState(next);
@@ -359,12 +348,6 @@ export default function App() {
         {screen === 'entry' && (
           <PageTransition key="entry" variant="entry" className="fixed inset-0 z-50">
             <EntrySplash onComplete={finishEntry} />
-          </PageTransition>
-        )}
-
-        {screen === 'welcome' && (
-          <PageTransition key="welcome" variant="menu" className="fixed inset-0 z-40">
-            <FirstVisitGuide onComplete={finishFirstVisitGuide} />
           </PageTransition>
         )}
 

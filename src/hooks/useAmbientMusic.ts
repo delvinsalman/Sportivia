@@ -23,7 +23,6 @@ const FADE_MS = 1_250;
 
 type AmbientScreen =
   | 'entry'
-  | 'welcome'
   | 'home'
   | 'about'
   | 'store'
@@ -42,7 +41,6 @@ type BedId = 'menu' | 'cards' | 'quick' | 'none';
 function isMenuScreen(screen: AmbientScreen) {
   return (
     screen === 'entry' ||
-    screen === 'welcome' ||
     screen === 'home' ||
     screen === 'store' ||
     screen === 'cards' ||
