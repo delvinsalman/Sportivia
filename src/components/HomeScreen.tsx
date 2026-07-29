@@ -295,7 +295,7 @@ export function HomeScreen({
         >
           <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 shrink-0">
             <img
-              src="/icons/trophy-record.png"
+              src={assetUrl('/icons/trophy-record.png')}
               alt=""
               width={32}
               height={32}
@@ -546,7 +546,7 @@ export function HomeScreen({
                 className="group/camp relative z-[1] flex min-h-11 items-center gap-2 rounded-[0.85rem] border-2 border-white/20 bg-gradient-to-b from-[#7dffa8] via-[#23a559] to-[#157a3f] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-[#062816] transition-all hover:brightness-105 sm:px-7 sm:py-3 sm:text-sm"
               >
                 <img
-                  src="/icons/trophy-record.png"
+                  src={assetUrl('/icons/trophy-record.png')}
                   alt=""
                   className="h-5 w-5 object-contain drop-shadow-sm transition-transform duration-300 group-hover/camp:scale-110 group-hover/camp:-rotate-6 sm:h-5 sm:w-5"
                   draggable={false}
@@ -649,7 +649,7 @@ export function HomeScreen({
                         />
                         <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-[2.5px] border-white/15 bg-[#111214]/80 shadow-[0_3px_0_rgba(0,0,0,0.35)] sm:h-[3.25rem] sm:w-[3.25rem]">
                           <img
-                            src={meta.icon}
+                            src={assetUrl(meta.icon)}
                             alt=""
                             className="h-8 w-8 object-contain"
                             draggable={false}

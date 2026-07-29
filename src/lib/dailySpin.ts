@@ -1,3 +1,5 @@
+import { assetUrl } from './assetUrl';
+
 export type DailySpinPrizeKind = 'coins' | 'upgrades';
 
 export interface DailySpinSegment {
@@ -13,7 +15,7 @@ export interface DailySpinSegment {
 }
 
 export const DAILY_SPIN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
-export const DAILY_SPIN_ICON = '/icons/daily-spin.png';
+export const DAILY_SPIN_ICON = assetUrl('/icons/daily-spin.png');
 
 /** Weighted prizes. Weights sum to 100. */
 export const DAILY_SPIN_SEGMENTS: readonly DailySpinSegment[] = [

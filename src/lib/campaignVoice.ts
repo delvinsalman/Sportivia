@@ -16,6 +16,23 @@ const blobCache = new Map<string, Blob>();
 const BLOB_CACHE_LIMIT = 40;
 const inflight = new Map<string, Promise<Blob | null>>();
 
+function campaignVoiceUrl(): string {
+  const duel = import.meta.env.VITE_DUEL_WS as string | undefined;
+  if (duel) {
+    try {
+      const url = new URL(duel);
+      url.protocol = url.protocol === 'wss:' ? 'https:' : 'http:';
+      url.pathname = '/api/campaign-voice';
+      url.search = '';
+      url.hash = '';
+      return url.toString();
+    } catch {
+      /* fall through to same-origin */
+    }
+  }
+  return '/api/campaign-voice';
+}
+
 function revokeObjectUrl() {
   if (currentObjectUrl) {
     URL.revokeObjectURL(currentObjectUrl);
@@ -74,7 +91,7 @@ async function fetchNeuralMp3(text: string): Promise<Blob | null> {
 
   const req = (async () => {
     try {
-      const res = await fetch('/api/campaign-voice', {
+      const res = await fetch(campaignVoiceUrl(), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text }),
@@ -99,7 +116,7 @@ async function fetchNeuralMp3(text: string): Promise<Blob | null> {
 /** Warm the voice route so the first question doesn’t wait on a cold server. */
 export function warmCampaignVoice() {
   if (typeof window === 'undefined') return;
-  void fetch('/api/campaign-voice', { method: 'GET' }).catch(() => undefined);
+  void fetch(campaignVoiceUrl(), { method: 'GET' }).catch(() => undefined);
 }
 
 function speakBrowserFallback(

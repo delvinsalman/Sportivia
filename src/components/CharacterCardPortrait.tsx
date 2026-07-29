@@ -1,4 +1,5 @@
 import type { CharacterDef } from '../types/profile';
+import { assetUrl } from '../lib/assetUrl';
 
 interface CharacterCardPortraitProps {
   character: CharacterDef;
@@ -23,7 +24,7 @@ export function CharacterCardPortrait({
     >
       {character.cardImage ? (
         <img
-          src={character.cardImage}
+          src={assetUrl(character.cardImage)}
           alt=""
           draggable={false}
           className={`absolute inset-0 h-full w-full object-contain object-bottom select-none ${

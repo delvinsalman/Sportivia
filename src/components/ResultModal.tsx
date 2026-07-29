@@ -14,6 +14,7 @@ import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
 import type { RefBotLoadout } from '../types/refBotCharacter';
+import { assetUrl } from '../lib/assetUrl';
 
 interface ResultModalProps {
   result: GameResult;
@@ -288,11 +289,11 @@ export function ResultModal({
               >
                 <div className="flex items-start gap-3">
                   <img
-                    src={
+                    src={assetUrl(
                       result.campaignBonus.levelId === 40
                         ? '/icons/trophy-record.png'
-                        : '/icons/trophies/world-cup.png'
-                    }
+                        : '/icons/trophies/world-cup.png',
+                    )}
                     alt=""
                     className={`object-contain drop-shadow-[0_4px_8px_rgba(0,0,0,0.45)] ${
                       result.campaignBonus.levelId === 40 ? 'h-14 w-14' : 'h-11 w-11'

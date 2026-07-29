@@ -1,3 +1,5 @@
+import { assetUrl } from '../lib/assetUrl';
+
 const COIN_SRC = '/icons/coin.png';
 
 const SIZE_MAP = {
@@ -25,7 +27,7 @@ export function CoinIcon({ size = 'md', className = '', alt = '' }: CoinIconProp
       aria-hidden={alt ? undefined : true}
     >
       <img
-        src={COIN_SRC}
+        src={assetUrl(COIN_SRC)}
         alt={alt}
         width={px}
         height={px}

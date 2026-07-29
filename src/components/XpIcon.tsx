@@ -1,3 +1,5 @@
+import { assetUrl } from '../lib/assetUrl';
+
 const XP_SRC = '/icons/xp.png';
 
 const SIZE_MAP = {
@@ -25,7 +27,7 @@ export function XpIcon({ size = 'md', className = '', alt = '' }: XpIconProps) {
       aria-hidden={alt ? undefined : true}
     >
       <img
-        src={XP_SRC}
+        src={assetUrl(XP_SRC)}
         alt={alt}
         width={px}
         height={px}
