@@ -74,13 +74,13 @@ const LANDING_PAD_PATH = '/models/landing-pad.glb';
 const LANDING_PAD_HEIGHT = 0.5;
 const LANDING_PAD_SCALE = 0.92;
 
-CHARACTERS.filter(c => c.modelPath.endsWith('.fbx')).forEach(c => useFBX.preload(c.modelPath));
-CHARACTERS.filter(c => c.modelPath.endsWith('.glb')).forEach(c => useGLTF.preload(c.modelPath));
-RABBIT_VARIANTS.forEach(variant => useGLTF.preload(variant.modelPath));
-MAKO_VARIANTS.forEach(variant => useGLTF.preload(variant.modelPath));
-DOG_VARIANTS.forEach(variant => useGLTF.preload(variant.modelPath));
-PETS.forEach(p => useGLTF.preload(p.modelPath));
-useGLTF.preload(LANDING_PAD_PATH);
+CHARACTERS.filter(c => c.modelPath.endsWith('.fbx')).forEach(c => useFBX.preload(assetUrl(c.modelPath)));
+CHARACTERS.filter(c => c.modelPath.endsWith('.glb')).forEach(c => useGLTF.preload(assetUrl(c.modelPath)));
+RABBIT_VARIANTS.forEach(variant => useGLTF.preload(assetUrl(variant.modelPath)));
+MAKO_VARIANTS.forEach(variant => useGLTF.preload(assetUrl(variant.modelPath)));
+DOG_VARIANTS.forEach(variant => useGLTF.preload(assetUrl(variant.modelPath)));
+PETS.forEach(p => useGLTF.preload(assetUrl(p.modelPath)));
+useGLTF.preload(assetUrl(LANDING_PAD_PATH));
 
 class ModelErrorBoundary extends Component<
   { children: ReactNode; characterId: CharacterId },
