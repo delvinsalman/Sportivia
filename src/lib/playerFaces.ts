@@ -9,6 +9,7 @@
  */
 
 import type { Sport } from '../types';
+import { assetUrl } from './assetUrl';
 
 const CACHE_KEY = 'sportivia.playerFaces.v3';
 const BIO_CACHE_KEY = 'sportivia.playerCardBios.v1';
@@ -579,7 +580,7 @@ function sleep(ms: number): Promise<void> {
 async function loadFaceManifest(sport: Sport): Promise<Record<string, string>> {
   if (faceManifests[sport]) return faceManifests[sport]!;
   if (!faceManifestPromises[sport]) {
-    faceManifestPromises[sport] = fetch(`/data/${sport}-faces.json`)
+    faceManifestPromises[sport] = fetch(assetUrl(`/data/${sport}-faces.json`))
       .then(res => (res.ok ? res.json() : {}))
       .then(data => (data && typeof data === 'object' ? (data as Record<string, string>) : {}))
       .catch(() => ({}));
@@ -1002,17 +1003,19 @@ export async function resolvePlayerFace(
 ): Promise<string | null> {
   const direct = FACE_URL_BY_ID[sport]?.[playerId];
   if (direct) {
+    const resolved = assetUrl(direct);
     const cached = getCached(sport, playerId);
-    if (cached !== direct) setCached(sport, playerId, direct);
-    return direct;
+    if (cached !== resolved) setCached(sport, playerId, resolved);
+    return resolved;
   }
 
   if (!options?.force) {
     const manifest = await loadFaceManifest(sport);
     const fromManifest = manifest[playerId];
     if (fromManifest) {
-      setCached(sport, playerId, fromManifest);
-      return fromManifest;
+      const resolved = assetUrl(fromManifest);
+      setCached(sport, playerId, resolved);
+      return resolved;
     }
   }
 
@@ -1045,10 +1048,11 @@ export function getCachedPlayerFace(
   playerId: string,
 ): string | null | undefined {
   const direct = FACE_URL_BY_ID[sport]?.[playerId];
-  if (direct) return direct;
+  if (direct) return assetUrl(direct);
   const fromManifest = faceManifests[sport]?.[playerId];
-  if (fromManifest) return fromManifest;
-  return getCached(sport, playerId);
+  if (fromManifest) return assetUrl(fromManifest);
+  const cached = getCached(sport, playerId);
+  return typeof cached === 'string' ? assetUrl(cached) : cached;
 }
 
 /** Warm face manifests early on collection screens. */

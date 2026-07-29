@@ -61,6 +61,7 @@ import {
   refBotSlotForPart,
 } from '../../types/refBotCharacter';
 import type { Sport } from '../../types';
+import { assetUrl } from '../../lib/assetUrl';
 
 const TARGET_HEIGHT = 1.35;
 const PODIUM_GROUP_Y = -0.92;
@@ -2225,7 +2226,7 @@ function FbxCharacterModel({
   showcase?: boolean;
   sport?: Sport;
 }) {
-  const fbx = useFBX(def.modelPath);
+  const fbx = useFBX(assetUrl(def.modelPath));
   const scene = useMemo(() => SkeletonUtils.clone(fbx), [fbx]);
   return (
     <PodiumRig
@@ -2468,7 +2469,7 @@ function GlbModel({
   const isAthlete = 'id' in def && def.id === 'athlete';
   const isBob = 'id' in def && def.id === 'bob';
   const isRefBot = 'id' in def && def.id === 'ref-bot';
-  const { scene, animations: embeddedAnims } = useGLTF(def.modelPath);
+  const { scene, animations: embeddedAnims } = useGLTF(assetUrl(def.modelPath));
   const animations = useMemo(() => {
     // Quaternius animals often ship each clip twice (Idle + AnimalArmature|Idle).
     // Prefer the shorter name so actions don't fight on the same armature.
@@ -2591,7 +2592,7 @@ function PetModel({
 }
 
 function PodiumStage({ accent }: { accent: string }) {
-  const { scene } = useGLTF(LANDING_PAD_PATH);
+  const { scene } = useGLTF(assetUrl(LANDING_PAD_PATH));
   const pad = useMemo(() => {
     const cloned = SkeletonUtils.clone(scene);
     cloned.traverse(child => {
