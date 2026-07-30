@@ -5,6 +5,7 @@ import { PageTransition } from './components/PageTransition';
 import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
 import { QuickPlayScreen } from './components/QuickPlayScreen';
+import { ClueHuntScreen } from './components/ClueHuntScreen';
 import { CampaignTriviaScreen } from './components/CampaignTriviaScreen';
 import { BallRainIntro } from './components/BallRainIntro';
 import { EntrySplash } from './components/EntrySplash';
@@ -80,6 +81,7 @@ const modeLabels: Record<GameMode, string> = {
   bot: 'VS AI',
   duel: 'DUEL',
   quick: 'QUICK',
+  clue: 'GUESS PLAYER',
   campaign: 'CAMPAIGN',
 };
 
@@ -538,6 +540,26 @@ export default function App() {
           </PageTransition>
         )}
 
+        {screen === 'game' && mode === 'clue' && (
+          <PageTransition key={`clue-${sport}-${gameKey}`} variant="game">
+            <ClueHuntScreen
+              sport={uiSport}
+              equippedCharacter={profile.equippedCharacter}
+              equippedPet={profile.equippedPet}
+              creativeLoadout={profile.creativeLoadout}
+              athleteLoadout={profile.athleteLoadout}
+              bobLoadout={profile.bobLoadout}
+              refBotLoadout={profile.refBotLoadout}
+              rabbitVariant={profile.rabbitVariant}
+              makoVariant={profile.makoVariant}
+              dogVariant={profile.dogVariant}
+              onHome={handleHome}
+              onReplay={handleReplay}
+              onProfileChange={refreshProfile}
+            />
+          </PageTransition>
+        )}
+
         {screen === 'game' && mode === 'campaign' && campaignLevelId != null && (
           <PageTransition key={`campaign-${sport}-${campaignLevelId}-${gameKey}`} variant="game">
             <CampaignTriviaScreen
@@ -561,7 +583,7 @@ export default function App() {
           </PageTransition>
         )}
 
-        {screen === 'game' && mode !== 'quick' && mode !== 'campaign' && (
+        {screen === 'game' && mode !== 'quick' && mode !== 'clue' && mode !== 'campaign' && (
           <PageTransition key={`game-${sport}-${mode}-${gameKey}`} variant="game">
             <GameScreen
               sport={uiSport}

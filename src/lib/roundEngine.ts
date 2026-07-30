@@ -122,11 +122,16 @@ export function generateShareText(
             ? '1v1 Duel'
             : mode === 'quick'
               ? 'Quick Play'
+              : mode === 'clue'
+                ? 'Guess the Player'
               : mode === 'campaign'
                 ? 'Campaign'
                 : 'Training';
   if (mode === 'quick') {
     return `${emoji} Sportivia Quick Play · ${score} pts · ${correct} correct\nBeat my streak!`;
+  }
+  if (mode === 'clue') {
+    return `${emoji} Sportivia Guess the Player · ${score} pts · ${correct} found\nBeat my score!`;
   }
   return `${emoji} Sportivia ${score} pts · ${correct} correct · ${boardFilled}/9 filled\n${modeLabel} — beat my score!`;
 }

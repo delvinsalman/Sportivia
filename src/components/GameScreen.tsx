@@ -63,6 +63,7 @@ const modeLabels: Record<GameMode, string> = {
   bot: 'VS AI',
   duel: 'DUEL',
   quick: 'QUICK',
+  clue: 'GUESS PLAYER',
   campaign: 'CAMPAIGN',
 };
 

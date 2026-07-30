@@ -7,7 +7,7 @@ export function isRunComplete(_mode: GameMode, reason: GameEndReason): boolean {
 }
 
 export function earnsProgression(mode: GameMode): boolean {
-  return mode === 'daily' || mode === 'timed' || mode === 'bot' || mode === 'duel' || mode === 'quick' || mode === 'campaign';
+  return mode === 'daily' || mode === 'timed' || mode === 'bot' || mode === 'duel' || mode === 'quick' || mode === 'clue' || mode === 'campaign';
 }
 
 /** Total XP required to reach a given level (level 1 = 0). */
@@ -88,6 +88,29 @@ export function computeGameRewards(result: GameResult): GameRewards {
     }
     coins = Math.max(5, coins);
     xp = Math.max(5, xp);
+    return {
+      coinsEarned: coins,
+      xpEarned: xp,
+      leveledUp: false,
+      previousLevel: 1,
+      newLevel: 1,
+      milestoneBonus: 0,
+    };
+  }
+
+  // Guess the Player — early solves bank strong coins; late/hinted solves pay less via score.
+  if (result.mode === 'clue') {
+    let coins = Math.floor(result.score / 3.2) + result.correct * 10 + 28;
+    let xp = result.correct * 9 + Math.floor(result.score / 10) + 12;
+    if (result.correct >= 8) {
+      coins += 60;
+      xp += 28;
+    } else if (result.correct >= 5) {
+      coins += 30;
+      xp += 14;
+    }
+    coins = Math.max(12, coins);
+    xp = Math.max(8, xp);
     return {
       coinsEarned: coins,
       xpEarned: xp,
@@ -181,6 +204,7 @@ export function modeXpHint(mode: GameMode): string {
   if (mode === 'duel') return '+ duel bonus';
   if (mode === 'bot') return '+ AI match bonus';
   if (mode === 'quick') return '+ light quick bonus';
+  if (mode === 'clue') return '+ guess bonus';
   if (mode === 'campaign') return '+ campaign bonus';
   return 'practice only';
 }

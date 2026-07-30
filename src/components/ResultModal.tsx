@@ -41,6 +41,7 @@ const modeLabels: Record<GameResult['mode'], string> = {
   bot: 'Vs AI',
   duel: '1v1 Duel',
   quick: 'Quick Play',
+  clue: 'Guess the Player',
   campaign: 'Campaign',
 };
 
@@ -97,7 +98,7 @@ export function ResultModal({
               ? `Level ${result.campaignLevelId} Done`
               : `Level ${result.campaignLevelId}`
         : result.perfectBoard
-        ? result.mode === 'quick'
+        ? result.mode === 'quick' || result.mode === 'clue'
           ? 'Perfect Run!'
           : 'Perfect Board!'
         : result.completed
@@ -389,7 +390,7 @@ export function ResultModal({
                     },
                   ]
                 : [
-                    result.mode === 'quick'
+                    result.mode === 'quick' || result.mode === 'clue'
                       ? { label: 'Correct', value: result.correct }
                       : { label: 'Filled', value: `${result.boardFilled}/9` },
                     ...(result.mode === 'quick'

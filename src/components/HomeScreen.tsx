@@ -47,6 +47,7 @@ const modeLabels: Record<GameMode, string> = {
   bot: 'Vs AI',
   duel: '1v1 Duel',
   quick: 'Quick Play',
+  clue: 'Guess the Player',
   campaign: 'Campaign',
 };
 
@@ -77,6 +78,13 @@ const MODE_META: Record<
     icon: '/icons/modes/quick.png',
     detail: '10 Qs · fast trivia · light coins',
     blurb: 'Ten rapid-fire trivia questions — no bingo board. Fast rounds with a light coin payout; Daily & Ranked pay more.',
+  },
+  clue: {
+    tone: '#22d3ee',
+    icon: '/icons/modes/clue.svg',
+    detail: '90 sec · type names · big coins',
+    blurb:
+      'One hidden player from your selected sport. Progressive clues reveal every 5 seconds. Type the exact player with suggestions; guess early for full coins, because every extra hint cuts the payout.',
   },
   campaign: {
     tone: '#f0b232',
@@ -260,20 +268,6 @@ export function HomeScreen({
         <h1 className="text-xl sm:text-4xl font-black tracking-tight text-[#f2f3f5] leading-none">
           Sportivia
         </h1>
-        <a
-          href="https://www.y8.com/"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Play games on Y8"
-          title="Y8 Games"
-          className="shrink-0 rounded-md transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f0b232]"
-        >
-          <img
-            src={assetUrl('/y8-logo.png')}
-            alt="Y8"
-            className="h-6 w-auto drop-shadow-[0_2px_0_rgba(0,0,0,0.4)] sm:h-8"
-          />
-        </a>
       </motion.div>
 
       {/* Left-center sport rail + record — only after a sport is chosen */}
@@ -595,11 +589,11 @@ export function HomeScreen({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 28, scale: 0.97 }}
               transition={PAGE_TRANSITION}
-              className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-6 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8"
+              className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-6 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8 [@media(max-height:700px)]:!py-3"
               onClick={e => e.stopPropagation()}
             >
-              <div className="mx-auto mb-4 flex w-full max-w-lg items-center gap-2.5 sm:mb-5">
-                <h3 className="text-2xl font-black tracking-tight text-[#f2f3f5] sm:text-3xl">Game Modes</h3>
+              <div className="mx-auto mb-3 flex w-full max-w-lg items-center gap-2.5 [@media(max-height:700px)]:!mb-2">
+                <h3 className="text-2xl font-black tracking-tight text-[#f2f3f5] sm:text-3xl [@media(max-height:700px)]:!text-2xl">Game Modes</h3>
                 <span
                   className="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
                   style={{
@@ -612,8 +606,8 @@ export function HomeScreen({
                 </span>
               </div>
 
-              <div className="mx-auto flex w-full max-w-lg flex-col gap-2.5 sm:gap-3">
-                {(['daily', 'quick', 'training', 'timed', 'bot', 'duel'] as GameMode[]).map((m, i) => {
+              <div className="mx-auto flex w-full max-w-lg flex-col gap-2 [@media(max-height:700px)]:!gap-1.5">
+                {(['daily', 'quick', 'clue', 'training', 'timed', 'bot', 'duel'] as GameMode[]).map((m, i) => {
                   const meta = MODE_META[m];
                   return (
                     <motion.div
@@ -635,7 +629,7 @@ export function HomeScreen({
                           setShowModes(false);
                           onStart(m);
                         }}
-                        className="group/mode relative flex h-[76px] w-full items-center gap-3.5 rounded-2xl border-[3px] px-4 text-left transition-all hover:translate-y-[1px] sm:h-[82px] sm:gap-4 sm:px-4.5"
+                        className="group/mode relative flex h-[72px] w-full items-center gap-3.5 rounded-xl border-2 px-4 text-left transition-all hover:translate-y-[1px] [@media(max-height:700px)]:!h-14 [@media(max-height:700px)]:!gap-3"
                         style={{
                           background: `linear-gradient(160deg, ${meta.tone}22 0%, #1a1b1f 55%)`,
                           borderColor: `${meta.tone}88`,
@@ -647,17 +641,17 @@ export function HomeScreen({
                           className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity group-hover/mode:opacity-[0.2]"
                           style={{ backgroundImage: `radial-gradient(circle at 92% 12%, ${meta.tone}, transparent 42%)` }}
                         />
-                        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border-[2.5px] border-white/15 bg-[#111214]/80 shadow-[0_3px_0_rgba(0,0,0,0.35)] sm:h-[3.25rem] sm:w-[3.25rem]">
+                        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 border-white/15 bg-[#111214]/80 shadow-[0_2px_0_rgba(0,0,0,0.35)] [@media(max-height:700px)]:!h-10 [@media(max-height:700px)]:!w-10">
                           <img
                             src={assetUrl(meta.icon)}
                             alt=""
-                            className="h-8 w-8 object-contain"
+                            className="h-8 w-8 object-contain [@media(max-height:700px)]:!h-7 [@media(max-height:700px)]:!w-7"
                             draggable={false}
                           />
                         </div>
                         <div className="relative min-w-0 flex-1">
                           <div className="flex flex-wrap items-center gap-1.5">
-                            <p className="text-base font-black leading-none text-[#f2f3f5] sm:text-lg">
+                            <p className="text-sm font-black leading-none text-[#f2f3f5] sm:text-base [@media(max-height:700px)]:!text-sm">
                               {modeLabels[m]}
                             </p>
                             <button
@@ -692,7 +686,7 @@ export function HomeScreen({
                               </span>
                             )}
                           </div>
-                          <p className="mt-1.5 truncate text-xs font-semibold leading-none whitespace-nowrap text-[#949ba4]">
+                          <p className="mt-1 truncate text-[10px] font-semibold leading-none whitespace-nowrap text-[#949ba4] [@media(max-height:700px)]:!mt-0.5 [@media(max-height:700px)]:!text-[9px]">
                             {meta.detail}
                           </p>
                         </div>
