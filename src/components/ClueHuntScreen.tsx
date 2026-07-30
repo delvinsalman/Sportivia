@@ -264,12 +264,7 @@ export function ClueHuntScreen({
               </AnimatePresence>
             </div>
 
-            <form
-              onSubmit={onSubmit}
-              className={`relative mt-auto transition-opacity duration-300 ${
-                showVisualClue ? 'pointer-events-none opacity-0' : 'opacity-100'
-              }`}
-            >
+            <form onSubmit={onSubmit} className="relative mt-auto">
               <label className="mb-2 block text-[10px] font-black uppercase tracking-[0.16em] text-[#949ba4]">
                 Type the player
               </label>
