@@ -22,9 +22,10 @@ interface UseDuelOptions {
 export function useDuel({ playerName, characterId, sport, profile }: UseDuelOptions) {
   const wsRef = useRef<WebSocket | null>(null);
   const youIdRef = useRef<string>('');
-  const intentionalCloseRef = useRef(false);
+  const intentionalSocketsRef = useRef(new WeakSet<WebSocket>());
   const [status, setStatus] = useState<DuelConnectionStatus>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [matchmaking, setMatchmaking] = useState(false);
   const [lobby, setLobby] = useState<DuelLobbyState | null>(null);
   const [match, setMatch] = useState<DuelMatchStart | null>(null);
   const [opponentScore, setOpponentScore] = useState(0);
@@ -36,6 +37,7 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
     wsRef.current = null;
     if (ws && (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING)) {
       try {
+        intentionalSocketsRef.current.add(ws);
         ws.close();
       } catch {
         /* ignore */
@@ -63,8 +65,20 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
       return;
     }
 
-    if (msg.type === 'created' || msg.type === 'joined' || msg.type === 'lobby') {
+    if (msg.type === 'queued') {
       setError(null);
+      setMatchmaking(true);
+      return;
+    }
+
+    if (
+      msg.type === 'created' ||
+      msg.type === 'joined' ||
+      msg.type === 'matched' ||
+      msg.type === 'lobby'
+    ) {
+      setError(null);
+      setMatchmaking(false);
       if (msg.youId) youIdRef.current = msg.youId;
       setLobby({
         code: msg.code,
@@ -85,6 +99,7 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
 
     if (msg.type === 'start') {
       setError(null);
+      setMatchmaking(false);
       setMatch({
         code: msg.code,
         sport: msg.sport,
@@ -138,6 +153,7 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
     }
 
     if (msg.type === 'left') {
+      setMatchmaking(false);
       setLobby(null);
       setMatch(null);
       setDuelResult(null);
@@ -147,22 +163,21 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
   }, []);
 
   const connect = useCallback((): Promise<WebSocket> => {
-    intentionalCloseRef.current = true;
     cleanupSocket();
     setStatus('connecting');
     setError(null);
+    setMatchmaking(false);
 
     return new Promise((resolve, reject) => {
       const ws = new WebSocket(duelWsUrl());
       wsRef.current = ws;
 
       const onOpen = () => {
-        intentionalCloseRef.current = false;
         setStatus('connected');
         resolve(ws);
       };
       const onError = () => {
-        intentionalCloseRef.current = false;
+        if (wsRef.current !== ws) return;
         setStatus('error');
         setError('Could not reach the live duel server. Check your connection and try again.');
         reject(new Error('connect failed'));
@@ -172,13 +187,15 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
       ws.addEventListener('error', onError, { once: true });
       ws.addEventListener('message', handleMessage);
       ws.addEventListener('close', () => {
-        wsRef.current = null;
-        if (intentionalCloseRef.current) {
-          intentionalCloseRef.current = false;
-          setStatus('idle');
+        const isCurrent = wsRef.current === ws;
+        if (isCurrent) wsRef.current = null;
+        if (intentionalSocketsRef.current.has(ws)) {
+          if (isCurrent) setStatus('idle');
           return;
         }
+        if (!isCurrent) return;
         setStatus(s => (s === 'connecting' ? 'error' : 'idle'));
+        setMatchmaking(false);
         setLobby(null);
         setMatch(null);
         setDuelResult(null);
@@ -228,6 +245,24 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
     },
     [connect, playerName, characterId, profile],
   );
+
+  const findRandomMatch = useCallback(async () => {
+    try {
+      const ws = await connect();
+      ws.send(
+        JSON.stringify({
+          type: 'matchmake',
+          name: playerName,
+          characterId,
+          sport,
+          cardLevels: cardLevelsForCharacter(profile, characterId),
+          pvpRecord: profile.pvpRecord ?? { wins: 0, losses: 0, ties: 0 },
+        }),
+      );
+    } catch {
+      /* error state set in connect */
+    }
+  }, [connect, playerName, characterId, sport, profile]);
 
   const setReady = useCallback(
     (ready: boolean) => {
@@ -280,9 +315,9 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
   }, [send]);
 
   const leaveLobby = useCallback(() => {
-    intentionalCloseRef.current = true;
-    send({ type: 'leave' });
+    send({ type: matchmaking ? 'cancel_matchmaking' : 'leave' });
     cleanupSocket();
+    setMatchmaking(false);
     setLobby(null);
     setMatch(null);
     setDuelResult(null);
@@ -290,11 +325,10 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
     setOpponentFinished(false);
     setStatus('idle');
     setError(null);
-  }, [send, cleanupSocket]);
+  }, [send, cleanupSocket, matchmaking]);
 
   useEffect(() => {
     return () => {
-      intentionalCloseRef.current = true;
       cleanupSocket();
     };
   }, [cleanupSocket]);
@@ -305,6 +339,7 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
   return {
     status,
     error,
+    matchmaking,
     lobby,
     match,
     you,
@@ -314,6 +349,7 @@ export function useDuel({ playerName, characterId, sport, profile }: UseDuelOpti
     duelResult,
     createLobby,
     joinLobby,
+    findRandomMatch,
     setReady,
     reportScore,
     reportFinish,

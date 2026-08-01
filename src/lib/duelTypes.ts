@@ -66,7 +66,8 @@ export interface DuelMatchResult {
 }
 
 export type DuelServerMessage =
-  | ({ type: 'created' | 'joined' | 'lobby' } & DuelLobbyState & { youId?: string })
+  | ({ type: 'created' | 'joined' | 'matched' | 'lobby' } & DuelLobbyState & { youId?: string })
+  | { type: 'queued'; sport: Sport }
   | { type: 'start' } & DuelMatchStart
   | { type: 'opponent_score'; playerId: string; score: number }
   | {

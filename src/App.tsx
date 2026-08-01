@@ -11,6 +11,7 @@ import { CampaignTriviaScreen } from './components/CampaignTriviaScreen';
 import { BallRainIntro } from './components/BallRainIntro';
 import { EntrySplash } from './components/EntrySplash';
 import { DuelVersusScreen } from './components/DuelVersusScreen';
+import { RandomMatchmakingScreen } from './components/RandomMatchmakingScreen';
 import { StoreScreen } from './components/StoreScreen';
 import { CharacterCardsScreen } from './components/CharacterCardsScreen';
 import { LobbyScreen } from './components/LobbyScreen';
@@ -73,6 +74,7 @@ type Screen =
   | 'career'
   | 'campaign'
   | 'lobby'
+  | 'matchmaking'
   | 'bot-stake'
   | 'duel-versus'
   | 'duel-web-only'
@@ -102,6 +104,7 @@ export default function App() {
   }, []);
 
   const [mode, setMode] = useState<GameMode>('training');
+  const [duelEntry, setDuelEntry] = useState<'friend' | 'random'>('friend');
   const [botDifficulty, setBotDifficulty] = useState<BotDifficulty>('beginner');
   const [campaignLevelId, setCampaignLevelId] = useState<number | null>(null);
   const [profile, setProfile] = useState<PlayerProfile>(loadProfile);
@@ -173,9 +176,17 @@ export default function App() {
       startedMatchRef.current = null;
       setDuelSeed(null);
       setProfile(releaseCoinStake());
-      setScreen('lobby');
+      setScreen(duelEntry === 'random' ? 'matchmaking' : 'lobby');
     }
-  }, [duel.lobby, duel.lobby?.status, duel.status, duel.duelResult, mode, screen]);
+  }, [
+    duel.lobby,
+    duel.lobby?.status,
+    duel.status,
+    duel.duelResult,
+    duelEntry,
+    mode,
+    screen,
+  ]);
 
   function refreshProfile() {
     setProfile(loadProfile());
@@ -185,14 +196,26 @@ export default function App() {
     setProfile(nextProfile ?? loadProfile());
   }
 
-  function handleStart(m: GameMode, difficulty?: BotDifficulty) {
+  function handleStart(
+    m: GameMode,
+    difficulty?: BotDifficulty,
+    duelChoice: 'friend' | 'random' = 'friend',
+  ) {
     if (m === 'duel') {
       setMode('duel');
+      setDuelEntry(duelChoice);
       setCampaignLevelId(null);
       setDuelSeed(null);
       startedMatchRef.current = null;
       // Poki / iframe packages can't host live multiplayer — send players to the site.
-      setScreen(isPokiBuild() ? 'duel-web-only' : 'lobby');
+      if (isPokiBuild()) {
+        setScreen('duel-web-only');
+      } else if (duelChoice === 'random') {
+        setScreen('matchmaking');
+        void duel.findRandomMatch();
+      } else {
+        setScreen('lobby');
+      }
       return;
     }
     if (m === 'campaign') {
@@ -248,6 +271,15 @@ export default function App() {
 
   function handleReplay() {
     if (mode === 'duel') {
+      if (duelEntry === 'random') {
+        duel.leaveLobby();
+        startedMatchRef.current = null;
+        setDuelSeed(null);
+        setProfile(releaseCoinStake());
+        setScreen('matchmaking');
+        void duel.findRandomMatch();
+        return;
+      }
       duel.requestRematch();
       startedMatchRef.current = null;
       setDuelSeed(null);
@@ -487,6 +519,23 @@ export default function App() {
               onReady={ready => duel.setReady(ready)}
               onLeave={() => duel.leaveLobby()}
               onSetWager={duel.setWager}
+            />
+          </PageTransition>
+        )}
+
+        {screen === 'matchmaking' && (
+          <PageTransition key="matchmaking" variant="menu">
+            <RandomMatchmakingScreen
+              sport={uiSport}
+              playerName={profile.playerName}
+              status={duel.status}
+              searching={duel.matchmaking}
+              error={duel.error}
+              onRetry={() => void duel.findRandomMatch()}
+              onCancel={() => {
+                duel.leaveLobby();
+                setScreen('home');
+              }}
             />
           </PageTransition>
         )}

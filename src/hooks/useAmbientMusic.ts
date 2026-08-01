@@ -30,6 +30,7 @@ type AmbientScreen =
   | 'settings'
   | 'career'
   | 'lobby'
+  | 'matchmaking'
   | 'bot-stake'
   | 'duel-versus'
   | 'duel-web-only'
@@ -49,6 +50,7 @@ function isMenuScreen(screen: AmbientScreen) {
     screen === 'settings' ||
     screen === 'career' ||
     screen === 'bot-stake' ||
+    screen === 'matchmaking' ||
     screen === 'duel-web-only' ||
     screen === 'campaign'
   );

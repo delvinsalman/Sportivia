@@ -86,9 +86,17 @@ interface Room {
   players: Map<string, Player>;
 }
 
+interface MatchmakingEntry {
+  sport: Sport;
+  player: Player;
+  queuedAt: number;
+}
+
 const rooms = new Map<string, Room>();
 const socketRoom = new WeakMap<WebSocket, string>();
 const socketPlayer = new WeakMap<WebSocket, string>();
+const matchmaking = new Map<Sport, MatchmakingEntry[]>();
+const socketQueue = new WeakMap<WebSocket, Sport>();
 const liveClients = new Set<WebSocket>();
 /** Tab-scoped presence ids → last seen (ms). More reliable than raw socket count. */
 const presence = new Map<string, number>();
@@ -182,10 +190,98 @@ function uniqueCode(): string {
   return code;
 }
 
+function createPlayer(ws: WebSocket, msg: ClientMsg, options?: { ready?: boolean }): Player {
+  return {
+    id: randomBytes(8).toString('hex'),
+    name: (msg.name || 'Player').slice(0, 18),
+    characterId: msg.characterId || 'cube-man',
+    ready: options?.ready ?? false,
+    score: 0,
+    finished: false,
+    correct: 0,
+    wrong: 0,
+    maxStreak: 0,
+    wagerDecided: options?.ready ?? false,
+    wagerCoins: 0,
+    cardLevels: sanitizeCardLevels(msg.cardLevels),
+    pvpRecord: sanitizePvpRecord(msg.pvpRecord),
+    ws,
+    alive: true,
+  };
+}
+
 function send(ws: WebSocket, payload: unknown) {
   if (ws.readyState === WebSocket.OPEN) {
     ws.send(JSON.stringify(payload));
   }
+}
+
+function removeFromMatchmaking(ws: WebSocket) {
+  const sport = socketQueue.get(ws);
+  if (!sport) return;
+  const queue = matchmaking.get(sport);
+  if (queue) {
+    const next = queue.filter(entry => entry.player.ws !== ws);
+    if (next.length) matchmaking.set(sport, next);
+    else matchmaking.delete(sport);
+  }
+  socketQueue.delete(ws);
+}
+
+function queueForMatch(ws: WebSocket, msg: ClientMsg) {
+  if (socketRoom.get(ws)) removePlayer(ws);
+  removeFromMatchmaking(ws);
+
+  const sport = msg.sport ?? 'soccer';
+  const queue = matchmaking.get(sport) ?? [];
+  let opponent: MatchmakingEntry | undefined;
+
+  while (queue.length) {
+    const candidate = queue.shift()!;
+    socketQueue.delete(candidate.player.ws);
+    if (
+      candidate.player.ws !== ws &&
+      candidate.player.ws.readyState === WebSocket.OPEN &&
+      !socketRoom.get(candidate.player.ws)
+    ) {
+      opponent = candidate;
+      break;
+    }
+  }
+
+  if (!opponent) {
+    const player = createPlayer(ws, msg, { ready: true });
+    queue.push({ sport, player, queuedAt: Date.now() });
+    matchmaking.set(sport, queue);
+    socketQueue.set(ws, sport);
+    send(ws, { type: 'queued', sport });
+    return;
+  }
+
+  if (queue.length) matchmaking.set(sport, queue);
+  else matchmaking.delete(sport);
+
+  const player = createPlayer(ws, msg, { ready: true });
+  const code = uniqueCode();
+  const room: Room = {
+    code,
+    sport,
+    hostId: opponent.player.id,
+    status: 'lobby',
+    seed: null,
+    players: new Map([
+      [opponent.player.id, opponent.player],
+      [player.id, player],
+    ]),
+  };
+
+  rooms.set(code, room);
+  for (const matched of room.players.values()) {
+    socketRoom.set(matched.ws, code);
+    socketPlayer.set(matched.ws, matched.id);
+    send(matched.ws, { ...lobbyPayload(room), type: 'matched', youId: matched.id });
+  }
+  tryStart(room);
 }
 
 function publicPlayers(room: Room): PlayerInfo[] {
@@ -224,6 +320,7 @@ function lobbyPayload(room: Room) {
 }
 
 function removePlayer(ws: WebSocket) {
+  removeFromMatchmaking(ws);
   const code = socketRoom.get(ws);
   const playerId = socketPlayer.get(ws);
   if (!code || !playerId) return;
@@ -460,6 +557,7 @@ const server = createServer((req, res) => {
         ok: true,
         service: 'sportivia',
         rooms: rooms.size,
+        matchmaking: [...matchmaking.values()].reduce((total, queue) => total + queue.length, 0),
         online: onlineCount(),
       }),
     );
@@ -721,28 +819,25 @@ wss.on('connection', ws => {
       return;
     }
 
+    if (msg.type === 'matchmake') {
+      queueForMatch(ws, msg);
+      return;
+    }
+
+    if (msg.type === 'cancel_matchmaking') {
+      if (socketRoom.get(ws)) removePlayer(ws);
+      else removeFromMatchmaking(ws);
+      send(ws, { type: 'left' });
+      return;
+    }
+
     if (msg.type === 'create') {
       if (socketRoom.get(ws)) removePlayer(ws);
+      removeFromMatchmaking(ws);
       const sport = msg.sport ?? 'soccer';
       const code = uniqueCode();
-      const id = randomBytes(8).toString('hex');
-      const player: Player = {
-        id,
-        name: (msg.name || 'Player').slice(0, 18),
-        characterId: msg.characterId || 'cube-man',
-        ready: false,
-        score: 0,
-        finished: false,
-        correct: 0,
-        wrong: 0,
-        maxStreak: 0,
-        wagerDecided: false,
-        wagerCoins: 0,
-        cardLevels: sanitizeCardLevels(msg.cardLevels),
-        pvpRecord: sanitizePvpRecord(msg.pvpRecord),
-        ws,
-        alive: true,
-      };
+      const player = createPlayer(ws, msg);
+      const id = player.id;
       const room: Room = {
         code,
         sport,
@@ -774,25 +869,10 @@ wss.on('connection', ws => {
         return;
       }
       if (socketRoom.get(ws)) removePlayer(ws);
+      removeFromMatchmaking(ws);
 
-      const id = randomBytes(8).toString('hex');
-      const player: Player = {
-        id,
-        name: (msg.name || 'Player').slice(0, 18),
-        characterId: msg.characterId || 'cube-man',
-        ready: false,
-        score: 0,
-        finished: false,
-        correct: 0,
-        wrong: 0,
-        maxStreak: 0,
-        wagerDecided: false,
-        wagerCoins: 0,
-        cardLevels: sanitizeCardLevels(msg.cardLevels),
-        pvpRecord: sanitizePvpRecord(msg.pvpRecord),
-        ws,
-        alive: true,
-      };
+      const player = createPlayer(ws, msg);
+      const id = player.id;
       room.players.set(id, player);
       socketRoom.set(ws, code);
       socketPlayer.set(ws, id);
@@ -918,8 +998,14 @@ wss.on('connection', ws => {
     }
   });
 
-  ws.on('close', () => removePlayer(ws));
-  ws.on('error', () => removePlayer(ws));
+  ws.on('close', () => {
+    removeFromMatchmaking(ws);
+    removePlayer(ws);
+  });
+  ws.on('error', () => {
+    removeFromMatchmaking(ws);
+    removePlayer(ws);
+  });
 });
 
 server.listen(PORT, '0.0.0.0', () => {

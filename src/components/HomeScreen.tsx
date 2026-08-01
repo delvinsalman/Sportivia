@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, type CSSProperties } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Pencil, Play, ShoppingBag, Check, Info, Settings,
-  Medal, ArrowLeft, LayoutGrid,
+  Medal, ArrowLeft, LayoutGrid, Swords, Radio,
 } from 'lucide-react';
 import type { Sport, GameMode, BotDifficulty } from '../types';
 import type { PlayerProfile } from '../types/profile';
@@ -29,7 +29,11 @@ import { isPokiBuild } from '../lib/platformBuild';
 interface HomeScreenProps {
   sport: Sport | null;
   onSportChange: (sport: Sport) => void;
-  onStart: (mode: GameMode, botDifficulty?: BotDifficulty) => void;
+  onStart: (
+    mode: GameMode,
+    botDifficulty?: BotDifficulty,
+    duelChoice?: 'friend' | 'random',
+  ) => void;
   profile: PlayerProfile;
   onOpenStore: () => void;
   onOpenCards: () => void;
@@ -103,10 +107,10 @@ const MODE_META: Record<
   duel: {
     tone: '#ed4245',
     icon: '/icons/modes/duel.png',
-    detail: isPokiBuild() ? 'Live 1v1 · on sportivia.xyz' : 'Live 1v1 · optional coin stakes',
+    detail: isPokiBuild() ? 'Live 1v1 · on sportivia.xyz' : 'Friend lobby or public matchmaking',
     blurb: isPokiBuild()
       ? 'Live online 1v1 isn’t supported on this platform. Open sportivia.xyz to duel another player — every other mode works here.'
-      : 'Live online 1v1 against another player. Optional coin stakes; first to clear the board takes the win.',
+      : 'Create a private room for a friend or search the public queue for a random opponent. Both use the same live 1v1 game.',
   },
 };
 
@@ -190,6 +194,7 @@ export function HomeScreen({
   const [showSportPick, setShowSportPick] = useState(false);
   const [pendingAfterSport, setPendingAfterSport] = useState<'modes' | 'campaign' | null>(null);
   const [showBotDifficulties, setShowBotDifficulties] = useState(false);
+  const [showDuelChoices, setShowDuelChoices] = useState(false);
   const [showDailySpin, setShowDailySpin] = useState(false);
   const [modeInfo, setModeInfo] = useState<GameMode | null>(null);
   const modeInfoLeaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -220,6 +225,7 @@ export function HomeScreen({
   function requestPlay() {
     playMenuClick();
     setShowBotDifficulties(false);
+    setShowDuelChoices(false);
     setModeInfo(null);
     if (!homeSport) {
       setPendingAfterSport('modes');
@@ -574,6 +580,8 @@ export function HomeScreen({
             onClick={() => {
               playMenuBack();
               setModeInfo(null);
+              setShowBotDifficulties(false);
+              setShowDuelChoices(false);
               setShowModes(false);
             }}
           >
@@ -582,6 +590,8 @@ export function HomeScreen({
               onClick={() => {
                 playMenuBack();
                 setModeInfo(null);
+                setShowBotDifficulties(false);
+                setShowDuelChoices(false);
                 setShowModes(false);
               }}
               className="fixed top-0 left-0 z-50 m-3 flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-2 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] sm:m-4"
@@ -629,7 +639,18 @@ export function HomeScreen({
                           playMenuConfirm();
                           setModeInfo(null);
                           if (m === 'bot') {
+                            setShowDuelChoices(false);
                             setShowBotDifficulties(open => !open);
+                            return;
+                          }
+                          if (m === 'duel') {
+                            if (isPokiBuild()) {
+                              setShowModes(false);
+                              onStart('duel');
+                              return;
+                            }
+                            setShowBotDifficulties(false);
+                            setShowDuelChoices(open => !open);
                             return;
                           }
                           setShowModes(false);
@@ -697,7 +718,10 @@ export function HomeScreen({
                           </p>
                         </div>
                         <span className="relative shrink-0 text-lg font-black" style={{ color: meta.tone }}>
-                          {m === 'bot' && showBotDifficulties ? '↑' : '→'}
+                          {(m === 'bot' && showBotDifficulties) ||
+                          (m === 'duel' && showDuelChoices)
+                            ? '↑'
+                            : '→'}
                         </span>
                       </button>
 
@@ -790,6 +814,66 @@ export function HomeScreen({
                                   </button>
                                 );
                               })}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      <AnimatePresence initial={false}>
+                        {m === 'duel' && showDuelChoices && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={PAGE_TRANSITION}
+                            className="overflow-hidden"
+                          >
+                            <div className="grid grid-cols-2 gap-2 px-1 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  playMenuConfirm();
+                                  setShowModes(false);
+                                  setShowDuelChoices(false);
+                                  onStart('duel', undefined, 'friend');
+                                }}
+                                className="flex min-h-[74px] items-center gap-2.5 rounded-2xl border-[2.5px] border-[#ff8a8c]/70 bg-[#211517] px-3 py-2.5 text-left shadow-[0_3px_0_#8f1e22] transition-transform hover:translate-y-[1px]"
+                              >
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#ed4245] text-white">
+                                  <Swords className="h-4.5 w-4.5" />
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block text-xs font-black text-[#f2f3f5]">
+                                    Friend Duel
+                                  </span>
+                                  <span className="mt-0.5 block text-[9px] font-bold leading-tight text-[#949ba4]">
+                                    Create or join by code
+                                  </span>
+                                </span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  playMenuConfirm();
+                                  setShowModes(false);
+                                  setShowDuelChoices(false);
+                                  onStart('duel', undefined, 'random');
+                                }}
+                                className="flex min-h-[74px] items-center gap-2.5 rounded-2xl border-[2.5px] border-[#67e8f9]/70 bg-[#102126] px-3 py-2.5 text-left shadow-[0_3px_0_#155e75] transition-transform hover:translate-y-[1px]"
+                              >
+                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0891b2] text-white">
+                                  <Radio className="h-4.5 w-4.5" />
+                                </span>
+                                <span className="min-w-0">
+                                  <span className="block text-xs font-black text-[#f2f3f5]">
+                                    Online Random
+                                  </span>
+                                  <span className="mt-0.5 block text-[9px] font-bold leading-tight text-[#949ba4]">
+                                    Search public matchmaking
+                                  </span>
+                                </span>
+                              </button>
                             </div>
                           </motion.div>
                         )}
