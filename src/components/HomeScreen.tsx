@@ -24,6 +24,7 @@ import { DailySpinModal } from './DailySpinModal';
 import type { DailySpinPrize } from '../lib/dailySpin';
 import { DAILY_SPIN_ICON } from '../lib/dailySpin';
 import { assetUrl } from '../lib/assetUrl';
+import { isPokiBuild } from '../lib/platformBuild';
 
 interface HomeScreenProps {
   sport: Sport | null;
@@ -102,8 +103,10 @@ const MODE_META: Record<
   duel: {
     tone: '#ed4245',
     icon: '/icons/modes/duel.png',
-    detail: 'Live 1v1 · optional coin stakes',
-    blurb: 'Live online 1v1 against another player. Optional coin stakes; first to clear the board takes the win.',
+    detail: isPokiBuild() ? 'Live 1v1 · on sportivia.xyz' : 'Live 1v1 · optional coin stakes',
+    blurb: isPokiBuild()
+      ? 'Live online 1v1 isn’t supported on this platform. Open sportivia.xyz to duel another player — every other mode works here.'
+      : 'Live online 1v1 against another player. Optional coin stakes; first to clear the board takes the win.',
   },
 };
 
@@ -488,6 +491,9 @@ export function HomeScreen({
                 : {})}
               {...(profile.equippedCharacter === 'mako'
                 ? { makoVariant: profile.makoVariant }
+                : {})}
+              {...(profile.equippedCharacter === 'stickman'
+                ? { stickmanVariant: profile.stickmanVariant }
                 : {})}
             />
             </div>

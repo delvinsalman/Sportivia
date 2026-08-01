@@ -7,6 +7,7 @@ import type {
   PetId,
   RabbitVariantId,
   MakoVariantId,
+  StickmanVariantId,
   DogVariantId,
 } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
@@ -32,6 +33,7 @@ interface ClueHuntScreenProps {
   refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
+  stickmanVariant?: StickmanVariantId;
   dogVariant?: DogVariantId;
   onHome: () => void;
   onReplay: () => void;
@@ -61,6 +63,7 @@ export function ClueHuntScreen({
   refBotLoadout,
   rabbitVariant,
   makoVariant,
+  stickmanVariant,
   dogVariant,
   onHome,
   onReplay,
@@ -386,6 +389,7 @@ export function ClueHuntScreen({
             refBotLoadout={refBotLoadout}
             rabbitVariant={rabbitVariant}
             makoVariant={makoVariant}
+            stickmanVariant={stickmanVariant}
             dogVariant={dogVariant}
             onHome={handleResultHome}
             onPlayAgain={handleResultReplay}

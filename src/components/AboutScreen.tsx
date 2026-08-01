@@ -257,6 +257,9 @@ export function AboutScreen({ sport, profile, onBack, onPlay }: AboutScreenProps
                   {...(profile.equippedCharacter === 'mako'
                     ? { makoVariant: profile.makoVariant }
                     : {})}
+                  {...(profile.equippedCharacter === 'stickman'
+                    ? { stickmanVariant: profile.stickmanVariant }
+                    : {})}
                 />
                 {pet && (
                   <div className="absolute right-[-2%] bottom-0 w-[52%] max-w-[260px] pointer-events-none">

@@ -305,6 +305,9 @@ function PlatformNode({
               {...(profile.equippedCharacter === 'mako'
                 ? { makoVariant: profile.makoVariant }
                 : {})}
+              {...(profile.equippedCharacter === 'stickman'
+                ? { stickmanVariant: profile.stickmanVariant }
+                : {})}
             />
           </span>
         )}

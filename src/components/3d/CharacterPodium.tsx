@@ -9,7 +9,7 @@ import {
 } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { ContactShadows, useAnimations, useFBX, useGLTF } from '@react-three/drei';
-import { Box3, Color, Float32BufferAttribute, LoopOnce, LoopRepeat, MeshPhysicalMaterial, Vector3 } from 'three';
+import { AnimationMixer, Box3, Color, Float32BufferAttribute, LoopOnce, LoopRepeat, MeshPhysicalMaterial, Vector3 } from 'three';
 import { SkeletonUtils } from 'three-stdlib';
 import type { AnimationAction, AnimationClip, Bone, Group, Mesh, MeshStandardMaterial, Object3D, SkinnedMesh } from 'three';
 import type {
@@ -20,6 +20,7 @@ import type {
   PetDef,
   PetId,
   RabbitVariantId,
+  StickmanVariantId,
 } from '../../types/profile';
 import {
   CHARACTERS,
@@ -29,9 +30,11 @@ import {
   getMakoVariantDef,
   getPetDef,
   getRabbitVariantDef,
+  getStickmanVariantDef,
   MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
+  STICKMAN_VARIANTS,
 } from '../../types/profile';
 import type { CreativeLoadout } from '../../types/creativeCharacter';
 import {
@@ -78,6 +81,7 @@ CHARACTERS.filter(c => c.modelPath.endsWith('.fbx')).forEach(c => useFBX.preload
 CHARACTERS.filter(c => c.modelPath.endsWith('.glb')).forEach(c => useGLTF.preload(assetUrl(c.modelPath)));
 RABBIT_VARIANTS.forEach(variant => useGLTF.preload(assetUrl(variant.modelPath)));
 MAKO_VARIANTS.forEach(variant => useGLTF.preload(assetUrl(variant.modelPath)));
+STICKMAN_VARIANTS.forEach(variant => useGLTF.preload(assetUrl(variant.modelPath)));
 DOG_VARIANTS.forEach(variant => useGLTF.preload(assetUrl(variant.modelPath)));
 PETS.forEach(p => useGLTF.preload(assetUrl(p.modelPath)));
 useGLTF.preload(assetUrl(LANDING_PAD_PATH));
@@ -110,7 +114,55 @@ class ModelErrorBoundary extends Component<
   }
 }
 
-function fitModel(scene: Object3D, footOffsetY = 0, targetHeight = TARGET_HEIGHT) {
+const IDLE_FIT_SAMPLES = 8;
+
+/**
+ * Mixamo rigs stand well away from their T-pose centre once the idle plays, and
+ * some are authored at sub-unit scale. Sampling the loop measures the silhouette
+ * players actually see instead of the bind pose.
+ */
+function measureIdlePose(scene: Object3D, clip: AnimationClip) {
+  const nodes: Object3D[] = [];
+  scene.traverse(node => nodes.push(node));
+  const rest = nodes.map(node => ({
+    position: node.position.clone(),
+    quaternion: node.quaternion.clone(),
+    scale: node.scale.clone(),
+  }));
+
+  const mixer = new AnimationMixer(scene);
+  mixer.clipAction(clip).play();
+
+  const envelope = new Box3();
+  const center = new Vector3();
+  for (let i = 0; i < IDLE_FIT_SAMPLES; i += 1) {
+    mixer.setTime((i / IDLE_FIT_SAMPLES) * clip.duration);
+    scene.updateMatrixWorld(true);
+    // Precise mode walks skinned vertices; the coarse box ignores bone transforms.
+    const frame = new Box3().setFromObject(scene, true);
+    envelope.union(frame);
+    center.add(frame.getCenter(new Vector3()));
+  }
+  center.multiplyScalar(1 / IDLE_FIT_SAMPLES);
+
+  mixer.stopAllAction();
+  mixer.uncacheRoot(scene);
+  nodes.forEach((node, index) => {
+    node.position.copy(rest[index].position);
+    node.quaternion.copy(rest[index].quaternion);
+    node.scale.copy(rest[index].scale);
+  });
+  scene.updateMatrixWorld(true);
+
+  return { envelope, center };
+}
+
+function fitModel(
+  scene: Object3D,
+  footOffsetY = 0,
+  targetHeight = TARGET_HEIGHT,
+  idleClip: AnimationClip | null = null,
+) {
   scene.traverse(child => {
     if ('isMesh' in child && child.isMesh) {
       child.frustumCulled = false;
@@ -124,12 +176,15 @@ function fitModel(scene: Object3D, footOffsetY = 0, targetHeight = TARGET_HEIGHT
   });
 
   scene.updateMatrixWorld(true);
-  const box = new Box3().setFromObject(scene);
+  const idle = idleClip ? measureIdlePose(scene, idleClip) : null;
+  const box = idle ? idle.envelope : new Box3().setFromObject(scene);
   const size = box.getSize(new Vector3());
-  // Fit tall/deep animals (e.g. alpaca) so they don't clip the camera
-  const dominant = Math.max(size.y, size.z * 0.72, size.x * 0.72, 1);
+  // Fit tall/deep animals (e.g. alpaca) so they don't clip the camera. The floor
+  // also stops undersized bind poses from ballooning, which an idle measurement
+  // is accurate enough to size on its own.
+  const dominant = Math.max(size.y, size.z * 0.72, size.x * 0.72, idle ? 1e-3 : 1);
   const scale = targetHeight / dominant;
-  const center = box.getCenter(new Vector3());
+  const center = idle ? idle.center : box.getCenter(new Vector3());
 
   return {
     scale,
@@ -181,6 +236,8 @@ const FLOURISH_PATTERNS = [
   'headbutt',
   'look',
   'relax',
+  'bow',
+  'focus',
 ];
 
 /** Rare sport-themed flourishes — exact clip name prefixes */
@@ -1060,6 +1117,7 @@ interface CharacterModelProps {
   showcase?: boolean;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
+  stickmanVariant?: StickmanVariantId;
 }
 
 type PodiumModelDef = CharacterDef | PetDef;
@@ -1671,9 +1729,15 @@ function PodiumRig({
     ('poseMode' in def && def.poseMode === 'procedural') ||
     (animations.length === 0 && !skeletalIdle && !isNaturalPet);
   const animTimeScale = 'animTimeScale' in def ? def.animTimeScale ?? 1 : 1;
+  const fitFromIdle = 'fitFromIdle' in def && !!def.fitFromIdle;
+  const idleFitClip = useMemo(() => {
+    if (!fitFromIdle || !animations.length) return null;
+    const idleName = findIdleName(animations.map(clip => clip.name));
+    return animations.find(clip => clip.name === idleName) ?? null;
+  }, [fitFromIdle, animations]);
   const { scale, position } = useMemo(
-    () => fitModel(scene, def.footOffsetY ?? 0, targetHeight),
-    [scene, def.footOffsetY, targetHeight],
+    () => fitModel(scene, def.footOffsetY ?? 0, targetHeight, idleFitClip),
+    [scene, def.footOffsetY, targetHeight, idleFitClip],
   );
   const baseY = useRef(position[1]);
   const isStarterSkeletal =
@@ -2469,6 +2533,8 @@ function GlbModel({
   const isAthlete = 'id' in def && def.id === 'athlete';
   const isBob = 'id' in def && def.id === 'bob';
   const isRefBot = 'id' in def && def.id === 'ref-bot';
+  const isGentleStickman = def.modelPath.includes('gentle-stickman');
+  const isRuneStickman = def.modelPath.includes('witcher-stickman');
   const { scene, animations: embeddedAnims } = useGLTF(assetUrl(def.modelPath));
   const animations = useMemo(() => {
     // Quaternius animals often ship each clip twice (Idle + AnimalArmature|Idle).
@@ -2483,12 +2549,32 @@ function GlbModel({
         preferred.set(base, clip);
       }
     }
-    return [...preferred.values()].map(clip => {
+    const clips = [...preferred.values()];
+    // Witcher Stickman ships mangled Sketchfab names; pick Idle by duration so
+    // Sad.Idle never becomes the podium loop (see model inspect notes).
+    const runeIdle = isRuneStickman
+      ? clips
+          .filter(clip => !/sad/i.test(stripArmature(clip.name)) && clip.duration >= 1.5)
+          .sort((a, b) => b.duration - a.duration)[0] ?? null
+      : null;
+
+    return clips.map(clip => {
       const next = clip.clone();
-      next.name = stripArmature(clip.name);
+      const baseName = stripArmature(clip.name);
+      next.name = isRuneStickman
+        ? /sad/i.test(baseName)
+          ? 'Hunter_Focus'
+          : clip.duration < 1.5
+            ? 'Run'
+            : clip === runeIdle
+              ? 'Idle'
+              : baseName
+        : isGentleStickman && /sad/i.test(baseName)
+          ? 'Gentle_Bow'
+          : baseName;
       return next;
     });
-  }, [embeddedAnims]);
+  }, [embeddedAnims, isGentleStickman, isRuneStickman]);
   const loadout = creativeLoadout ?? DEFAULT_CREATIVE_LOADOUT;
   const kit = athleteLoadout ?? DEFAULT_ATHLETE_LOADOUT;
   const bobKit = bobLoadout ?? DEFAULT_BOB_LOADOUT;
@@ -2534,6 +2620,7 @@ function CharacterModel({
   refBotLoadout,
   rabbitVariant,
   makoVariant,
+  stickmanVariant,
   sport,
 }: CharacterModelProps & {
   creativeLoadout?: CreativeLoadout;
@@ -2548,6 +2635,13 @@ function CharacterModel({
       ? { ...baseDef, modelPath: getRabbitVariantDef(rabbitVariant ?? 'base').modelPath }
       : characterId === 'mako'
         ? { ...baseDef, modelPath: getMakoVariantDef(makoVariant ?? 'classic').modelPath }
+        : characterId === 'stickman'
+          ? {
+              ...baseDef,
+              ...getStickmanVariantDef(stickmanVariant ?? 'classic'),
+              id: baseDef.id,
+              name: baseDef.name,
+            }
         : baseDef;
   if (def.modelPath.endsWith('.glb')) {
     return (
@@ -2656,6 +2750,7 @@ function Scene({
   refBotLoadout,
   rabbitVariant,
   makoVariant,
+  stickmanVariant,
   dogVariant,
   sport,
 }: {
@@ -2671,6 +2766,7 @@ function Scene({
   refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
+  stickmanVariant?: StickmanVariantId;
   dogVariant?: DogVariantId;
   sport?: Sport;
 }) {
@@ -2708,6 +2804,7 @@ function Scene({
             refBotLoadout={refBotLoadout}
             rabbitVariant={rabbitVariant}
             makoVariant={makoVariant}
+            stickmanVariant={stickmanVariant}
             sport={sport}
           />
         ) : null}
@@ -2757,6 +2854,8 @@ interface CharacterPodiumProps {
   rabbitVariant?: RabbitVariantId;
   /** Appearance included with the Finisher Mako skin */
   makoVariant?: MakoVariantId;
+  /** Appearance included with the Stickman skin */
+  stickmanVariant?: StickmanVariantId;
   /** Breed included with the Street Dog pet */
   dogVariant?: DogVariantId;
   /** Prefer sport-themed flourishes when available (Fitness Geek) */
@@ -2779,6 +2878,7 @@ export function CharacterPodium({
   refBotLoadout,
   rabbitVariant,
   makoVariant,
+  stickmanVariant,
   dogVariant,
   sport,
 }: CharacterPodiumProps) {
@@ -2801,6 +2901,8 @@ export function CharacterPodium({
       ? rabbitVariant ?? 'base'
       : characterId === 'mako'
         ? makoVariant ?? 'classic'
+        : characterId === 'stickman'
+          ? stickmanVariant ?? 'classic'
         : petId === 'dog'
           ? dogVariant ?? 'husky'
           : '';
@@ -2870,6 +2972,7 @@ export function CharacterPodium({
             refBotLoadout={refBotLoadout}
             rabbitVariant={rabbitVariant}
             makoVariant={makoVariant}
+            stickmanVariant={stickmanVariant}
             dogVariant={dogVariant}
             sport={sport}
           />

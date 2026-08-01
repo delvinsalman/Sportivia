@@ -6,6 +6,7 @@ import type {
   PetId,
   RabbitVariantId,
   MakoVariantId,
+  StickmanVariantId,
   DogVariantId,
 } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
@@ -30,6 +31,7 @@ interface QuickPlayScreenProps {
   refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
+  stickmanVariant?: StickmanVariantId;
   dogVariant?: DogVariantId;
   onHome: () => void;
   onReplay: () => void;
@@ -46,6 +48,7 @@ export function QuickPlayScreen({
   refBotLoadout,
   rabbitVariant,
   makoVariant,
+  stickmanVariant,
   dogVariant,
   onHome,
   onReplay,
@@ -204,6 +207,7 @@ export function QuickPlayScreen({
           refBotLoadout={refBotLoadout}
           rabbitVariant={rabbitVariant}
           makoVariant={makoVariant}
+          stickmanVariant={stickmanVariant}
           dogVariant={dogVariant}
           onPlayAgain={handleResultReplay}
           onHome={handleResultHome}

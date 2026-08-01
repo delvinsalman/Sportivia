@@ -9,6 +9,7 @@ import type {
   PetId,
   PlayerProfile,
   RabbitVariantId,
+  StickmanVariantId,
 } from '../types/profile';
 import {
   CHARACTERS,
@@ -16,6 +17,7 @@ import {
   MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
+  STICKMAN_VARIANTS,
   getCharacterDef,
   getPetDef,
 } from '../types/profile';
@@ -70,6 +72,7 @@ interface StoreScreenProps {
   onSaveRefBotLoadout: (loadout: RefBotLoadout) => void;
   onSaveRabbitVariant: (variant: RabbitVariantId) => void;
   onSaveMakoVariant: (variant: MakoVariantId) => void;
+  onSaveStickmanVariant: (variant: StickmanVariantId) => void;
   onSaveDogVariant: (variant: DogVariantId) => void;
 }
 
@@ -90,6 +93,7 @@ export function StoreScreen({
   onSaveRefBotLoadout,
   onSaveRabbitVariant,
   onSaveMakoVariant,
+  onSaveStickmanVariant,
   onSaveDogVariant,
 }: StoreScreenProps) {
   const [tab, setTab] = useState<StoreTab>('skins');
@@ -120,6 +124,9 @@ export function StoreScreen({
     profile.rabbitVariant,
   );
   const [draftMakoVariant, setDraftMakoVariant] = useState<MakoVariantId>(profile.makoVariant);
+  const [draftStickmanVariant, setDraftStickmanVariant] = useState<StickmanVariantId>(
+    profile.stickmanVariant,
+  );
   const [draftDogVariant, setDraftDogVariant] = useState<DogVariantId>(profile.dogVariant);
   const [slotId, setSlotId] = useState<CreativeSlotId>('face');
   const [athleteSlotId, setAthleteSlotId] = useState<AthleteSlotId>('jersey');
@@ -169,6 +176,10 @@ export function StoreScreen({
   }, [profile.makoVariant]);
 
   useEffect(() => {
+    setDraftStickmanVariant(profile.stickmanVariant);
+  }, [profile.stickmanVariant]);
+
+  useEffect(() => {
     setDraftDogVariant(profile.dogVariant);
   }, [profile.dogVariant]);
 
@@ -195,6 +206,7 @@ export function StoreScreen({
   const isRefBotPreview = !isPets && safePreviewId === 'ref-bot';
   const isRabbitPreview = !isPets && safePreviewId === 'bunny';
   const isMakoPreview = !isPets && safePreviewId === 'mako';
+  const isStickmanPreview = !isPets && safePreviewId === 'stickman';
   const isDogPreview = isPets && safePreviewId === 'dog';
   const canCustomize =
     (isCreativePreview ||
@@ -203,6 +215,7 @@ export function StoreScreen({
       isRefBotPreview ||
       isRabbitPreview ||
       isMakoPreview ||
+      isStickmanPreview ||
       isDogPreview) &&
     owned;
   const previewLoadout =
@@ -296,6 +309,7 @@ export function StoreScreen({
     setDraftRefBotLoadout(normalizeRefBotLoadout(profile.refBotLoadout));
     setDraftRabbitVariant(profile.rabbitVariant);
     setDraftMakoVariant(profile.makoVariant);
+    setDraftStickmanVariant(profile.stickmanVariant);
     setDraftDogVariant(profile.dogVariant);
     setSlotId('face');
     setAthleteSlotId('jersey');
@@ -308,6 +322,7 @@ export function StoreScreen({
     playMenuConfirm();
     if (isRabbitPreview) onSaveRabbitVariant(draftRabbitVariant);
     else if (isMakoPreview) onSaveMakoVariant(draftMakoVariant);
+    else if (isStickmanPreview) onSaveStickmanVariant(draftStickmanVariant);
     else if (isDogPreview) onSaveDogVariant(draftDogVariant);
     else if (isAthletePreview) onSaveAthleteLoadout(draftAthleteLoadout);
     else if (isBobPreview) onSaveBobLoadout(draftBobLoadout);
@@ -320,6 +335,7 @@ export function StoreScreen({
     playMenuClick();
     if (isRabbitPreview) setDraftRabbitVariant('base');
     else if (isMakoPreview) setDraftMakoVariant('classic');
+    else if (isStickmanPreview) setDraftStickmanVariant('classic');
     else if (isDogPreview) setDraftDogVariant('husky');
     else if (isAthletePreview) setDraftAthleteLoadout({ ...DEFAULT_ATHLETE_LOADOUT });
     else if (isBobPreview) {
@@ -352,6 +368,7 @@ export function StoreScreen({
                 setDraftRefBotLoadout(normalizeRefBotLoadout(profile.refBotLoadout));
                 setDraftRabbitVariant(profile.rabbitVariant);
                 setDraftMakoVariant(profile.makoVariant);
+                setDraftStickmanVariant(profile.stickmanVariant);
                 setDraftDogVariant(profile.dogVariant);
                 return;
               }
@@ -432,6 +449,9 @@ export function StoreScreen({
                               ...(prevItem.id === 'mako'
                                 ? { makoVariant: profile.makoVariant }
                                 : {}),
+                              ...(prevItem.id === 'stickman'
+                                ? { stickmanVariant: profile.stickmanVariant }
+                                : {}),
                             })}
                         accent={prevItem.accent}
                         height={240}
@@ -499,6 +519,13 @@ export function StoreScreen({
                                     : profile.makoVariant,
                                 }
                               : {}),
+                            ...(isStickmanPreview
+                              ? {
+                                  stickmanVariant: customizing
+                                    ? draftStickmanVariant
+                                    : profile.stickmanVariant,
+                                }
+                              : {}),
                           })}
                       accent={previewDef.accent}
                       height={customizing ? 280 : 300}
@@ -563,6 +590,9 @@ export function StoreScreen({
                               ...(nextItem.id === 'mako'
                                 ? { makoVariant: profile.makoVariant }
                                 : {}),
+                              ...(nextItem.id === 'stickman'
+                                ? { stickmanVariant: profile.stickmanVariant }
+                                : {}),
                             })}
                         accent={nextItem.accent}
                         height={240}
@@ -625,6 +655,29 @@ export function StoreScreen({
                           className={`px-3 py-3 rounded-xl text-xs font-black border-[2.5px] transition-all ${
                             active
                               ? 'border-[#2dd4bf] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#0f766e]'
+                              : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
+                          }`}
+                        >
+                          {variant.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : isStickmanPreview ? (
+                  <div className="grid grid-cols-3 gap-2">
+                    {STICKMAN_VARIANTS.map(variant => {
+                      const active = draftStickmanVariant === variant.id;
+                      return (
+                        <button
+                          key={variant.id}
+                          type="button"
+                          onClick={() => {
+                            playMenuSelect();
+                            setDraftStickmanVariant(variant.id);
+                          }}
+                          className={`px-3 py-3 rounded-xl text-xs font-black border-[2.5px] transition-all ${
+                            active
+                              ? 'border-[#22d3ee] bg-[#1e1f22] text-[#f2f3f5] shadow-[0_3px_0_#155e75]'
                               : 'border-[#3f4147] bg-[#151618] text-[#949ba4] hover:text-[#dbdee1]'
                           }`}
                         >
@@ -1040,6 +1093,8 @@ export function StoreScreen({
                       ? 'Save Lane Hopper'
                       : isMakoPreview
                         ? 'Save Mako Style'
+                        : isStickmanPreview
+                          ? 'Save Stickman Look'
                         : isDogPreview
                           ? 'Save Breed'
                           : isAthletePreview
@@ -1067,6 +1122,8 @@ export function StoreScreen({
                           ? 'Choose Lane Hopper Look'
                           : isMakoPreview
                             ? 'Choose Mako Style'
+                            : isStickmanPreview
+                              ? 'Choose Stickman Look'
                             : isDogPreview
                               ? 'Choose Dog Breed'
                               : isAthletePreview

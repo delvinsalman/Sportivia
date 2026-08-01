@@ -8,7 +8,7 @@ import {
 } from './GameUI';
 import { ResultModal } from './ResultModal';
 import type { Sport, GameMode, GameResult, BotDifficulty } from '../types';
-import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from '../types/profile';
+import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, StickmanVariantId, DogVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
@@ -36,6 +36,7 @@ interface GameScreenProps {
   refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
+  stickmanVariant?: StickmanVariantId;
   dogVariant?: DogVariantId;
   seedKey?: string;
   /** Campaign stage id (1–40) when mode === 'campaign' */
@@ -79,6 +80,7 @@ export function GameScreen({
   refBotLoadout,
   rabbitVariant,
   makoVariant,
+  stickmanVariant,
   dogVariant,
   seedKey,
   campaignLevelId,
@@ -390,6 +392,7 @@ export function GameScreen({
           refBotLoadout={refBotLoadout}
           rabbitVariant={rabbitVariant}
           makoVariant={makoVariant}
+          stickmanVariant={stickmanVariant}
           dogVariant={dogVariant}
           onPlayAgain={onReplay}
           onHome={onHome}

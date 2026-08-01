@@ -6,6 +6,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { GameScreen } from './components/GameScreen';
 import { QuickPlayScreen } from './components/QuickPlayScreen';
 import { ClueHuntScreen } from './components/ClueHuntScreen';
+import { DuelWebOnlyScreen } from './components/DuelWebOnlyScreen';
 import { CampaignTriviaScreen } from './components/CampaignTriviaScreen';
 import { BallRainIntro } from './components/BallRainIntro';
 import { EntrySplash } from './components/EntrySplash';
@@ -34,6 +35,7 @@ import {
   saveRefBotLoadout,
   saveRabbitVariant,
   saveMakoVariant,
+  saveStickmanVariant,
   saveDogVariant,
   lockCoinStake,
   releaseCoinStake,
@@ -44,6 +46,7 @@ import type {
   PetId,
   RabbitVariantId,
   MakoVariantId,
+  StickmanVariantId,
   DogVariantId,
 } from './types/profile';
 import type { StatPending } from './lib/characterCards';
@@ -58,6 +61,7 @@ import { useSettings } from './hooks/useSettings';
 import { playUnlockFanfare } from './lib/menuAudio';
 import { getCampaignLevel, pickLevelSport } from './lib/campaign';
 import { loadPreferredSport, savePreferredSport } from './lib/preferredSport';
+import { isPokiBuild } from './lib/platformBuild';
 
 type Screen =
   | 'entry'
@@ -71,6 +75,7 @@ type Screen =
   | 'lobby'
   | 'bot-stake'
   | 'duel-versus'
+  | 'duel-web-only'
   | 'intro'
   | 'game';
 
@@ -186,7 +191,8 @@ export default function App() {
       setCampaignLevelId(null);
       setDuelSeed(null);
       startedMatchRef.current = null;
-      setScreen('lobby');
+      // Poki / iframe packages can't host live multiplayer — send players to the site.
+      setScreen(isPokiBuild() ? 'duel-web-only' : 'lobby');
       return;
     }
     if (m === 'campaign') {
@@ -334,6 +340,10 @@ export default function App() {
     setProfile(saveMakoVariant(variant));
   }
 
+  function handleSaveStickmanVariant(variant: StickmanVariantId) {
+    setProfile(saveStickmanVariant(variant));
+  }
+
   function handleSaveDogVariant(variant: DogVariantId) {
     setProfile(saveDogVariant(variant));
   }
@@ -410,6 +420,7 @@ export default function App() {
               onSaveRefBotLoadout={handleSaveRefBotLoadout}
               onSaveRabbitVariant={handleSaveRabbitVariant}
               onSaveMakoVariant={handleSaveMakoVariant}
+              onSaveStickmanVariant={handleSaveStickmanVariant}
               onSaveDogVariant={handleSaveDogVariant}
             />
           </PageTransition>
@@ -449,6 +460,12 @@ export default function App() {
               }}
               onPlayLevel={handleCampaignPlayLevel}
             />
+          </PageTransition>
+        )}
+
+        {screen === 'duel-web-only' && (
+          <PageTransition key="duel-web-only" variant="menu">
+            <DuelWebOnlyScreen onBack={() => setScreen('home')} />
           </PageTransition>
         )}
 
@@ -532,6 +549,7 @@ export default function App() {
               refBotLoadout={profile.refBotLoadout}
               rabbitVariant={profile.rabbitVariant}
               makoVariant={profile.makoVariant}
+              stickmanVariant={profile.stickmanVariant}
               dogVariant={profile.dogVariant}
               onHome={handleHome}
               onReplay={handleReplay}
@@ -552,6 +570,7 @@ export default function App() {
               refBotLoadout={profile.refBotLoadout}
               rabbitVariant={profile.rabbitVariant}
               makoVariant={profile.makoVariant}
+              stickmanVariant={profile.stickmanVariant}
               dogVariant={profile.dogVariant}
               onHome={handleHome}
               onReplay={handleReplay}
@@ -574,6 +593,7 @@ export default function App() {
               refBotLoadout={profile.refBotLoadout}
               rabbitVariant={profile.rabbitVariant}
               makoVariant={profile.makoVariant}
+              stickmanVariant={profile.stickmanVariant}
               dogVariant={profile.dogVariant}
               onHome={handleHome}
               onReplay={handleReplay}
@@ -597,6 +617,7 @@ export default function App() {
               refBotLoadout={profile.refBotLoadout}
               rabbitVariant={profile.rabbitVariant}
               makoVariant={profile.makoVariant}
+              stickmanVariant={profile.stickmanVariant}
               dogVariant={profile.dogVariant}
               seedKey={mode === 'duel' ? duelSeed ?? undefined : undefined}
               opponentName={duel.opponent?.name}
@@ -625,6 +646,7 @@ export default function App() {
             refBotLoadout={profile.refBotLoadout}
             rabbitVariant={profile.rabbitVariant}
             makoVariant={profile.makoVariant}
+            stickmanVariant={profile.stickmanVariant}
             dogVariant={profile.dogVariant}
             onDone={clearUnlockReveal}
           />

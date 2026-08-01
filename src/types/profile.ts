@@ -28,9 +28,11 @@ export type CharacterId =
   | 'ninja'
   | 'mako'
   | 'creative'
-  | 'athlete';
+  | 'athlete'
+  | 'stickman';
 export type RabbitVariantId = 'base' | 'grey' | 'blond' | 'pigtails' | 'cyan-hair';
 export type MakoVariantId = 'classic' | 'sharky';
+export type StickmanVariantId = 'classic' | 'gentle' | 'rune';
 export type DogVariantId = 'husky' | 'shiba' | 'black-shiba' | 'german-shepherd';
 export type PetId =
   | 'pug'
@@ -58,6 +60,14 @@ export interface MakoVariantDef {
   id: MakoVariantId;
   name: string;
   modelPath: string;
+}
+
+export interface StickmanVariantDef {
+  id: StickmanVariantId;
+  name: string;
+  modelPath: string;
+  /** Overrides the skin's podium fit height when a look reads bigger or smaller. */
+  targetHeight?: number;
 }
 
 export interface DogVariantDef {
@@ -89,6 +99,8 @@ export interface CharacterDef {
   poseMode?: 'animated' | 'procedural' | 'skeletal';
   /** Extra yaw so the model faces the camera */
   yawOffset?: number;
+  /** Size and centre the podium fit on the idle loop instead of the bind pose. */
+  fitFromIdle?: boolean;
   /** Modular outfit builder (Creative Character) */
   customizable?: boolean;
   /** Home showcase: min/max ms between flourishes */
@@ -132,6 +144,8 @@ export interface PlayerProfile {
   rabbitVariant: RabbitVariantId;
   /** Selected look included with the Finisher Mako skin */
   makoVariant: MakoVariantId;
+  /** Selected look included with the Stickman skin */
+  stickmanVariant: StickmanVariantId;
   /** Selected breed included with the Dog pet */
   dogVariant: DogVariantId;
   /** Per-skin per-stat upgrade bonuses. Overall averages the six live stats (up to 99). */
@@ -315,6 +329,21 @@ export const CHARACTERS: CharacterDef[] = [
     cardImage: '/cards/cosmo.png',
     accent: '#93c5fd',
     footOffsetY: 0,
+  },
+  {
+    id: 'stickman',
+    name: 'Stickman',
+    tagline: 'Three looks included · switch anytime',
+    price: 16_500,
+    modelPath: '/models/stickman.glb',
+    baseOvr: 82,
+    cardImage: '/cards/stickman.png',
+    accent: '#22d3ee',
+    footOffsetY: 0,
+    targetHeight: 1.7,
+    fitFromIdle: true,
+    customizable: true,
+    showcaseRestMs: [3_200, 5_800],
   },
   {
     id: 'panda',
@@ -573,6 +602,7 @@ export const DEFAULT_CHARACTER: CharacterId = 'cube-man';
 export const DEFAULT_PET: PetId = 'pug';
 export const DEFAULT_RABBIT_VARIANT: RabbitVariantId = 'base';
 export const DEFAULT_MAKO_VARIANT: MakoVariantId = 'classic';
+export const DEFAULT_STICKMAN_VARIANT: StickmanVariantId = 'classic';
 export const DEFAULT_DOG_VARIANT: DogVariantId = 'husky';
 export { DEFAULT_CREATIVE_LOADOUT };
 export { DEFAULT_ATHLETE_LOADOUT };
@@ -592,6 +622,12 @@ export const MAKO_VARIANTS: MakoVariantDef[] = [
   { id: 'sharky', name: 'Sharky', modelPath: '/models/mako/sharky.glb' },
 ];
 
+export const STICKMAN_VARIANTS: StickmanVariantDef[] = [
+  { id: 'classic', name: 'Classic', modelPath: '/models/stickman.glb', targetHeight: 1.58 },
+  { id: 'gentle', name: 'Gentle', modelPath: '/models/gentle-stickman.glb' },
+  { id: 'rune', name: 'Rune', modelPath: '/models/witcher-stickman.glb' },
+];
+
 export const DOG_VARIANTS: DogVariantDef[] = [
   { id: 'husky', name: 'Husky', modelPath: '/models/pets/dog/husky.glb' },
   { id: 'shiba', name: 'Shiba', modelPath: '/models/pets/dog/shiba.glb' },
@@ -605,6 +641,10 @@ export function getRabbitVariantDef(id: RabbitVariantId): RabbitVariantDef {
 
 export function getMakoVariantDef(id: MakoVariantId): MakoVariantDef {
   return MAKO_VARIANTS.find(variant => variant.id === id) ?? MAKO_VARIANTS[0];
+}
+
+export function getStickmanVariantDef(id: StickmanVariantId): StickmanVariantDef {
+  return STICKMAN_VARIANTS.find(variant => variant.id === id) ?? STICKMAN_VARIANTS[0];
 }
 
 export function getDogVariantDef(id: DogVariantId): DogVariantDef {

@@ -9,6 +9,7 @@ import {
   type PetId,
   type RabbitVariantId,
   type MakoVariantId,
+  type StickmanVariantId,
   type DogVariantId,
 } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
@@ -31,6 +32,7 @@ interface UnlockShowcaseProps {
   refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
+  stickmanVariant?: StickmanVariantId;
   dogVariant?: DogVariantId;
   onDone: () => void;
   /** Auto-close after this many ms. */
@@ -55,6 +57,7 @@ export function UnlockShowcase({
   refBotLoadout,
   rabbitVariant,
   makoVariant,
+  stickmanVariant,
   dogVariant,
   onDone,
   durationMs = 4200,
@@ -183,6 +186,7 @@ export function UnlockShowcase({
               ? { rabbitVariant }
               : {})}
             {...(characterId === 'mako' && makoVariant ? { makoVariant } : {})}
+            {...(characterId === 'stickman' && stickmanVariant ? { stickmanVariant } : {})}
           />
         )}
       </motion.div>

@@ -15,6 +15,8 @@
     "zip:itch": "npm run build:itch && node scripts/packageItch.mjs",
     "build:y8": "tsc -b && VITE_DUEL_WS=wss://sportivia.xyz/duel VITE_MEDIA_BASE=https://sportivia.xyz/ vite build --base=./",
     "zip:y8": "npm run build:y8 && node scripts/packageY8.mjs",
+    "build:poki": "tsc -b && VITE_POKI=1 vite build --base=./",
+    "zip:poki": "npm run build:poki && node scripts/packagePoki.mjs",
     "start": "tsx server/index.ts",
     "lint": "oxlint",
     "preview": "vite preview",

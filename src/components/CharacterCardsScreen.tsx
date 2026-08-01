@@ -303,6 +303,9 @@ export function CharacterCardsScreen({
                       {...(selectedId === 'mako'
                         ? { makoVariant: profile.makoVariant }
                         : {})}
+                      {...(selectedId === 'stickman'
+                        ? { stickmanVariant: profile.stickmanVariant }
+                        : {})}
                     />
                     {!owned && (
                       <div className="absolute inset-0 flex items-center justify-center bg-black/40">

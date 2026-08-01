@@ -1,5 +1,5 @@
 import type { GameResult, Sport } from '../types';
-import type { CharacterId, DogVariantId, MakoVariantId, PetId, PlayerProfile, PvpRecord, RabbitVariantId } from '../types/profile';
+import type { CharacterId, DogVariantId, MakoVariantId, PetId, PlayerProfile, PvpRecord, RabbitVariantId, StickmanVariantId } from '../types/profile';
 import {
   CHARACTERS,
   DEFAULT_ATHLETE_LOADOUT,
@@ -10,11 +10,13 @@ import {
   DEFAULT_DOG_VARIANT,
   DEFAULT_MAKO_VARIANT,
   DEFAULT_RABBIT_VARIANT,
+  DEFAULT_STICKMAN_VARIANT,
   DOG_VARIANTS,
   EMPTY_PVP_RECORD,
   MAKO_VARIANTS,
   PETS,
   RABBIT_VARIANTS,
+  STICKMAN_VARIANTS,
   STARTER_CHARACTERS,
   STARTER_PETS,
 } from '../types/profile';
@@ -192,6 +194,7 @@ export function settleLockedCoinStake(outcome: StakeOutcome): {
 
 function migrateCharacterId(id?: string): CharacterId | undefined {
   if (id === 'cool-banana-guy') return 'bunny';
+  if (id === 'gentle-stickman' || id === 'rune-stickman') return 'stickman';
   if (CHARACTERS.some(c => c.id === id)) return id as CharacterId;
   return undefined;
 }
@@ -237,6 +240,7 @@ function defaultProfile(): PlayerProfile {
     refBotLoadout: { ...DEFAULT_REF_BOT_LOADOUT },
     rabbitVariant: DEFAULT_RABBIT_VARIANT,
     makoVariant: DEFAULT_MAKO_VARIANT,
+    stickmanVariant: DEFAULT_STICKMAN_VARIANT,
     dogVariant: DEFAULT_DOG_VARIANT,
     characterStatLevels: {},
     pvpRecord: { ...EMPTY_PVP_RECORD },
@@ -284,6 +288,13 @@ export function loadProfile(): PlayerProfile {
     const makoVariant = MAKO_VARIANTS.some(variant => variant.id === parsed.makoVariant)
       ? (parsed.makoVariant as MakoVariantId)
       : DEFAULT_MAKO_VARIANT;
+    const stickmanVariant = STICKMAN_VARIANTS.some(variant => variant.id === parsed.stickmanVariant)
+      ? (parsed.stickmanVariant as StickmanVariantId)
+      : (parsed.equippedCharacter as string | undefined) === 'gentle-stickman'
+        ? 'gentle'
+        : (parsed.equippedCharacter as string | undefined) === 'rune-stickman'
+          ? 'rune'
+          : DEFAULT_STICKMAN_VARIANT;
     const dogVariant = DOG_VARIANTS.some(variant => variant.id === parsed.dogVariant)
       ? (parsed.dogVariant as DogVariantId)
       : DEFAULT_DOG_VARIANT;
@@ -328,6 +339,7 @@ export function loadProfile(): PlayerProfile {
       refBotLoadout,
       rabbitVariant,
       makoVariant,
+      stickmanVariant,
       dogVariant,
       characterStatLevels,
       pvpRecord: normalizePvpRecord((parsed as { pvpRecord?: unknown }).pvpRecord),
@@ -354,6 +366,7 @@ export function loadProfile(): PlayerProfile {
       unlockedPets.length !== (parsed.unlockedPets?.length ?? 0);
     const rabbitChanged = parsed.rabbitVariant !== rabbitVariant;
     const makoChanged = parsed.makoVariant !== makoVariant;
+    const stickmanChanged = parsed.stickmanVariant !== stickmanVariant;
     const dogChanged = parsed.dogVariant !== dogVariant;
     const hadLegacyCards = 'cardCollection' in parsed;
     const cardStatsReset = !resetDone;
@@ -368,6 +381,7 @@ export function loadProfile(): PlayerProfile {
       petsChanged ||
       rabbitChanged ||
       makoChanged ||
+      stickmanChanged ||
       dogChanged ||
       trophyRemoved ||
       hadLegacyCards ||
@@ -721,6 +735,15 @@ export function saveMakoVariant(variant: MakoVariantId): PlayerProfile {
   if (!profile.unlockedCharacters.includes('mako')) return profile;
   if (!MAKO_VARIANTS.some(item => item.id === variant)) return profile;
   profile.makoVariant = variant;
+  saveProfile(profile);
+  return profile;
+}
+
+export function saveStickmanVariant(variant: StickmanVariantId): PlayerProfile {
+  const profile = loadProfile();
+  if (!profile.unlockedCharacters.includes('stickman')) return profile;
+  if (!STICKMAN_VARIANTS.some(item => item.id === variant)) return profile;
+  profile.stickmanVariant = variant;
   saveProfile(profile);
   return profile;
 }

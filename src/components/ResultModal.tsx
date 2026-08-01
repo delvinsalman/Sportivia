@@ -9,7 +9,7 @@ import { SportBall } from './SportBall';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { SPORT_PODIUM_ACCENT } from '../lib/sportTheme';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, DogVariantId } from '../types/profile';
+import type { CharacterId, PetId, RabbitVariantId, MakoVariantId, StickmanVariantId, DogVariantId } from '../types/profile';
 import type { CreativeLoadout } from '../types/creativeCharacter';
 import type { AthleteLoadout } from '../types/athleteCharacter';
 import type { BobLoadout } from '../types/bobCharacter';
@@ -26,6 +26,7 @@ interface ResultModalProps {
   refBotLoadout?: RefBotLoadout;
   rabbitVariant?: RabbitVariantId;
   makoVariant?: MakoVariantId;
+  stickmanVariant?: StickmanVariantId;
   dogVariant?: DogVariantId;
   onPlayAgain: () => void;
   onHome: () => void;
@@ -55,6 +56,7 @@ export function ResultModal({
   refBotLoadout,
   rabbitVariant,
   makoVariant,
+  stickmanVariant,
   dogVariant,
   onPlayAgain,
   onHome,
@@ -165,6 +167,9 @@ export function ResultModal({
                   : {})}
                 {...(characterId === 'mako' && makoVariant
                   ? { makoVariant }
+                  : {})}
+                {...(characterId === 'stickman' && stickmanVariant
+                  ? { stickmanVariant }
                   : {})}
               />
             </div>
