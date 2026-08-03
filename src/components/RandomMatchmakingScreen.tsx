@@ -137,17 +137,21 @@ export function RandomMatchmakingScreen({
                 animate={{ opacity: [0.18, 0.42, 0.18] }}
                 transition={{ duration: 2.2, repeat: Infinity, ease: 'easeInOut' }}
               />
-              <motion.span
-                className="absolute inset-0 rounded-full border-[3px] border-dashed"
-                style={{ borderColor: `${accent}70` }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 14, repeat: Infinity, ease: 'linear' }}
-              />
-              <Search
-                className="relative h-14 w-14 sm:h-16 sm:w-16"
-                style={{ color: accent }}
-                strokeWidth={2.25}
-              />
+              <motion.div
+                className="relative"
+                animate={{
+                  x: [0, 7, 10, 7, 0, -7, -10, -7, 0],
+                  y: [-10, -7, 0, 7, 10, 7, 0, -7, -10],
+                  rotate: [-7, -4, 0, 4, 7, 4, 0, -4, -7],
+                }}
+                transition={{ duration: 6, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <Search
+                  className="h-14 w-14 sm:h-16 sm:w-16"
+                  style={{ color: accent }}
+                  strokeWidth={2.25}
+                />
+              </motion.div>
             </div>
 
             <motion.h1

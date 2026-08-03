@@ -1,8 +1,8 @@
-import { useState, useRef, useEffect, type CSSProperties } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Pencil, Play, ShoppingBag, Check, Info, Settings,
-  Medal, ArrowLeft, LayoutGrid, Swords, Radio,
+  Medal, ArrowLeft, LayoutGrid, Gamepad2, Wifi,
 } from 'lucide-react';
 import type { Sport, GameMode, BotDifficulty } from '../types';
 import type { PlayerProfile } from '../types/profile';
@@ -13,7 +13,7 @@ import { SportPicker } from './SportPicker';
 import { CharacterPodium } from './3d/CharacterPodium';
 import { HeaderStats, LevelCorner } from './LevelBar';
 import { getCharacterDef, getPetDef } from '../types/profile';
-import { SPORT_ACCENT, SPORT_PODIUM_ACCENT, SPORT_LABEL, SPORT_RAIL_BG, SPORTS } from '../lib/sportTheme';
+import { SPORT_ACCENT, SPORT_PODIUM_ACCENT, SPORT_LABEL, SPORTS } from '../lib/sportTheme';
 import { playMenuBack, playMenuClick, playMenuConfirm } from '../lib/menuAudio';
 import { PAGE_TRANSITION } from '../lib/pageTransitions';
 import { useSettings } from '../hooks/useSettings';
@@ -25,6 +25,7 @@ import type { DailySpinPrize } from '../lib/dailySpin';
 import { DAILY_SPIN_ICON } from '../lib/dailySpin';
 import { assetUrl } from '../lib/assetUrl';
 import { isPokiBuild } from '../lib/platformBuild';
+import { ModeGuideOverlay } from './ModeGuideOverlay';
 
 interface HomeScreenProps {
   sport: Sport | null;
@@ -58,38 +59,63 @@ const modeLabels: Record<GameMode, string> = {
 
 const MODE_META: Record<
   GameMode,
-  { tone: string; icon: string; detail: string; blurb: string }
+  { tone: string; icon: string; detail: string; blurb: string; howTo: string[] }
 > = {
   training: {
     tone: '#949ba4',
     icon: '/icons/modes/training.png',
     detail: '1 min · practice · no rewards',
     blurb: 'A short practice board with no coins or XP. Warm up, learn the categories, then jump into a real mode.',
+    howTo: [
+      'Open a one-minute practice board for your selected sport.',
+      'Fill cells by naming players that fit each category.',
+      'No coins or XP are awarded — it’s a pure warm-up.',
+    ],
   },
   daily: {
     tone: '#23a559',
     icon: '/icons/modes/daily.png',
     detail: '2 min · first finish pays',
     blurb: 'One shared board per sport each day. Your first finish pays coins + XP; later runs still count toward your streak.',
+    howTo: [
+      'Everyone gets the same daily board for that sport.',
+      'Finish within 2 minutes to lock in your score.',
+      'Your first clear of the day pays coins + XP; later runs still grow your streak.',
+    ],
   },
   timed: {
     tone: '#5865f2',
     icon: '/icons/modes/ranked.png',
     detail: '2 min · ranked bonus',
     blurb: 'Classic timed board run. Score for coins, XP, and ranked payout — the main grind when you want real rewards.',
+    howTo: [
+      'Race a fresh 2-minute board and fill as many cells as you can.',
+      'Higher scores earn more coins and XP.',
+      'Ranked payouts boost the best finishes.',
+    ],
   },
   quick: {
     tone: '#f59e0b',
     icon: '/icons/modes/quick.png',
     detail: '10 Qs · fast trivia · light coins',
     blurb: 'Ten rapid-fire trivia questions — no bingo board. Fast rounds with a light coin payout; Daily & Ranked pay more.',
+    howTo: [
+      'Answer 10 multiple-choice trivia questions in a row.',
+      'No bingo board — just speed and sports knowledge.',
+      'Earn a light coin payout; Daily and Ranked pay more.',
+    ],
   },
   clue: {
     tone: '#22d3ee',
-    icon: '/icons/modes/clue.svg',
+    icon: '/icons/modes/clue.png',
     detail: '90 sec · type names · big coins',
     blurb:
       'One hidden player from your selected sport. Progressive clues reveal every 5 seconds. Type the exact player with suggestions; guess early for full coins, because every extra hint cuts the payout.',
+    howTo: [
+      'A mystery player is hidden — clues unlock every few seconds.',
+      'Type the name (suggestions help with spelling).',
+      'Guess early for max coins; each extra hint lowers the payout.',
+    ],
   },
   campaign: {
     tone: '#f0b232',
@@ -97,12 +123,22 @@ const MODE_META: Record<
     detail: 'Special · 40 stages · all 5 sports',
     blurb:
       'Sportivia’s special path across all five top sports — soccer, basketball, baseball, football, and hockey. Climb 40 stages of player trivia + championship & award curveballs. Test what you know, learn as you go, and earn coins + XP with stars, chapter gates, and huge finale bonuses.',
+    howTo: [
+      'Climb 40 stages across all five sports.',
+      'Earn stars, clear chapter gates, and unlock bigger bonuses.',
+      'Finale stages pay the biggest coin and XP rewards.',
+    ],
   },
   bot: {
     tone: '#a855f7',
     icon: '/icons/modes/bot.png',
     detail: 'Race a bot · stake coins · high risk',
     blurb: 'Race an AI on the same board. Pick a difficulty and optionally stake coins — win the race to cash out, or lose the bet.',
+    howTo: [
+      'Choose Beginner, Pro, or Elite difficulty.',
+      'Optionally stake coins before the race starts.',
+      'Beat the bot on the shared board to win the stake and rewards.',
+    ],
   },
   duel: {
     tone: '#ed4245',
@@ -111,8 +147,79 @@ const MODE_META: Record<
     blurb: isPokiBuild()
       ? 'Live online 1v1 isn’t supported on this platform. Open sportivia.xyz to duel another player — every other mode works here.'
       : 'Create a private room for a friend or search the public queue for a random opponent. Both use the same live 1v1 game.',
+    howTo: isPokiBuild()
+      ? [
+          'Live duel isn’t available in this build.',
+          'Open sportivia.xyz to play 1v1 against real players.',
+          'Every other mode still works here.',
+        ]
+      : [
+          'Create or join a private room with a code.',
+          'Both players get the same live board.',
+          'Highest score wins when the timer ends.',
+        ],
   },
 };
+
+interface ModeCard {
+  key: string;
+  mode: GameMode;
+  duelChoice?: 'friend' | 'random';
+  label: string;
+  tone: string;
+  icon: string;
+  detail: string;
+  blurb: string;
+  howTo: string[];
+  live?: boolean;
+}
+
+function baseCard(mode: GameMode): ModeCard {
+  return { key: mode, mode, label: modeLabels[mode], ...MODE_META[mode] };
+}
+
+const OFFLINE_CARDS: ModeCard[] = (
+  ['daily', 'quick', 'clue', 'training', 'timed', 'bot'] as GameMode[]
+).map(baseCard);
+
+const ONLINE_CARDS: ModeCard[] = isPokiBuild()
+  ? [{ ...baseCard('duel'), live: true }]
+  : [
+      {
+        key: 'duel-friend',
+        mode: 'duel',
+        duelChoice: 'friend',
+        label: '1v1 Duel',
+        tone: '#ed4245',
+        icon: '/icons/modes/duel.png',
+        detail: 'Private room · invite by code',
+        blurb:
+          'Make a private room and share the code with a friend. You both play the exact same board at the same time, and the higher score takes the win.',
+        howTo: [
+          'Create a room or join with a shared code.',
+          'Both players race the same live board.',
+          'When time is up, the higher score wins.',
+        ],
+        live: true,
+      },
+      {
+        key: 'duel-random',
+        mode: 'duel',
+        duelChoice: 'random',
+        label: 'Online Public',
+        tone: '#38bdf8',
+        icon: '/icons/region-globe.png',
+        detail: 'Public queue · random rival',
+        blurb:
+          'Jump into the public queue and get paired with a random live player on your sport. The match starts the moment someone is found — no code needed.',
+        howTo: [
+          'Enter the public matchmaking queue for your sport.',
+          'Stay on the search screen until a rival is found.',
+          'The duel starts automatically — no lobby code required.',
+        ],
+        live: true,
+      },
+    ];
 
 function EditableName({
   name,
@@ -194,20 +301,8 @@ export function HomeScreen({
   const [showSportPick, setShowSportPick] = useState(false);
   const [pendingAfterSport, setPendingAfterSport] = useState<'modes' | 'campaign' | null>(null);
   const [showBotDifficulties, setShowBotDifficulties] = useState(false);
-  const [showDuelChoices, setShowDuelChoices] = useState(false);
   const [showDailySpin, setShowDailySpin] = useState(false);
-  const [modeInfo, setModeInfo] = useState<GameMode | null>(null);
-  const modeInfoLeaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const openModeInfo = (m: GameMode) => {
-    if (modeInfoLeaveRef.current) clearTimeout(modeInfoLeaveRef.current);
-    setModeInfo(m);
-  };
-
-  const closeModeInfo = () => {
-    if (modeInfoLeaveRef.current) clearTimeout(modeInfoLeaveRef.current);
-    modeInfoLeaveRef.current = setTimeout(() => setModeInfo(null), 140);
-  };
+  const [modeInfo, setModeInfo] = useState<string | null>(null);
   const { settings } = useSettings();
   const homeSport = sport;
   const s = homeSport ? profile.stats[homeSport] : null;
@@ -217,6 +312,8 @@ export function HomeScreen({
   const accent = homeSport ? SPORT_ACCENT[homeSport] : '#f0b232';
   const character = getCharacterDef(profile.equippedCharacter);
   const showOnline = settings.showOnlineCount ? online : null;
+  const guideCard =
+    [...OFFLINE_CARDS, ...ONLINE_CARDS].find(card => card.key === modeInfo) ?? null;
 
   function handleSpinClaimed(next: PlayerProfile, _prize: DailySpinPrize) {
     onProfileChange?.(next);
@@ -225,7 +322,6 @@ export function HomeScreen({
   function requestPlay() {
     playMenuClick();
     setShowBotDifficulties(false);
-    setShowDuelChoices(false);
     setModeInfo(null);
     if (!homeSport) {
       setPendingAfterSport('modes');
@@ -244,6 +340,135 @@ export function HomeScreen({
       return;
     }
     onStart('campaign');
+  }
+
+  function renderModeCard(card: ModeCard, i: number) {
+    const expandable = card.mode === 'bot';
+    const expanded = expandable && showBotDifficulties;
+    const guided = modeInfo === card.key;
+
+    return (
+      <motion.div
+        key={card.key}
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ ...PAGE_TRANSITION, delay: 0.03 * i }}
+        className="relative"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            playMenuConfirm();
+            setModeInfo(null);
+            if (expandable) {
+              setShowBotDifficulties(open => !open);
+              return;
+            }
+            setShowBotDifficulties(false);
+            setShowModes(false);
+            onStart(card.mode, undefined, card.duelChoice);
+          }}
+          className="group/mode relative flex h-[66px] w-full items-center gap-3 overflow-hidden rounded-xl border-2 px-3.5 text-left transition-all hover:translate-y-[1px] sm:h-[72px] [@media(max-height:700px)]:!h-[60px]"
+          style={{
+            background: `linear-gradient(160deg, ${card.tone}22 0%, #1a1b1f 55%)`,
+            borderColor: expanded ? card.tone : `${card.tone}88`,
+            boxShadow: `0 4px 0 ${card.tone}55`,
+          }}
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity group-hover/mode:opacity-[0.2]"
+            style={{ backgroundImage: `radial-gradient(circle at 92% 12%, ${card.tone}, transparent 42%)` }}
+          />
+
+          <span className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border-2 border-white/15 bg-[#111214]/80 shadow-[0_2px_0_rgba(0,0,0,0.35)] [@media(max-height:700px)]:!h-10 [@media(max-height:700px)]:!w-10">
+            <img
+              src={assetUrl(card.icon)}
+              alt=""
+              className="h-8 w-8 object-contain [@media(max-height:700px)]:!h-7 [@media(max-height:700px)]:!w-7"
+              draggable={false}
+            />
+          </span>
+
+          <span className="relative block min-w-0 flex-1">
+            <span className="flex items-center gap-1.5">
+              <span className="truncate text-base font-black leading-tight text-[#f2f3f5]">
+                {card.label}
+              </span>
+              {card.mode === 'daily' && dailyDone && (
+                <span className="shrink-0 rounded-full border-2 border-[#4ade80] bg-[#23a559] px-1.5 py-0.5 text-[10px] font-black text-white shadow-[0_2px_0_#14532d]">
+                  DONE
+                </span>
+              )}
+              {card.live && (
+                <span
+                  className="flex shrink-0 items-center gap-1 rounded-full border px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider"
+                  style={{
+                    borderColor: `${card.tone}88`,
+                    background: `${card.tone}1f`,
+                    color: card.tone,
+                  }}
+                >
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span
+                      className="absolute inline-flex h-full w-full animate-ping rounded-full opacity-75"
+                      style={{ background: card.tone }}
+                    />
+                    <span
+                      className="relative inline-flex h-1.5 w-1.5 rounded-full"
+                      style={{ background: card.tone }}
+                    />
+                  </span>
+                  Live
+                </span>
+              )}
+              {expandable && (
+                <span
+                  className="shrink-0 rounded-full border px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider"
+                  style={{
+                    borderColor: `${card.tone}88`,
+                    background: `${card.tone}1f`,
+                    color: card.tone,
+                  }}
+                >
+                  3 levels
+                </span>
+              )}
+              <span
+                role="button"
+                tabIndex={0}
+                aria-label={`About ${card.label}`}
+                aria-expanded={guided}
+                onClick={e => {
+                  e.stopPropagation();
+                  playMenuClick();
+                  setModeInfo(card.key);
+                }}
+                onKeyDown={e => {
+                  if (e.key !== 'Enter' && e.key !== ' ') return;
+                  e.preventDefault();
+                  e.stopPropagation();
+                  playMenuClick();
+                  setModeInfo(card.key);
+                }}
+                className={`inline-flex cursor-pointer p-1 transition-colors ${
+                  guided ? 'text-[#f0b232]' : 'text-[#7a7d86] hover:text-[#d7dae0]'
+                }`}
+              >
+                <Info className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </span>
+            </span>
+            <span className="mt-1 block truncate text-xs font-semibold leading-none text-[#949ba4]">
+              {card.detail}
+            </span>
+          </span>
+
+          <span className="relative shrink-0 text-xl font-black" style={{ color: card.tone }}>
+            {expanded ? '↑' : '→'}
+          </span>
+        </button>
+      </motion.div>
+    );
   }
 
   function pickSport(next: Sport) {
@@ -279,7 +504,7 @@ export function HomeScreen({
         </h1>
       </motion.div>
 
-      {/* Left-center sport rail + record — only after a sport is chosen */}
+      {/* Left-center sport rail — only after a sport is chosen */}
       {homeSport && (
       <motion.aside
         initial={{ opacity: 0, x: -16 }}
@@ -287,56 +512,6 @@ export function HomeScreen({
         className="fixed left-0 top-1/2 z-30 flex -translate-y-1/2 flex-col items-stretch gap-2.5 pl-0 sm:gap-3.5 max-sm:origin-left max-sm:scale-[0.9]"
       >
         <SportPicker sport={homeSport} onSportChange={onSportChange} layout="rail" />
-
-        <div
-          className="game-sport-record"
-          style={
-            {
-              '--sport-rail-bg': SPORT_RAIL_BG[homeSport].base,
-            } as CSSProperties
-          }
-        >
-          <div className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 shrink-0">
-            <img
-              src={assetUrl('/icons/trophy-record.png')}
-              alt=""
-              width={32}
-              height={32}
-              draggable={false}
-              className="h-7 w-7 sm:h-8 sm:w-8 select-none object-contain drop-shadow-[0_2px_0_rgba(0,0,0,0.35)]"
-            />
-          </div>
-          <div className="min-w-0 flex-1 hidden sm:block">
-            <p className="text-[9px] font-black uppercase tracking-[0.14em] text-[#949ba4] leading-none mb-1">
-              Record
-            </p>
-            <p className="text-sm sm:text-base font-black text-[#f2f3f5] font-mono leading-none">
-              {s && s.bestScore > 0 ? s.bestScore : '—'}
-              <span className="text-[10px] font-black text-[#949ba4] ml-1.5 tracking-wide">
-                ALL-TIME BEST
-              </span>
-            </p>
-            {(s && s.dailyStreak > 0 || dailyDone) && (
-              <p className="text-[10px] font-black mt-1.5 leading-none">
-                {s && s.dailyStreak > 0 && (
-                  <span className="text-[#f0b232]">🔥 {s.dailyStreak}d</span>
-                )}
-                {s && s.dailyStreak > 0 && dailyDone && (
-                  <span className="text-[#5c5e66]"> · </span>
-                )}
-                {dailyDone && <span className="text-[#23a559]">Daily done</span>}
-              </p>
-            )}
-          </div>
-          <div className="min-w-0 flex-1 sm:hidden text-center">
-            <p className="text-[8px] font-black uppercase tracking-wide text-[#949ba4] leading-none mb-0.5">
-              Best
-            </p>
-            <p className="text-xs font-black text-[#f2f3f5] font-mono leading-none">
-              {s && s.bestScore > 0 ? s.bestScore : '—'}
-            </p>
-          </div>
-        </div>
       </motion.aside>
       )}
 
@@ -436,7 +611,7 @@ export function HomeScreen({
           />
           <span>Spin</span>
           {spinReady && (
-            <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-[#23a559] shadow-[0_0_8px_#23a559]" />
+            <span className="absolute right-0.5 top-0.5 h-2.5 w-2.5 rounded-full bg-[#f0b232] shadow-[0_0_8px_#f0b232]" />
           )}
         </button>
       </motion.div>
@@ -551,12 +726,6 @@ export function HomeScreen({
                 onClick={requestCampaign}
                 className="group/camp relative z-[1] flex min-h-11 items-center gap-2 rounded-[0.85rem] border-2 border-white/20 bg-gradient-to-b from-[#7dffa8] via-[#23a559] to-[#157a3f] px-5 py-2.5 text-xs font-black uppercase tracking-wide text-[#062816] transition-all hover:brightness-105 sm:px-7 sm:py-3 sm:text-sm"
               >
-                <img
-                  src={assetUrl('/icons/trophy-record.png')}
-                  alt=""
-                  className="h-5 w-5 object-contain drop-shadow-sm transition-transform duration-300 group-hover/camp:scale-110 group-hover/camp:-rotate-6 sm:h-5 sm:w-5"
-                  draggable={false}
-                />
                 <span>Campaign</span>
                 <span className="rounded-full border border-[#062816]/20 bg-[#062816]/15 px-1.5 py-0.5 text-[8px] font-black tracking-wider text-[#062816]">
                   Special
@@ -581,7 +750,6 @@ export function HomeScreen({
               playMenuBack();
               setModeInfo(null);
               setShowBotDifficulties(false);
-              setShowDuelChoices(false);
               setShowModes(false);
             }}
           >
@@ -591,7 +759,6 @@ export function HomeScreen({
                 playMenuBack();
                 setModeInfo(null);
                 setShowBotDifficulties(false);
-                setShowDuelChoices(false);
                 setShowModes(false);
               }}
               className="fixed top-0 left-0 z-50 m-3 flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border-[2.5px] border-[#3f4147] bg-[#1e1f22] px-3 py-2 text-xs font-black text-[#b5bac1] shadow-[0_3px_0_#1a1b1f] sm:m-4"
@@ -608,10 +775,10 @@ export function HomeScreen({
               className="relative z-10 flex min-h-svh w-full flex-col justify-center overflow-y-auto overscroll-contain px-4 py-6 pt-[max(4rem,calc(env(safe-area-inset-top)+3.25rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))] sm:px-8 [@media(max-height:700px)]:!py-3"
               onClick={e => e.stopPropagation()}
             >
-              <div className="mx-auto mb-3 flex w-full max-w-lg items-center gap-2.5 [@media(max-height:700px)]:!mb-2">
-                <h3 className="text-2xl font-black tracking-tight text-[#f2f3f5] sm:text-3xl [@media(max-height:700px)]:!text-2xl">Game Modes</h3>
+              <div className="mx-auto mb-3 flex w-full max-w-3xl items-center gap-2.5 [@media(max-height:700px)]:!mb-2">
+                <h3 className="text-3xl font-black tracking-tight text-[#f2f3f5] sm:text-4xl [@media(max-height:700px)]:!text-3xl">Game Modes</h3>
                 <span
-                  className="rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.18em]"
+                  className="rounded-full border px-2.5 py-1 text-xs font-black uppercase tracking-[0.18em]"
                   style={{
                     borderColor: `${accent}88`,
                     background: `${accent}1a`,
@@ -622,265 +789,80 @@ export function HomeScreen({
                 </span>
               </div>
 
-              <div className="mx-auto flex w-full max-w-lg flex-col gap-2 [@media(max-height:700px)]:!gap-1.5">
-                {(['daily', 'quick', 'clue', 'training', 'timed', 'bot', 'duel'] as GameMode[]).map((m, i) => {
-                  const meta = MODE_META[m];
-                  return (
+              <div className="mx-auto w-full max-w-3xl">
+                <div className="mb-2 flex items-center gap-2">
+                  <Gamepad2 className="h-3.5 w-3.5 shrink-0 text-[#7a7d86]" />
+                  <p className="shrink-0 text-xs font-black uppercase tracking-[0.2em] text-[#8b8e97]">
+                    Offline · Play on your own
+                  </p>
+                  <span className="h-px flex-1 bg-[#2b2d33]" />
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5">
+                  {OFFLINE_CARDS.map(renderModeCard)}
+                </div>
+
+                <AnimatePresence initial={false}>
+                  {showBotDifficulties && (
                     <motion.div
-                      key={m}
-                      initial={{ opacity: 0, y: 14 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ ...PAGE_TRANSITION, delay: 0.04 * i }}
-                      className="relative"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={PAGE_TRANSITION}
+                      className="overflow-hidden"
                     >
-                      <button
-                        type="button"
-                        onClick={() => {
-                          playMenuConfirm();
-                          setModeInfo(null);
-                          if (m === 'bot') {
-                            setShowDuelChoices(false);
-                            setShowBotDifficulties(open => !open);
-                            return;
-                          }
-                          if (m === 'duel') {
-                            if (isPokiBuild()) {
-                              setShowModes(false);
-                              onStart('duel');
-                              return;
-                            }
-                            setShowBotDifficulties(false);
-                            setShowDuelChoices(open => !open);
-                            return;
-                          }
-                          setShowModes(false);
-                          onStart(m);
-                        }}
-                        className="group/mode relative flex h-[72px] w-full items-center gap-3.5 rounded-xl border-2 px-4 text-left transition-all hover:translate-y-[1px] [@media(max-height:700px)]:!h-14 [@media(max-height:700px)]:!gap-3"
-                        style={{
-                          background: `linear-gradient(160deg, ${meta.tone}22 0%, #1a1b1f 55%)`,
-                          borderColor: `${meta.tone}88`,
-                          boxShadow: `0 4px 0 ${meta.tone}55`,
-                        }}
-                      >
-                        <div
-                          aria-hidden
-                          className="pointer-events-none absolute inset-0 opacity-[0.12] transition-opacity group-hover/mode:opacity-[0.2]"
-                          style={{ backgroundImage: `radial-gradient(circle at 92% 12%, ${meta.tone}, transparent 42%)` }}
-                        />
-                        <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border-2 border-white/15 bg-[#111214]/80 shadow-[0_2px_0_rgba(0,0,0,0.35)] [@media(max-height:700px)]:!h-10 [@media(max-height:700px)]:!w-10">
-                          <img
-                            src={assetUrl(meta.icon)}
-                            alt=""
-                            className="h-8 w-8 object-contain [@media(max-height:700px)]:!h-7 [@media(max-height:700px)]:!w-7"
-                            draggable={false}
-                          />
-                        </div>
-                        <div className="relative min-w-0 flex-1">
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <p className="text-sm font-black leading-none text-[#f2f3f5] sm:text-base [@media(max-height:700px)]:!text-sm">
-                              {modeLabels[m]}
-                            </p>
+                      <div className="grid grid-cols-3 gap-2 pt-2">
+                        {(Object.keys(BOT_DIFFICULTIES) as BotDifficulty[]).map(difficulty => {
+                          const config = BOT_DIFFICULTIES[difficulty];
+                          return (
                             <button
+                              key={difficulty}
                               type="button"
-                              aria-label={`About ${modeLabels[m]}`}
-                              aria-expanded={modeInfo === m}
-                              onMouseEnter={() => openModeInfo(m)}
-                              onMouseLeave={closeModeInfo}
-                              onFocus={() => openModeInfo(m)}
-                              onBlur={closeModeInfo}
-                              onClick={e => {
-                                e.stopPropagation();
-                                playMenuClick();
-                                setModeInfo(cur => (cur === m ? null : m));
+                              onClick={() => {
+                                playMenuConfirm();
+                                setShowModes(false);
+                                setShowBotDifficulties(false);
+                                onStart('bot', difficulty);
                               }}
-                              className={`p-0.5 transition-colors ${
-                                modeInfo === m
-                                  ? 'text-[#f0b232]'
-                                  : 'text-[#7a7d86] hover:text-[#d7dae0]'
-                              }`}
+                              className="rounded-2xl border-[2.5px] bg-[#111214] px-2 py-2.5 text-center shadow-[0_3px_0_#0c0d0f] transition-transform hover:translate-y-[1px]"
+                              style={{ borderColor: `${config.color}aa` }}
                             >
-                              <Info className="h-3.5 w-3.5" strokeWidth={2.5} />
+                              <p className="text-sm font-black" style={{ color: config.color }}>
+                                {config.label}
+                              </p>
+                              <p className="mt-1 text-[10px] font-bold leading-tight text-[#7a7d86]">
+                                {difficulty === 'beginner'
+                                  ? 'Stake optional'
+                                  : difficulty === 'pro'
+                                    ? 'Optional · 1.75×'
+                                    : 'Optional · 2.5×'}
+                              </p>
                             </button>
-                            {m === 'daily' && dailyDone && (
-                              <span className="rounded-full border-2 border-[#4ade80] bg-[#23a559] px-1.5 py-0.5 text-[8px] font-black text-white shadow-[0_2px_0_#14532d]">
-                                DONE
-                              </span>
-                            )}
-                            {m === 'duel' && (
-                              <span className="rounded-full border-2 border-[#ff8a8c] bg-[#ed4245] px-1.5 py-0.5 text-[8px] font-black text-white shadow-[0_2px_0_#8f1e22]">
-                                LIVE
-                              </span>
-                            )}
-                          </div>
-                          <p className="mt-1 truncate text-[10px] font-semibold leading-none whitespace-nowrap text-[#949ba4] [@media(max-height:700px)]:!mt-0.5 [@media(max-height:700px)]:!text-[9px]">
-                            {meta.detail}
-                          </p>
-                        </div>
-                        <span className="relative shrink-0 text-lg font-black" style={{ color: meta.tone }}>
-                          {(m === 'bot' && showBotDifficulties) ||
-                          (m === 'duel' && showDuelChoices)
-                            ? '↑'
-                            : '→'}
-                        </span>
-                      </button>
-
-                      <AnimatePresence>
-                        {modeInfo === m && (
-                          <motion.div
-                            initial={{ opacity: 0, x: -6, scale: 0.98 }}
-                            animate={{ opacity: 1, x: 0, scale: 1 }}
-                            exit={{ opacity: 0, x: -4, scale: 0.98 }}
-                            transition={{ duration: 0.14 }}
-                            className="pointer-events-auto absolute left-full top-0 z-50 ml-2.5 hidden w-[min(15rem,calc(100vw-2rem))] rounded-2xl border-[2.5px] bg-[#121316]/98 p-3 text-left shadow-[0_8px_0_#0a0a0b,0_18px_40px_rgba(0,0,0,0.45)] sm:block"
-                            style={{ borderColor: `${meta.tone}66` }}
-                            onMouseEnter={() => openModeInfo(m)}
-                            onMouseLeave={closeModeInfo}
-                            onClick={e => e.stopPropagation()}
-                          >
-                            <p
-                              className="text-[10px] font-black uppercase tracking-[0.14em]"
-                              style={{ color: meta.tone }}
-                            >
-                              {modeLabels[m]}
-                            </p>
-                            <p className="mt-1.5 text-[11px] font-semibold leading-snug text-[#b5bac1]">
-                              {meta.blurb}
-                            </p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      {/* Mobile: tip sits under the row so it doesn’t cover the title */}
-                      <AnimatePresence>
-                        {modeInfo === m && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 4 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 2 }}
-                            transition={{ duration: 0.14 }}
-                            className="relative z-50 mt-1.5 rounded-2xl border-[2.5px] bg-[#121316]/98 p-3 text-left shadow-[0_6px_0_#0a0a0b] sm:hidden"
-                            style={{ borderColor: `${meta.tone}66` }}
-                            onClick={e => e.stopPropagation()}
-                          >
-                            <p
-                              className="text-[10px] font-black uppercase tracking-[0.14em]"
-                              style={{ color: meta.tone }}
-                            >
-                              {modeLabels[m]}
-                            </p>
-                            <p className="mt-1.5 text-[11px] font-semibold leading-snug text-[#b5bac1]">
-                              {meta.blurb}
-                            </p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <AnimatePresence initial={false}>
-                        {m === 'bot' && showBotDifficulties && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={PAGE_TRANSITION}
-                            className="overflow-hidden"
-                          >
-                            <div className="grid grid-cols-3 gap-2 px-1 pt-2">
-                              {(Object.keys(BOT_DIFFICULTIES) as BotDifficulty[]).map(difficulty => {
-                                const config = BOT_DIFFICULTIES[difficulty];
-                                return (
-                                  <button
-                                    key={difficulty}
-                                    type="button"
-                                    onClick={() => {
-                                      playMenuConfirm();
-                                      setShowModes(false);
-                                      setShowBotDifficulties(false);
-                                      onStart('bot', difficulty);
-                                    }}
-                                    className="rounded-2xl border-[2.5px] bg-[#111214] px-2 py-2.5 text-center shadow-[0_3px_0_#0c0d0f] transition-transform hover:translate-y-[1px]"
-                                    style={{ borderColor: `${config.color}aa` }}
-                                  >
-                                    <p className="text-xs font-black" style={{ color: config.color }}>
-                                      {config.label}
-                                    </p>
-                          <p className="mt-1 text-[8px] font-bold leading-tight text-[#7a7d86]">
-                            {difficulty === 'beginner'
-                              ? 'Stake optional'
-                              : difficulty === 'pro'
-                                ? 'Optional · 1.75×'
-                                : 'Optional · 2.5×'}
-                          </p>
-                                  </button>
-                                );
-                              })}
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-
-                      <AnimatePresence initial={false}>
-                        {m === 'duel' && showDuelChoices && (
-                          <motion.div
-                            initial={{ opacity: 0, height: 0 }}
-                            animate={{ opacity: 1, height: 'auto' }}
-                            exit={{ opacity: 0, height: 0 }}
-                            transition={PAGE_TRANSITION}
-                            className="overflow-hidden"
-                          >
-                            <div className="grid grid-cols-2 gap-2 px-1 pt-2">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  playMenuConfirm();
-                                  setShowModes(false);
-                                  setShowDuelChoices(false);
-                                  onStart('duel', undefined, 'friend');
-                                }}
-                                className="flex min-h-[74px] items-center gap-2.5 rounded-2xl border-[2.5px] border-[#ff8a8c]/70 bg-[#211517] px-3 py-2.5 text-left shadow-[0_3px_0_#8f1e22] transition-transform hover:translate-y-[1px]"
-                              >
-                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#ed4245] text-white">
-                                  <Swords className="h-4.5 w-4.5" />
-                                </span>
-                                <span className="min-w-0">
-                                  <span className="block text-xs font-black text-[#f2f3f5]">
-                                    Friend Duel
-                                  </span>
-                                  <span className="mt-0.5 block text-[9px] font-bold leading-tight text-[#949ba4]">
-                                    Create or join by code
-                                  </span>
-                                </span>
-                              </button>
-
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  playMenuConfirm();
-                                  setShowModes(false);
-                                  setShowDuelChoices(false);
-                                  onStart('duel', undefined, 'random');
-                                }}
-                                className="flex min-h-[74px] items-center gap-2.5 rounded-2xl border-[2.5px] border-[#67e8f9]/70 bg-[#102126] px-3 py-2.5 text-left shadow-[0_3px_0_#155e75] transition-transform hover:translate-y-[1px]"
-                              >
-                                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#0891b2] text-white">
-                                  <Radio className="h-4.5 w-4.5" />
-                                </span>
-                                <span className="min-w-0">
-                                  <span className="block text-xs font-black text-[#f2f3f5]">
-                                    Online Random
-                                  </span>
-                                  <span className="mt-0.5 block text-[9px] font-bold leading-tight text-[#949ba4]">
-                                    Search public matchmaking
-                                  </span>
-                                </span>
-                              </button>
-                            </div>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                          );
+                        })}
+                      </div>
                     </motion.div>
-                  );
-                })}
+                  )}
+                </AnimatePresence>
+              </div>
+
+              <div className="mx-auto mt-4 w-full max-w-3xl [@media(max-height:700px)]:!mt-3">
+                <div className="mb-2 flex items-center gap-2">
+                  <Wifi className="h-3.5 w-3.5 shrink-0 text-[#23a559]" />
+                  <p className="shrink-0 text-xs font-black uppercase tracking-[0.2em] text-[#23a559]">
+                    Online · Real opponents
+                  </p>
+                  {typeof showOnline === 'number' && (
+                    <span className="shrink-0 rounded-full border border-[#23a559]/50 bg-[#23a559]/12 px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-[#7ee2a8]">
+                      {showOnline} online
+                    </span>
+                  )}
+                  <span className="h-px flex-1 bg-[#23a559]/25" />
+                </div>
+
+                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-2.5">
+                  {ONLINE_CARDS.map(renderModeCard)}
+                </div>
               </div>
             </motion.div>
           </motion.div>
@@ -975,6 +957,27 @@ export function HomeScreen({
               </div>
             </motion.div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {guideCard && (
+          <ModeGuideOverlay
+            key={guideCard.key}
+            card={guideCard}
+            onClose={() => setModeInfo(null)}
+            onPlay={() => {
+              const card = guideCard;
+              setModeInfo(null);
+              if (card.mode === 'bot') {
+                setShowBotDifficulties(true);
+                return;
+              }
+              setShowBotDifficulties(false);
+              setShowModes(false);
+              onStart(card.mode, undefined, card.duelChoice);
+            }}
+          />
         )}
       </AnimatePresence>
 

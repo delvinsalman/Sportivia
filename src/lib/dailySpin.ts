@@ -1,6 +1,6 @@
 import { assetUrl } from './assetUrl';
 
-export type DailySpinPrizeKind = 'coins' | 'upgrades';
+export type DailySpinPrizeKind = 'coins' | 'upgrades' | 'spins';
 
 export interface DailySpinSegment {
   id: string;
@@ -17,17 +17,36 @@ export interface DailySpinSegment {
 export const DAILY_SPIN_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 export const DAILY_SPIN_ICON = assetUrl('/icons/daily-spin.png');
 
-/** Weighted prizes. Weights sum to 100. */
+/**
+ * Weighted prizes. Higher weight = more common.
+ * 100k is intentionally tiny (~0.35% / about 1 in 285).
+ */
 export const DAILY_SPIN_SEGMENTS: readonly DailySpinSegment[] = [
-  { id: 'c1k', kind: 'coins', amount: 1_000, label: '1,000 coins', face: '1K', weight: 28, color: '#1e3a5f', text: '#e8eaef' },
-  { id: 'u1', kind: 'upgrades', amount: 1, label: '1 free upgrade', face: '+1', weight: 14, color: '#15803d', text: '#86efac' },
-  { id: 'c2k', kind: 'coins', amount: 2_000, label: '2,000 coins', face: '2K', weight: 22, color: '#2563eb', text: '#bfdbfe' },
-  { id: 'u2', kind: 'upgrades', amount: 2, label: '2 free upgrades', face: '+2', weight: 6, color: '#c2410c', text: '#fed7aa' },
-  { id: 'c5k', kind: 'coins', amount: 5_000, label: '5,000 coins', face: '5K', weight: 16, color: '#0e7490', text: '#a5f3fc' },
-  { id: 'c10k', kind: 'coins', amount: 10_000, label: '10,000 coins', face: '10K', weight: 8, color: '#ca8a04', text: '#fef08a' },
+  { id: 'c1k', kind: 'coins', amount: 1_000, label: '1,000 coins', face: '1K', weight: 26, color: '#1a3a5c', text: '#e8eaef' },
+  { id: 'u1', kind: 'upgrades', amount: 1, label: '1 free upgrade', face: '+1', weight: 12, color: '#1a6b3c', text: '#bbf7d0' },
+  { id: 'c2k', kind: 'coins', amount: 2_000, label: '2,000 coins', face: '2K', weight: 19, color: '#2f4fd0', text: '#dbe4ff' },
+  { id: 'spin1', kind: 'spins', amount: 1, label: '1 free spin', face: '+SPIN', weight: 9, color: '#7c3aed', text: '#e9d5ff' },
+  { id: 'u2', kind: 'upgrades', amount: 2, label: '2 free upgrades', face: '+2', weight: 5, color: '#c45a16', text: '#ffedd5' },
+  { id: 'c5k', kind: 'coins', amount: 5_000, label: '5,000 coins', face: '5K', weight: 14, color: '#0e7490', text: '#cffafe' },
+  { id: 'c10k', kind: 'coins', amount: 10_000, label: '10,000 coins', face: '10K', weight: 7, color: '#b8860b', text: '#fef9c3' },
   { id: 'u5', kind: 'upgrades', amount: 5, label: '5 free upgrades', face: '+5', weight: 3, color: '#b91c1c', text: '#fecaca' },
-  { id: 'c30k', kind: 'coins', amount: 30_000, label: '30,000 coins', face: '30K', weight: 3, color: '#f0b232', text: '#1a1200' },
+  { id: 'c30k', kind: 'coins', amount: 30_000, label: '30,000 coins', face: '30K', weight: 2.65, color: '#f0b232', text: '#1a1200' },
+  { id: 'c100k', kind: 'coins', amount: 100_000, label: '100,000 coins', face: '100K', weight: 0.35, color: '#fbbf24', text: '#1a1200' },
 ];
+
+/** Lighter rim/highlight tint for each segment (wheel face detail). */
+export const DAILY_SPIN_SEGMENT_LIGHT: Record<string, string> = {
+  c1k: '#2a5a8a',
+  u1: '#23a559',
+  c2k: '#5865f2',
+  spin1: '#a855f7',
+  u2: '#ea7a2e',
+  c5k: '#22d3ee',
+  c10k: '#f0b232',
+  u5: '#ed4245',
+  c30k: '#ffe08a',
+  c100k: '#fff7c2',
+};
 
 export type DailySpinPrize = DailySpinSegment;
 

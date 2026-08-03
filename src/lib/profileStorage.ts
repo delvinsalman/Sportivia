@@ -245,6 +245,7 @@ function defaultProfile(): PlayerProfile {
     characterStatLevels: {},
     pvpRecord: { ...EMPTY_PVP_RECORD },
     freeUpgradeCredits: 0,
+    freeSpinCredits: 0,
     dailySpinAt: null,
     stats: loadStats(),
   };
@@ -346,6 +347,10 @@ export function loadProfile(): PlayerProfile {
       freeUpgradeCredits:
         typeof (parsed as { freeUpgradeCredits?: unknown }).freeUpgradeCredits === 'number'
           ? Math.max(0, Math.floor((parsed as { freeUpgradeCredits: number }).freeUpgradeCredits))
+          : 0,
+      freeSpinCredits:
+        typeof (parsed as { freeSpinCredits?: unknown }).freeSpinCredits === 'number'
+          ? Math.max(0, Math.floor((parsed as { freeSpinCredits: number }).freeSpinCredits))
           : 0,
       dailySpinAt: normalizeDailySpinAt(parsed),
       stats: loadStats(),
@@ -455,29 +460,50 @@ export function recordPvpOutcome(
 
 export function isDailySpinAvailable(profile?: PlayerProfile): boolean {
   const p = profile ?? loadProfile();
-  return !isDailySpinOnCooldown(p.dailySpinAt);
+  const banked = Math.max(0, Math.floor(p.freeSpinCredits ?? 0));
+  return !isDailySpinOnCooldown(p.dailySpinAt) || banked > 0;
 }
 
-/** Roll + grant a spin. Locked for 24h from the moment you claim. */
+/** Roll + grant a spin. Uses the daily first; otherwise spends one banked free spin. */
 export function claimDailySpin(): {
   ok: boolean;
   profile: PlayerProfile;
   prize?: DailySpinPrize;
   error?: string;
+  usedFreeSpin?: boolean;
 } {
   const profile = loadProfile();
-  if (isDailySpinOnCooldown(profile.dailySpinAt)) {
+  const dailyReady = !isDailySpinOnCooldown(profile.dailySpinAt);
+  const banked = Math.max(0, Math.floor(profile.freeSpinCredits ?? 0));
+
+  if (!dailyReady && banked <= 0) {
     return { ok: false, profile, error: 'Spin available again in 24 hours' };
   }
+
+  const usedFreeSpin = !dailyReady;
   const prize = rollDailySpinPrize();
+
   if (prize.kind === 'coins') {
     profile.coins += prize.amount;
+  } else if (prize.kind === 'upgrades') {
+    profile.freeUpgradeCredits =
+      Math.max(0, Math.floor(profile.freeUpgradeCredits ?? 0)) + prize.amount;
   } else {
-    profile.freeUpgradeCredits = Math.max(0, Math.floor(profile.freeUpgradeCredits ?? 0)) + prize.amount;
+    profile.freeSpinCredits =
+      Math.max(0, Math.floor(profile.freeSpinCredits ?? 0)) + prize.amount;
   }
-  profile.dailySpinAt = Date.now();
+
+  if (usedFreeSpin) {
+    profile.freeSpinCredits = Math.max(
+      0,
+      Math.floor(profile.freeSpinCredits ?? 0) - 1,
+    );
+  } else {
+    profile.dailySpinAt = Date.now();
+  }
+
   saveProfile(profile);
-  return { ok: true, profile, prize };
+  return { ok: true, profile, prize, usedFreeSpin };
 }
 
 /** Apply duelist achievement + coin bonus after a confirmed online win. */

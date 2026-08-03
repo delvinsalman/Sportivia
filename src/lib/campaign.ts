@@ -136,18 +136,15 @@ function buildLevels(): CampaignLevelDef[] {
     const title = gate
       ? GATE_TITLES[id] ?? 'Chapter Gate'
       : STAGE_TITLES[id - 1] ?? `Stage ${id}`;
-    const sportLabel = mixed
-      ? sports.map(s => s[0]!.toUpperCase() + s.slice(1)).join(' · ')
-      : sports[0]!;
     levels.push({
       id,
       sports,
       title,
       tagline: gate
-        ? `Fast clock · championship trivia · clears next chapter`
+        ? 'Fast clock · clears the next chapter'
         : mixed
-          ? `Mixed sports · who won it? · ${stageTime(id)}s`
-          : `Championship trivia · ${sportLabel} · ${stageTime(id)}s`,
+          ? 'Mixed sports · who won it?'
+          : 'Championship trivia · players · titles + awards',
       timeSec: stageTime(id),
       starScores: starScoresFor(id),
       kind: gate ? 'gate' : 'stage',

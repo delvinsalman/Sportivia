@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { ArrowLeft, ChevronLeft, ChevronRight, Lock, Star, Zap, Info } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Lock, Star, Zap } from 'lucide-react';
 import type { Sport } from '../types';
 import {
   CAMPAIGN_LEVELS,
@@ -8,7 +8,6 @@ import {
   isLevelUnlocked,
   starsOnLevel,
   isMixedLevel,
-  primarySport,
   getGateBonus,
   hasClaimedGateBonus,
   type CampaignProgress,
@@ -337,27 +336,9 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
   );
   const [slideDir, setSlideDir] = useState<1 | -1>(1);
   const [showIntro, setShowIntro] = useState(() => !loadCampaignProgress().seenIntro);
-  const [showInfo, setShowInfo] = useState(false);
-  const infoLeaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function openInfo() {
-    if (infoLeaveRef.current) clearTimeout(infoLeaveRef.current);
-    setShowInfo(true);
-  }
-
-  function closeInfo() {
-    if (infoLeaveRef.current) clearTimeout(infoLeaveRef.current);
-    infoLeaveRef.current = setTimeout(() => setShowInfo(false), 140);
-  }
 
   useEffect(() => {
     setProgress(loadCampaignProgress());
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (infoLeaveRef.current) clearTimeout(infoLeaveRef.current);
-    };
   }, []);
 
   function dismissIntro() {
@@ -375,6 +356,28 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
   const mixed = isMixedLevel(level);
   const gateBonus = level.kind === 'gate' ? getGateBonus(level.id) : null;
   const gateClaimed = gateBonus ? hasClaimedGateBonus(progress, level.id) : false;
+  const statusLine = stars >= 2
+    ? stars === 3
+      ? 'Cleared · replay anytime'
+      : 'Cleared · chase that last ★'
+    : !unlocked
+      ? 'Locked · need 2★ on previous'
+      : level.kind === 'gate'
+        ? gateClaimed
+          ? 'Gate cleared · bonus claimed'
+          : gateBonus
+            ? `2★ clears chapter · +${gateBonus.coins}c`
+            : '2★ clears this chapter'
+        : level.tagline;
+  const playLabel = !unlocked
+    ? 'Locked'
+    : stars >= 2
+      ? 'Replay'
+      : stars > 0
+        ? 'Retry'
+        : level.kind === 'gate'
+          ? 'Play Gate'
+          : 'Play';
 
   const pageLevels = useMemo(
     () => CAMPAIGN_LEVELS.filter(l => l.id >= chapter.from && l.id <= chapter.to),
@@ -419,200 +422,47 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
             Back
           </button>
 
-          <div className="relative text-center">
-            <div className="flex items-center justify-center gap-1.5">
-              <p className="text-[11px] font-black uppercase tracking-[0.28em] text-white/70">
-                Chapter {chapter.id + 1}
-              </p>
-              <button
-                type="button"
-                aria-label="About Campaign"
-                aria-expanded={showInfo}
-                onMouseEnter={openInfo}
-                onMouseLeave={closeInfo}
-                onFocus={openInfo}
-                onBlur={closeInfo}
-                onClick={() => {
-                  playMenuClick();
-                  setShowInfo(cur => !cur);
-                }}
-                className={`relative z-10 flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
-                  showInfo ? 'text-[#f0b232]' : 'text-white/55 hover:text-[#f0b232]'
-                }`}
-              >
-                <Info className="h-4 w-4" strokeWidth={2.5} />
-              </button>
-            </div>
+          <div className="min-w-0 text-center">
+            <p className="text-[10px] font-black uppercase tracking-[0.28em] text-white/70 sm:text-[11px]">
+              Chapter {chapter.id + 1}
+            </p>
             <h1
-              className="text-2xl font-black tracking-tight text-white sm:text-3xl"
+              className="truncate text-lg font-black tracking-tight text-white sm:text-3xl"
               style={{ textShadow: '0 3px 0 rgba(0,0,0,0.55)' }}
             >
               {chapter.title}
             </h1>
-            <AnimatePresence>
-              {showInfo && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                  transition={{ duration: 0.16 }}
-                  onMouseEnter={openInfo}
-                  onMouseLeave={closeInfo}
-                  className="absolute left-1/2 top-full z-50 mt-2 w-[min(22rem,calc(100vw-2rem))] -translate-x-1/2 rounded-2xl border-[2.5px] border-[#f0b232]/45 bg-[#12141a]/96 p-3.5 text-left shadow-[0_10px_28px_rgba(0,0,0,0.55)] backdrop-blur-xl"
-                >
-                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#f0b232]">
-                    Campaign
-                  </p>
-                  <p className="mt-1.5 text-sm font-semibold leading-snug text-white/90">
-                    Combines all 5 top sports — soccer, basketball, NFL, baseball, and hockey.
-                    Test your trivia while you learn, and earn XP, coins, stars, and gate bonuses
-                    as you climb the path.
-                  </p>
-                  <div className="mt-2.5 flex items-center gap-1.5">
-                    {(['soccer', 'basketball', 'football', 'baseball', 'hockey'] as Sport[]).map(
-                      s => (
-                        <SportBall key={s} sport={s} size={22} />
-                      ),
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
           </div>
 
-          <div className="flex min-w-[5.5rem] flex-col items-end gap-1">
-            <div className="flex items-center gap-1.5 rounded-full border-2 border-[#f0b232]/50 bg-black/50 px-2.5 py-1 backdrop-blur-md">
-              <Star className="h-3.5 w-3.5 fill-[#f0b232] text-[#f0b232]" strokeWidth={2.5} />
-              <span className="text-xs font-black text-white">
-                {chStars}/{chMax}
+          <div className="min-w-[5.5rem] rounded-2xl border-2 border-[#f0b232]/45 bg-black/55 px-2 py-1.5 shadow-[0_3px_0_rgba(0,0,0,0.35)] backdrop-blur-md sm:min-w-[7.5rem] sm:px-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="flex items-center gap-1">
+                <Star
+                  className="h-3.5 w-3.5 fill-[#f0b232] text-[#f0b232] drop-shadow-[0_0_6px_rgba(240,178,50,0.55)]"
+                  strokeWidth={2.5}
+                />
+                <span className="text-[10px] font-black uppercase tracking-[0.12em] text-[#f0b232]/85">
+                  Stars
+                </span>
+              </span>
+              <span className="text-xs font-black tabular-nums text-white">
+                {chStars}
+                <span className="text-white/40">/{chMax}</span>
               </span>
             </div>
-            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/15">
+            <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/12 ring-1 ring-inset ring-white/10">
               <div
-                className="h-full rounded-full bg-[#f0b232]"
-                style={{ width: `${(chStars / chMax) * 100}%` }}
+                className="h-full rounded-full bg-gradient-to-r from-[#c48a18] via-[#f0b232] to-[#ffe08a] shadow-[0_0_8px_rgba(240,178,50,0.5)] transition-[width] duration-500"
+                style={{
+                  width: `${chMax === 0 ? 0 : Math.max(chStars > 0 ? 6 : 0, (chStars / chMax) * 100)}%`,
+                }}
               />
             </div>
           </div>
         </header>
 
-        {/* Detail menu — clean, light glass */}
-        <div className="relative z-30 shrink-0 px-3 pt-5 sm:px-5 sm:pt-6">
-          <motion.div
-            key={selected}
-            initial={{ opacity: 0, y: -6 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.16 }}
-            className="mx-auto w-full max-w-xl rounded-2xl border border-white/20 bg-white/[0.08] px-4 py-3 backdrop-blur-md sm:px-5 sm:py-3.5"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/55">
-                Level {level.id} ·{' '}
-                {mixed ? 'Mixed' : SPORT_LABEL[primarySport(level)]}
-                {level.kind === 'gate' ? ' · Gate' : ''}
-              </p>
-              <div className="flex shrink-0 items-center gap-2">
-                {(progress.threeStarStreak ?? 0) >= 1 && (
-                  <span
-                    className="rounded-full border border-[#f0b232]/70 bg-[#f0b232]/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-[#ffe08a]"
-                    title="Land 3★ again for double coins"
-                  >
-                    2× streak
-                  </span>
-                )}
-                {stars >= 2 && (
-                  <span className="rounded-full border border-[#4ade80]/70 bg-[#23a559]/90 px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-white">
-                    Completed
-                  </span>
-                )}
-                <StarRow filled={stars} size={18} />
-              </div>
-            </div>
-
-            <div className="mt-1 flex flex-col gap-3 sm:flex-row sm:items-end sm:gap-4">
-              <div className="min-w-0 flex-1">
-                <h2 className="text-xl font-black text-white sm:text-2xl">{level.title}</h2>
-                <p className="mt-0.5 text-xs font-semibold text-white/60">
-                  {level.tagline} ·{' '}
-                  {mixed ? 'mixed' : SPORT_LABEL[primarySport(level)].toLowerCase()} ·{' '}
-                  {level.timeSec}s
-                </p>
-
-                <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] font-semibold text-white/70">
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-white/40">
-                      Clock
-                    </span>
-                    <span className="font-black text-white">{level.timeSec}s</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5">
-                    <span className="text-[9px] font-black uppercase tracking-wider text-white/40">
-                      Sport
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      {level.sports.map(s => (
-                        <SportBall key={s} sport={s} size={14} />
-                      ))}
-                    </span>
-                  </span>
-                </div>
-
-                <p className="mt-2 text-[10px] font-bold leading-snug text-white/50">
-                  {stars >= 2
-                    ? stars === 3
-                      ? 'Completed · replay for fun'
-                      : 'Completed · chase that last ★'
-                    : level.kind === 'gate'
-                      ? gateClaimed
-                        ? 'Gate cleared · bonus already claimed'
-                        : gateBonus
-                          ? `2★ clears chapter · bonus +${gateBonus.coins}c / +${gateBonus.xp} XP`
-                          : '2★ clears this chapter · next page unlocks'
-                      : '2★ unlocks next · players + titles + awards'}
-                </p>
-
-                <p className="mt-1.5 text-[10px] font-black text-[#f0b232]/90">
-                  ★1 {level.starScores[0]}+ · ★2 {level.starScores[1]}+ · ★3{' '}
-                  {level.starScores[2]}+
-                  {gateBonus && !gateClaimed
-                    ? ` · ${gateBonus.title}: +${gateBonus.coins}c / +${gateBonus.xp} XP`
-                    : ''}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                disabled={!unlocked}
-                onClick={() => {
-                  if (!unlocked) return;
-                  playMenuConfirm();
-                  onPlayLevel(level.id);
-                }}
-                className="mb-0.5 w-full shrink-0 rounded-xl border-2 border-white/25 bg-[#23a559] px-5 py-3 text-sm font-black uppercase tracking-wide text-white shadow-[0_3px_0_#14532d] transition enabled:hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto sm:px-6 sm:py-2.5"
-                style={
-                  stars >= 2
-                    ? { background: '#3a3c42', boxShadow: '0 3px 0 #1a1b1f' }
-                    : level.kind === 'gate'
-                      ? { background: '#ed4245', boxShadow: '0 3px 0 #8f1e22' }
-                      : undefined
-                }
-              >
-                {!unlocked
-                  ? 'Locked'
-                  : stars >= 2
-                    ? 'Replay'
-                    : stars > 0
-                      ? 'Play Again'
-                      : level.kind === 'gate'
-                        ? 'Play Gate'
-                        : 'Play'}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-
-        {/* Path */}
-        <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-center px-1 pb-[max(2.25rem,env(safe-area-inset-bottom))] sm:px-3 -translate-y-9 sm:-translate-y-14">
+        {/* Path — screen hero, vertically centered */}
+        <div className="relative z-10 flex min-h-0 flex-1 flex-col justify-center px-1 sm:px-3">
           <div className="relative flex items-center gap-1 sm:gap-2">
             <button
               type="button"
@@ -641,7 +491,6 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
                       const nodeStars = starsOnLevel(progress, node.id);
                       const active = selected === node.id;
                       const next = pageLevels[idx + 1];
-                      // Path to next is lit only if you've unlocked that next level (progress)
                       const segmentLit = next
                         ? isLevelUnlocked(progress, next.id)
                         : false;
@@ -693,14 +542,14 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
             </button>
           </div>
 
-          <div className="mt-2 flex justify-center gap-1">
+          <div className="mt-1 flex justify-center gap-1">
             {CHAPTERS.map(ch => (
               <button
                 key={ch.id}
                 type="button"
                 aria-label={`Chapter ${ch.id + 1}`}
                 onClick={() => goChapter(ch.id)}
-                className="flex h-11 min-w-11 items-center justify-center"
+                className="flex h-9 min-w-9 items-center justify-center"
               >
                 <span
                   className={`block h-2 rounded-full transition-all ${
@@ -711,6 +560,84 @@ export function CampaignScreen({ sport, onBack, onPlayLevel }: CampaignScreenPro
             ))}
           </div>
           <p className="sr-only">{sport}</p>
+        </div>
+
+        {/* Action dock — info + play as one unit */}
+        <div className="relative z-30 shrink-0 px-2.5 pb-[max(1.75rem,calc(env(safe-area-inset-bottom)+1rem))] pt-1 sm:px-5 sm:pb-12 [@media(max-height:700px)]:pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+          <motion.div
+            key={selected}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.16 }}
+            className="mx-auto flex w-full max-w-2xl items-center gap-2.5 rounded-2xl border-[2.5px] border-[#3f4147] bg-[#121316]/95 px-3 py-3 shadow-[0_4px_0_#0a0a0b] sm:gap-5 sm:px-5 sm:py-5"
+          >
+            <div className="min-w-0 flex-1 text-left">
+              <div className="flex items-center gap-2">
+                <h2 className="truncate text-base font-black tracking-tight text-[#f2f3f5] sm:text-2xl">
+                  {level.title}
+                </h2>
+                <StarRow filled={stars} size={13} />
+              </div>
+
+              <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 text-[11px] font-semibold text-[#949ba4] sm:mt-1.5 sm:gap-x-2 sm:text-[13px]">
+                <span className="font-black uppercase tracking-[0.1em] text-[#6d6f78]">
+                  Lv {level.id}
+                </span>
+                {level.kind === 'gate' && (
+                  <span className="font-black uppercase tracking-[0.1em] text-[#ed4245]">Gate</span>
+                )}
+                {(progress.threeStarStreak ?? 0) >= 1 && (
+                  <span className="font-black uppercase tracking-[0.1em] text-[#f0b232]">2×</span>
+                )}
+                <span className="text-[#3f4147]">·</span>
+                <span className="inline-flex items-center gap-1 sm:gap-1.5">
+                  {level.sports.map(s => (
+                    <SportBall key={s} sport={s} size={13} />
+                  ))}
+                  <span className="text-[#b5bac1]">
+                    {mixed ? 'Mixed' : SPORT_LABEL[level.sports[0]!]}
+                  </span>
+                </span>
+                <span className="text-[#3f4147]">·</span>
+                <span>{level.timeSec}s</span>
+              </div>
+
+              <p className="mt-1 hidden truncate text-[12px] font-semibold text-[#6d6f78] sm:mt-1.5 sm:block sm:text-[13px]">
+                {statusLine}
+                <span className="text-[#3f4147]"> · </span>
+                <span className="tabular-nums text-[#f0b232]">
+                  ★{level.starScores[0]}+ / {level.starScores[1]}+ / {level.starScores[2]}+
+                </span>
+              </p>
+              <p className="mt-1 truncate text-[10px] font-semibold tabular-nums text-[#f0b232] sm:hidden">
+                ★{level.starScores[0]}+ / {level.starScores[1]}+ / {level.starScores[2]}+
+              </p>
+            </div>
+
+            <button
+              type="button"
+              disabled={!unlocked}
+              onClick={() => {
+                if (!unlocked) return;
+                playMenuConfirm();
+                onPlayLevel(level.id);
+              }}
+              className="min-h-11 shrink-0 rounded-xl border-[2.5px] border-white/25 bg-[#23a559] px-4 py-2.5 text-sm font-black uppercase tracking-wide text-white shadow-[0_3px_0_#14532d] transition enabled:hover:translate-y-[1px] enabled:hover:brightness-110 enabled:hover:shadow-[0_2px_0_#14532d] disabled:cursor-not-allowed disabled:opacity-40 sm:min-h-0 sm:px-8 sm:py-4 sm:text-lg"
+              style={
+                stars >= 2
+                  ? {
+                      background: '#2b2d31',
+                      borderColor: '#3f4147',
+                      boxShadow: '0 3px 0 #1a1b1f',
+                    }
+                  : level.kind === 'gate'
+                    ? { background: '#ed4245', boxShadow: '0 3px 0 #8f1e22' }
+                    : undefined
+              }
+            >
+              {playLabel}
+            </button>
+          </motion.div>
         </div>
       </div>
 

@@ -3,6 +3,7 @@ import { Info } from 'lucide-react';
 import { useState, type CSSProperties } from 'react';
 import type { Sport } from '../types';
 import { SportBall } from './SportBall';
+import { SportGuideOverlay } from './SportGuideOverlay';
 import {
   SPORT_ACCENT,
   SPORT_LABEL,
@@ -24,94 +25,83 @@ export function SportPicker({ sport, onSportChange, layout = 'bar' }: SportPicke
 
   if (rail) {
     return (
-      <div className="game-sport-menu" role="tablist" aria-label="Choose sport">
-        <div className="game-sport-menu-head">
-          <p className="game-sport-menu-kicker">Select</p>
-          <div className="game-sport-menu-title-row">
-            <p className="game-sport-menu-title">Sport</p>
-            <button
-              type="button"
-              aria-label="About sports"
-              aria-expanded={showSportInfo}
-              onClick={() => {
-                playMenuClick();
-                setShowSportInfo(v => !v);
-              }}
-              className={`game-sport-menu-info ${showSportInfo ? 'game-sport-menu-info-on' : ''}`}
-            >
-              <Info className="h-3.5 w-3.5" strokeWidth={2.5} />
-            </button>
-          </div>
-          {showSportInfo && (
-            <>
+      <>
+        <div className="game-sport-menu" role="tablist" aria-label="Choose sport">
+          <div className="game-sport-menu-head">
+            <p className="game-sport-menu-kicker">Select</p>
+            <div className="game-sport-menu-title-row">
+              <p className="game-sport-menu-title">Sport</p>
               <button
                 type="button"
-                aria-label="Dismiss sports info"
-                className="fixed inset-0 z-40 cursor-default bg-transparent"
-                onClick={() => setShowSportInfo(false)}
-              />
-              <div className="game-sport-menu-tip" role="tooltip">
-                <p className="text-[10px] font-black uppercase tracking-[0.14em] text-[#f0b232]">
-                  Same game · any sport
-                </p>
-                <p className="mt-1.5 text-[11px] font-semibold leading-snug text-[#b5bac1]">
-                  Every sport is the same trivia idea — match stars to categories on a 3×3 board —
-                  just with that sport’s players and categories. Switch anytime from this menu and
-                  pick up a run whenever you want.
-                </p>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="game-sport-menu-list">
-          {SPORTS.map((sp, i) => {
-            const active = sport === sp;
-            const label = SPORT_LABEL[sp];
-            const accent = SPORT_ACCENT[sp];
-            const railBg = SPORT_RAIL_BG[sp];
-            const ballSize =
-              sp === 'football' ? 24 : sp === 'hockey' ? 22 : sp === 'basketball' ? 28 : 30;
-            return (
-              <motion.button
-                key={sp}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                aria-label={label}
-                initial={{ opacity: 0, x: -8 }}
-                animate={{
-                  opacity: 1,
-                  x: active ? 4 : 0,
-                  scale: active ? 1.02 : 1,
-                }}
-                transition={{ type: 'spring', stiffness: 420, damping: 28, delay: i * 0.03 }}
+                aria-label="About sports"
+                aria-expanded={showSportInfo}
                 onClick={() => {
                   playMenuClick();
-                  onSportChange(sp);
+                  setShowSportInfo(true);
                 }}
-                className={`game-sport-menu-item ${active ? 'game-sport-menu-item-active' : ''}`}
-                style={
-                  {
-                    '--sport-rail-bg': railBg.base,
-                    '--sport-rail-bg-hover': railBg.hover,
-                    '--sport-rail-bg-active': railBg.active,
-                    '--sport-accent': accent,
-                  } as CSSProperties
-                }
+                className={`game-sport-menu-info ${showSportInfo ? 'game-sport-menu-info-on' : ''}`}
               >
-                <span className="game-sport-menu-copy">
-                  <span className="game-sport-menu-name">{label}</span>
-                  {active && <span className="game-sport-menu-live">Selected</span>}
-                </span>
-                <span className="game-sport-menu-ball">
-                  <SportBall sport={sp} size={ballSize} />
-                </span>
-              </motion.button>
-            );
-          })}
+                <Info className="h-3.5 w-3.5" strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+
+          <div className="game-sport-menu-list">
+            {SPORTS.map((sp, i) => {
+              const active = sport === sp;
+              const label = SPORT_LABEL[sp];
+              const accent = SPORT_ACCENT[sp];
+              const railBg = SPORT_RAIL_BG[sp];
+              const ballSize =
+                sp === 'football' ? 24 : sp === 'hockey' ? 22 : sp === 'basketball' ? 28 : 30;
+              return (
+                <motion.button
+                  key={sp}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  aria-label={label}
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{
+                    opacity: 1,
+                    x: active ? 4 : 0,
+                    scale: active ? 1.02 : 1,
+                  }}
+                  transition={{ type: 'spring', stiffness: 420, damping: 28, delay: i * 0.03 }}
+                  onClick={() => {
+                    playMenuClick();
+                    onSportChange(sp);
+                  }}
+                  className={`game-sport-menu-item ${active ? 'game-sport-menu-item-active' : ''}`}
+                  style={
+                    {
+                      '--sport-rail-bg': railBg.base,
+                      '--sport-rail-bg-hover': railBg.hover,
+                      '--sport-rail-bg-active': railBg.active,
+                      '--sport-accent': accent,
+                    } as CSSProperties
+                  }
+                >
+                  <span className="game-sport-menu-copy">
+                    <span className="game-sport-menu-name">{label}</span>
+                    {active && <span className="game-sport-menu-live">Selected</span>}
+                  </span>
+                  <span className="game-sport-menu-ball">
+                    <SportBall sport={sp} size={ballSize} />
+                  </span>
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+
+        <SportGuideOverlay
+          open={showSportInfo}
+          currentSport={sport}
+          onClose={() => setShowSportInfo(false)}
+          onPickSport={onSportChange}
+        />
+      </>
     );
   }
 

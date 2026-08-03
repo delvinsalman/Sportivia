@@ -154,6 +154,8 @@ export interface PlayerProfile {
   pvpRecord: PvpRecord;
   /** Banked free card +1 upgrades from daily spin (1 credit = 1 stat step). */
   freeUpgradeCredits: number;
+  /** Banked extra spins from the wheel — usable anytime, stack separately from the daily. */
+  freeSpinCredits: number;
   /** Unix ms of last daily spin claim (24h cooldown from this). */
   dailySpinAt: number | null;
   stats: PlayerStats;
